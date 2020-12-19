@@ -1,5 +1,5 @@
 workspace(
-    name = "react_webpack",
+    name = "xmaslist",
     managed_directories = {"@npm": ["node_modules"]},
 )
 
