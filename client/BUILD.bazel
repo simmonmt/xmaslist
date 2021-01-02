@@ -38,6 +38,7 @@ webpack(
     data = [
         "index.js",
         "styles.css",
+        "test.js",
         "webpack.config.js",
         "@npm//:node_modules",
     ],
