@@ -1,5 +1,5 @@
 import * as LoremIpsum from "lorem-ipsum";
-import { ItemLink, ListItem } from "./list_item";
+import { ItemLink, ListItem, ListItemBuilder } from "./list_item";
 
 const lorem = new LoremIpsum.LoremIpsum();
 
@@ -40,12 +40,12 @@ export class ItemModel {
             });
     }
 
-    getItemById(id): ListItem {
-        return this.items[id];
+    getItemById(id: string): ListItem {
+        return this.items.get(id);
     }
 
-    setClaimState(id, claimed): Promise<ListItem> {
-        const item = this.items[id];
+    setClaimState(id: string, claimed: boolean): Promise<ListItem> {
+        const item = this.items.get(id);
         if (item === undefined) {
             console.log("Attempt to claim nonexistent item", id);
             return;
@@ -55,11 +55,12 @@ export class ItemModel {
             console.log("Redundant item claim state change", id);
         }
 
-        const copy = item.clone();
-        copy.claimed = claimed;
+	const copy = new ListItemBuilder(item)
+	    .setClaimed(claimed)
+	    .build();
         return delay(1*1000)
             .then(() => {
-                this.items[id] = copy;
+                this.items.set(id, copy);
                 return Promise.resolve(copy);
             });
     }

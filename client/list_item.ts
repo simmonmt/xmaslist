@@ -1,6 +1,6 @@
 export class ItemLink {
-    constructor(private readonly name: string,
-		private readonly url: string) {
+    constructor(public readonly name: string,
+		public readonly url: string) {
     }
 
     clone() {
@@ -9,21 +9,35 @@ export class ItemLink {
 }
 
 export class ListItem {
-    constructor(private readonly id: string,
-		private readonly version: number,
-		private readonly name: string,
-		private readonly description: string,
-		private readonly links: ItemLink[],
-		private readonly claimed: boolean) {
+    constructor(public readonly id: string,
+		public readonly version: number,
+		public readonly name: string,
+		public readonly description: string,
+		public readonly links: ItemLink[],
+		public readonly claimed: boolean) {
+    }
+}
+
+export class ListItemBuilder {
+    private claimed: boolean|undefined = undefined;
+
+    constructor(private readonly base: ListItem) {}
+
+    setClaimed(claimed: boolean): ListItemBuilder {
+	this.claimed = claimed;
+	return this;
     }
 
-    clone() {
+    build(): ListItem {
+	let claimed = this.claimed === undefined ?
+	    this.base.claimed : this.claimed;
+
         return new ListItem(
-            this.id,
-            this.version,
-            this.name,
-            this.description,
-            this.links.map((link) => link.clone()),
-            this.claimed);
+            this.base.id,
+            this.base.version,
+            this.base.name,
+            this.base.description,
+            this.base.links.map((link) => link.clone()),
+	    claimed);
     }
 }
