@@ -20,6 +20,7 @@ ts_project(
     # Experimental: Start a tsc daemon to watch for changes to make recompiles faster.
     #supports_workers = True,
     deps = [
+        "@npm//@material-ui/core",
         "@npm//@types",
         "@npm//csstype",
         "@npm//lorem-ipsum",

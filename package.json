@@ -23,6 +23,7 @@
         "serve": "ibazel run :server"
     },
     "dependencies": {
+        "@material-ui/core": "^4.11.2",
         "csstype": "^3.0.5",
         "lorem-ipsum": "^2.0.3"
     }

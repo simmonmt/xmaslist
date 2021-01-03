@@ -1,5 +1,6 @@
 import { ItemModel } from './model';
 import * as React from 'react';
+import LinearProgress from '@material-ui/core/LinearProgress';
 
 class WishListState {
     loading: boolean;
@@ -37,7 +38,10 @@ export class WishList extends React.Component {
     render() {
         return (
 		//<div className={this.props.classes.root}>
+		<div>
                 <h1>Wish List</h1>
+		<LinearProgress />
+		</div>
                 //{this.state.loading && <LinearProgress />}
 
             // {this.state.ids.map((id) => (
