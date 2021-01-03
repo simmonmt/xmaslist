@@ -85,16 +85,19 @@ export class ListItemComponent extends React.Component<Props, State> {
                 </AccordionDetails>
                 <Divider />
                 <AccordionActions>
-                    <Button color="primary"
-                            disabled={this.state.updating}
-                            onClick={this.handleClaimClick}>
-                        {item.claimed ? "Unclaim" : "Claim"}
-                    </Button>
-                    {this.state.updating &&
-                     <CircularProgress
-                         size={24}
-                         className={this.props.classes.buttonProgress}
-                     />}
+		    <div className={this.props.classes.wrapper}>
+                        <Button color="primary"
+	                        variant="contained"
+                                disabled={this.state.updating}
+                                onClick={this.handleClaimClick}>
+                            {item.claimed ? "Unclaim" : "Claim"}
+                        </Button>
+                        {this.state.updating &&
+                         <CircularProgress
+                             size={24}
+                             className={this.props.classes.buttonProgress}
+                         />}
+	            </div>
                 </AccordionActions>
             </Accordion>
         );

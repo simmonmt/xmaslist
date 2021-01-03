@@ -94,6 +94,10 @@ const styles = (theme: Theme) => createStyles({
         marginTop: -12,
         marginLeft: -12,
     },
+    wrapper: {
+	margin: theme.spacing(1),
+	position: 'relative',
+    },
 });
 
 const StyledWishList = withStyles(styles)(WishList);
