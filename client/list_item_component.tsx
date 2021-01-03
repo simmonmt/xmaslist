@@ -59,8 +59,6 @@ export class ListItemComponent extends React.Component<Props, State> {
         const item = this.state.item;
         const classes = this.props.classes;
 
-	console.log('rendering', this.props, this.state);
-
         return (
             <Accordion>
                 <AccordionSummary

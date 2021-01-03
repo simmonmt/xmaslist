@@ -27,14 +27,12 @@ class WishList extends React.Component<Props, State> {
             loading: true,
             ids: [],
         }
-
-        // TODO: errors
     }
 
     componentDidMount() {
-	console.log("wish list mounted");
         this.model.loadItems()
             .then((items) => this.itemsLoaded(items));
+        // TODO: errors
     }
 
     private itemsLoaded(itemIds: string[]) {
@@ -42,8 +40,6 @@ class WishList extends React.Component<Props, State> {
             loading: false,
             ids: itemIds,
         };
-
-	console.log("ids", itemIds);
 
         this.setState(newState)
     }
