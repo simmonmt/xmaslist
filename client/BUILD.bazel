@@ -22,6 +22,7 @@ ts_project(
     deps = [
         "@npm//@types",
         "@npm//csstype",
+        "@npm//lorem-ipsum",
     ],
 )
 
@@ -37,9 +38,11 @@ webpack(
     ],
     data = [
         "index.js",
+        "list_item.js",
+        "model.js",
         "styles.css",
-        "test.js",
         "webpack.config.js",
+        "wishlist.js",
         "@npm//:node_modules",
     ],
 )

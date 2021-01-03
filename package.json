@@ -23,6 +23,7 @@
         "serve": "ibazel run :server"
     },
     "dependencies": {
-        "csstype": "^3.0.5"
+        "csstype": "^3.0.5",
+        "lorem-ipsum": "^2.0.3"
     }
 }
