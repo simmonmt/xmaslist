@@ -1,3 +1,5 @@
+import { Theme } from '@material-ui/core/styles/createMuiTheme';
+import { createStyles, withStyles } from '@material-ui/core/styles';
 import Chip from '@material-ui/core/Chip';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Divider from '@material-ui/core/Divider';
@@ -32,7 +34,7 @@ interface State {
     item: ListItem;
 };
 
-export class ListItemComponent extends React.Component<Props, State> {
+class ListItemComponent extends React.Component<Props, State> {
     constructor(props) {
         super(props);
 
@@ -101,3 +103,31 @@ export class ListItemComponent extends React.Component<Props, State> {
         );
     }
 }
+
+const styles = (theme: Theme) => createStyles({
+    chip: {
+        margin: theme.spacing(0.5),
+    },
+    heading: {
+        fontSize: theme.typography.pxToRem(15),
+        fontWeight: theme.typography.fontWeightRegular,
+    },
+    headingColumn: {
+        flexBasis: '100%',
+    },
+    buttonProgress: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        marginTop: -12,
+        marginLeft: -12,
+    },
+    wrapper: {
+	margin: theme.spacing(1),
+	position: 'relative',
+    },
+});
+
+const StyledListItemComponent = withStyles(styles)(ListItemComponent);
+
+export { StyledListItemComponent as ListItemComponent };
