@@ -34,6 +34,7 @@ webpack(
         "$(execpath index.js)",
         "--config",
         "$(execpath webpack.config.js)",
+        "--mode=development",
         "-o",
         "$@",
     ],

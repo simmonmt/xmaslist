@@ -2,12 +2,15 @@ import { ItemModel } from './model';
 import * as React from 'react';
 import LinearProgress from '@material-ui/core/LinearProgress';
 
-class WishListState {
+interface Props {
+};
+
+interface State {
     loading: boolean;
     ids: string[];
 };
 
-export class WishList extends React.Component {
+export class WishList extends React.Component<Props, State> {
     private readonly model: ItemModel;
 
     constructor(props) {
@@ -25,7 +28,7 @@ export class WishList extends React.Component {
     }
 
     private itemsLoaded(itemIds: string[]) {
-        const newState: WishListState = {
+        const newState: State = {
             loading: false,
             ids: itemIds,
         };
@@ -40,9 +43,8 @@ export class WishList extends React.Component {
 		//<div className={this.props.classes.root}>
 		<div>
                 <h1>Wish List</h1>
-		<LinearProgress />
+		{this.state.loading && <LinearProgress />}
 		</div>
-                //{this.state.loading && <LinearProgress />}
 
             // {this.state.ids.map((id) => (
             //         <ListItemComponent
