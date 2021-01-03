@@ -42,7 +42,7 @@ export class ListItemComponent extends React.Component<Props, State> {
         }
     }
 
-    handleClaimClick = () => {
+    handleClaimClick() {
         this.setState({updating: true});
 
         const item = this.state.item;
@@ -89,7 +89,7 @@ export class ListItemComponent extends React.Component<Props, State> {
                         <Button color="primary"
 	                        variant="contained"
                                 disabled={this.state.updating}
-                                onClick={this.handleClaimClick}>
+                                onClick={() => this.handleClaimClick()}>
                             {item.claimed ? "Unclaim" : "Claim"}
                         </Button>
                         {this.state.updating &&
