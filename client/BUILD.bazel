@@ -25,6 +25,7 @@ ts_project(
         "@npm//@types",
         "@npm//csstype",
         "@npm//lorem-ipsum",
+        "@npm//react-router-dom",
     ],
 )
 

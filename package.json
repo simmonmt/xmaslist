@@ -28,6 +28,7 @@
         "@material-ui/core": "^4.11.2",
         "@material-ui/icons": "^4.11.2",
         "csstype": "^3.0.5",
-        "lorem-ipsum": "^2.0.3"
+        "lorem-ipsum": "^2.0.3",
+        "react-router-dom": "^5.2.0"
     }
 }
