@@ -108,10 +108,7 @@ const styles = (theme: Theme) => createStyles({
     chip: {
         margin: theme.spacing(0.5),
     },
-    heading: {
-        fontSize: theme.typography.pxToRem(15),
-        fontWeight: theme.typography.fontWeightRegular,
-    },
+    heading: theme.typography.subtitle2,
     headingColumn: {
         flexBasis: '100%',
     },
