@@ -79,9 +79,25 @@ class ListItemComponent extends React.Component<Props, State> {
                     </div>
                 </AccordionSummary>
                 <AccordionDetails>
-                    <Typography>
-                        {item.description}
-                    </Typography>
+		    <div>
+                        <Typography>
+                            {item.description}
+                        </Typography>
+                        {this.state.item.links.length > 0 &&
+		         <div>
+		             <br />
+		             <Typography>Links</Typography>
+			     <ul className={this.props.classes.linksList}>
+			         {this.state.item.links.map((link) =>
+			             <li>
+				         <a href={link.url}>
+				             <Typography>{link.name}</Typography>
+			                 </a>
+				     </li>
+			         )}
+		             </ul>
+		         </div>}
+		     </div>
                 </AccordionDetails>
                 <Divider />
                 <AccordionActions>
@@ -122,6 +138,9 @@ const styles = (theme: Theme) => createStyles({
     wrapper: {
 	margin: theme.spacing(1),
 	position: 'relative',
+    },
+    linksList: {
+        margin: theme.spacing(0),
     },
 });
 
