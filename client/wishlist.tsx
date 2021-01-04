@@ -1,3 +1,4 @@
+import Typography from '@material-ui/core/Typography';
 import { Theme } from '@material-ui/core/styles/createMuiTheme';
 import { createStyles, withStyles } from '@material-ui/core/styles';
 import * as React from 'react';
@@ -46,7 +47,9 @@ class WishList extends React.Component<Props, State> {
     render() {
         return (
 	    <div className={this.props.classes.root}>
-                <h1>Wish List</h1>
+		<Typography variant="h2">
+                    Wish List
+                </Typography>
 		{this.state.loading && <LinearProgress />}
 
                 {this.state.ids.map((id) => (
