@@ -40,6 +40,7 @@ webpack(
         "$@",
     ],
     data = [
+        "app.js",
         "index.js",
         "list_item.js",
         "list_item_component.js",
