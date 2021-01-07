@@ -1,5 +1,5 @@
 load("@npm//@bazel/typescript:index.bzl", "ts_library")
-load("@npm//http-server:index.bzl", "http_server")
+load("@npm//http-server-spa:index.bzl", "http_server_spa")
 load("@npm//sass:index.bzl", "sass")
 load(
     "@npm//webpack-cli:index.bzl",
@@ -61,11 +61,15 @@ webpack(
     ],
 )
 
-http_server(
+http_server_spa(
     name = "server",
     data = [
         "app.bundle.js",
         "index.html",
     ],
-    templated_args = ["client"],
+    templated_args = [
+        "client",
+        "index.html",
+        "8080",
+    ],
 )
