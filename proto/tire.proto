@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+package proto;
+
+message Tire {
+  optional string type = 1;
+}
