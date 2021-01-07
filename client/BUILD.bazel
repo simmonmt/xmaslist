@@ -22,7 +22,6 @@ ts_library(
         "*.ts",
         "*.tsx",
     ]),
-    tsconfig = "tsconfig.json",
     devmode_module = "es2015",
     deps = [
         "@npm//@material-ui/core",
