@@ -24,7 +24,7 @@ ts_library(
     ]),
     devmode_module = "es2015",
     deps = [
-        "//proto:tire",
+        "//proto:list_ts_proto",
         "@npm//@material-ui/core",
         "@npm//@material-ui/icons",
         "@npm//@types",
@@ -56,7 +56,7 @@ webpack(
     data = [
         "webpack.config.js",
         ":app.js",
-        "//proto:tire",
+        "//proto:list_ts_proto",
         "@npm//:node_modules",
     ],
 )

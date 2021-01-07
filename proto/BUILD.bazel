@@ -6,11 +6,22 @@ package(
 )
 
 proto_library(
-    name = "tire_proto",
-    srcs = ["tire.proto"],
+    name = "list_item_proto",
+    srcs = ["list_item.proto"],
 )
 
 protobufjs_ts_library(
-    name = "tire",
-    deps = [":tire_proto"],
+    name = "list_item_ts_proto",
+    deps = [":list_item_proto"],
+)
+
+proto_library(
+    name = "list_proto",
+    srcs = ["list.proto"],
+    deps = [ ":list_item_proto" ],
+)
+
+protobufjs_ts_library(
+    name = "list_ts_proto",
+    deps = [":list_proto"],
 )

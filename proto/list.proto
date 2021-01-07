@@ -1,0 +1,27 @@
+syntax = "proto2";
+
+import "proto/list_item.proto";
+
+package proto;
+
+message ListData {
+  optional string name = 1;
+  optional string beneficiary = 2;
+  optional int64 event_date = 3;
+}
+
+message ListMetadata {
+  optional int64 created = 1;
+  optional int64 updated = 2;
+  optional int64 owner = 3;
+}
+
+message List {
+  optional string id = 1;
+  optional int32 version = 2;
+
+  optional ListData data = 3;
+  optional ListMetadata metadata = 4;
+
+  repeated ListItem items = 5;
+}

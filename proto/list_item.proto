@@ -1,0 +1,33 @@
+syntax = "proto2";
+
+package proto;
+
+message ListItemLink {
+  optional string name = 1;
+  optional string url = 2;
+}
+
+message ListItemData {
+  optional string name = 1;
+  optional string desc = 2;
+  repeated ListItemLink links = 3;
+}
+
+message ListItemMetadata {
+  optional int64 created = 1;
+  optional int64 updated = 2;
+}
+
+message ListItemState {
+  optional int32 claimed_by = 1;
+  optional int32 claimed_when = 2;
+}
+
+message ListItem {
+  optional string id = 1;
+  optional int32 version = 2;
+
+  optional ListItemData data = 3;
+  optional ListItemState state = 4;
+  optional ListItemMetadata metadata = 5;
+}
