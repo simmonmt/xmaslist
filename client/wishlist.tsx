@@ -63,6 +63,6 @@ const styles = (theme: Theme) =>
     },
   });
 
-const StyledWishList = withStyles(styles)(WishList);
+const StyledWishList: any = withStyles(styles)(WishList);
 
 export { StyledWishList as WishList };

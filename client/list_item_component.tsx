@@ -144,6 +144,6 @@ const styles = (theme: Theme) =>
     },
   });
 
-const StyledListItemComponent = withStyles(styles)(ListItemComponent);
+const StyledListItemComponent: any = withStyles(styles)(ListItemComponent);
 
 export { StyledListItemComponent as ListItemComponent };
