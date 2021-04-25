@@ -11,4 +11,5 @@ go_library(
     srcs = ["main.go"],
     importpath = "github.com/simmonmt/xmaslist/server",
     visibility = ["//visibility:private"],
+    deps = ["@org_golang_google_grpc//:go_default_library"],
 )
