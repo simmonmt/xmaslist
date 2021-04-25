@@ -20,10 +20,12 @@ var (
 type userServer struct{}
 
 func (s *userServer) Login(ctx context.Context, req *uspb.LoginRequest) (*uspb.LoginResponse, error) {
+	log.Println("login call")
 	return nil, fmt.Errorf("not implemented")
 }
 
 func (s *userServer) Logout(ctx context.Context, req *uspb.LogoutRequest) (*uspb.LogoutResponse, error) {
+	log.Println("logout call")
 	return nil, fmt.Errorf("not implemented")
 }
 
@@ -39,7 +41,7 @@ func main() {
 		log.Fatalf("--port is required")
 	}
 
-	sock, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
+	sock, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

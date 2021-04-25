@@ -11,12 +11,21 @@ ReactDOM.render(
   document.getElementById("root")
 );
 
-let req = new LoginRequest();
-console.log(req);
-
 const userService = new UserServiceClient(
-  "http://nash.simmonmt.org:8080",
+  "http://nash.simmonmt.org:8081",
   null,
   null
 );
-console.log(userService);
+
+let req = new LoginRequest();
+req.setUsername("simmonmt");
+req.setPassword("hunter2");
+
+userService.login(req, undefined, function (err, response) {
+  if (err) {
+    console.log(err.code);
+    console.log(err.message);
+  } else {
+    console.log(response);
+  }
+});
