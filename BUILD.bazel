@@ -1,0 +1,31 @@
+load("@io_bazel_rules_go//go:def.bzl", "nogo")
+load("@bazel_gazelle//:def.bzl", "gazelle")
+
+GAZELLE_EXCLUDES = [
+    "--exclude=client",
+    "--exclude=node_modules",
+    "--exclude=proto",  # TODO: remove
+]
+
+# gazelle:prefix github.com/simmonmt/xmaslist
+gazelle(
+    name = "gazelle",
+    command = "fix",
+    extra_args = GAZELLE_EXCLUDES + [
+        "--mode=diff",
+    ],
+)
+
+gazelle(
+    name = "gazelle_fix",
+    command = "fix",
+    extra_args = GAZELLE_EXCLUDES,
+)
+
+gazelle(name = "gazelle_cmd")
+
+nogo(
+    name = "nogo",
+    vet = True,
+    visibility = ["//visibility:public"],
+)
