@@ -1,5 +1,5 @@
+load("@npm//@bazel/labs:index.bzl", "ts_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@npm//@bazel/labs:index.bzl", "protobufjs_ts_library")
 
 package(
     default_visibility = ["//visibility:public"],
@@ -10,9 +10,9 @@ proto_library(
     srcs = ["list_item.proto"],
 )
 
-protobufjs_ts_library(
-    name = "list_item_ts_proto",
-    deps = [":list_item_proto"],
+ts_proto_library(
+    name = "list_item",
+    proto = ":list_item_proto",
 )
 
 proto_library(
@@ -21,7 +21,7 @@ proto_library(
     deps = [ ":list_item_proto" ],
 )
 
-protobufjs_ts_library(
-    name = "list_ts_proto",
-    deps = [":list_proto"],
+ts_proto_library(
+    name = "list",
+    proto = ":list_proto",
 )

@@ -16,8 +16,8 @@ message ListItemData {
 message ListItemMetadata {
   optional int64 created = 1;
   optional int64 updated = 2;
-  optional int32 claimed_by = 1;
-  optional int32 claimed_when = 2;
+  optional int32 claimed_by = 3;
+  optional int32 claimed_when = 4;
 }
 
 message ListItemState {
