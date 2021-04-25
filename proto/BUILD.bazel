@@ -40,6 +40,6 @@ ts_proto_library(
 go_proto_library(
     name = "user_service_go_proto",
     compilers = ["@io_bazel_rules_go//proto:go_grpc"],
-    importpath = "github.com/simmonmt/xmaslist/proto",
+    importpath = "github.com/simmonmt/xmaslist/proto/user_service",
     protos = [":user_service_proto"],
 )
