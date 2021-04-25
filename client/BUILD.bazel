@@ -1,10 +1,7 @@
-load("@npm//@bazel/typescript:index.bzl", "ts_library")
+load("@npm//@bazel/rollup:index.bzl", "rollup_bundle")
+load("@npm//@bazel/typescript:index.bzl", "ts_project")
 load("@npm//http-server-spa:index.bzl", "http_server_spa")
 load("@npm//sass:index.bzl", "sass")
-load(
-    "@npm//webpack-cli:index.bzl",
-    webpack = "webpack_cli",
-)
 
 sass(
     name = "styles",
@@ -16,15 +13,12 @@ sass(
     data = ["styles.scss"],
 )
 
-ts_library(
-    name = "app",
+ts_project(
     srcs = glob([
         "*.ts",
         "*.tsx",
     ]),
-    devmode_module = "es2015",
     deps = [
-        "//proto:list_ts_proto",
         "@npm//@material-ui/core",
         "@npm//@material-ui/icons",
         "@npm//@types",
@@ -36,35 +30,23 @@ ts_library(
     ],
 )
 
-filegroup(
-    name = "app.js",
-    srcs = [":app"],
-    output_group = "es5_sources",
-)
-
-webpack(
+rollup_bundle(
     name = "bundle",
-    outs = ["app.bundle.js"],
-    args = [
-        "$(locations :app.js)",
-        "--config",
-        "$(execpath webpack.config.js)",
-        "--mode=development",
-        "-o",
-        "$@",
-    ],
-    data = [
-        "webpack.config.js",
-        ":app.js",
-        "//proto:list_ts_proto",
+    config_file = "rollup.config.js",
+    entry_point = ":index.tsx",
+    format = "iife",
+    deps = [
+        ":tsconfig",
         "@npm//:node_modules",
+        "@npm//@rollup/plugin-commonjs",
+        "@npm//@rollup/plugin-node-resolve",
     ],
 )
 
 http_server_spa(
     name = "server",
     data = [
-        "app.bundle.js",
+        ":bundle.js",
         "index.html",
     ],
     templated_args = [

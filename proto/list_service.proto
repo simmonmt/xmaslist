@@ -1,0 +1,74 @@
+syntax = "proto2";
+
+import "proto/list.proto";
+import "proto/list_item.proto";
+
+package proto;
+
+message GetListsRequest {}
+
+message GetListsResponse {
+  repeated List lists = 1;
+}
+
+message NewListRequest {
+  optional ListData data = 1;
+}
+
+message NewListResponse {
+  optional List list = 1;
+}
+
+message DeleteListRequest {
+  optional string list_id = 1;
+}
+
+message DeleteListResponse {}
+
+message UpdateListRequest {
+  optional string list_id = 1;
+  optional int32 list_version = 2;
+
+  optional ListData data = 3;
+}
+
+message UpdateListResponse {
+  optional List list = 1;
+}
+
+message GetListItemsRequest {
+  optional string list_id = 1;
+}
+
+message GetListItemsResponse {
+  repeated ListItem items = 1;
+}
+
+message NewListItemRequest {
+  optional string list_id = 1;
+  optional ListItemData data = 2;
+}
+
+message NewListItemResponse {
+  optional ListItem item = 1;
+}
+
+message DeleteListItemRequest {
+  optional string list_id = 1;
+  optional string item_id = 2;
+}
+
+message DeleteListItemResponse {}
+
+message UpdateListItemRequest {
+  optional string list_id = 1;
+  optional string item_id = 2;
+  optional int32 list_version = 3;
+
+  optional ListItemData data = 4;
+  optional ListItemState state = 5;
+}
+
+message UpdateListItemResponse {
+  optional ListItem item = 1;
+}

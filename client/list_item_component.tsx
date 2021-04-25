@@ -11,10 +11,14 @@ import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import * as React from "react";
+import { ItemModel } from "./item_model";
 import { ListItem } from "./list_item";
-import { ItemModel } from "./model";
 
-function ClaimedChip(props) {
+interface ClaimedChipProps {
+  claimed: boolean;
+}
+
+function ClaimedChip(props: ClaimedChipProps) {
   if (props.claimed) {
     return <Chip size="small" label="Claimed" />;
   } else {
@@ -34,12 +38,12 @@ interface State {
 }
 
 class ListItemComponent extends React.Component<Props, State> {
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
 
     this.state = {
       updating: false,
-      item: this.props.model.getItemById(this.props.id),
+      item: this.props.model.getItemById(this.props.id)!,
     };
   }
 

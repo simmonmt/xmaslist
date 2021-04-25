@@ -3,8 +3,8 @@ import { createStyles, withStyles } from "@material-ui/core/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import Typography from "@material-ui/core/Typography";
 import * as React from "react";
+import { ItemModel } from "./item_model";
 import { ListItemComponent } from "./list_item_component";
-import { ItemModel } from "./model";
 
 interface Props {
   classes: any;
@@ -18,7 +18,7 @@ interface State {
 class WishList extends React.Component<Props, State> {
   private readonly model: ItemModel;
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
 
     this.model = new ItemModel();

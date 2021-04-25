@@ -3,7 +3,7 @@ import { ItemLink, ListItem, ListItemBuilder } from "./list_item";
 
 const lorem = new LoremIpsum.LoremIpsum();
 
-function delay(t) {
+function delay(t: number) {
   return new Promise(function (resolve) {
     setTimeout(resolve, t);
   });
@@ -59,19 +59,18 @@ export class ItemModel {
     });
   }
 
-  getItemById(id: string): ListItem {
+  getItemById(id: string): ListItem|undefined {
     return this.items.get(id);
   }
 
   setClaimState(id: string, claimed: boolean): Promise<ListItem> {
     const item = this.items.get(id);
     if (item === undefined) {
-      console.log("Attempt to claim nonexistent item", id);
-      return;
+      return Promise.reject(new Error(`Attempt to claim nonexistent item ${id}`));
     }
 
     if (item.claimed === claimed) {
-      console.log("Redundant item claim state change", id);
+      return Promise.reject(new Error(`Redundant item claim state change ${id}`));
     }
 
     const copy = new ListItemBuilder(item).setClaimed(claimed).build();

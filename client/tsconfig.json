@@ -1,0 +1,20 @@
+{
+   "compilerOptions" : {
+      "jsx" : "react",
+      "lib" : [
+         "es2015.promise",
+         "dom",
+         "es5"
+      ],
+      "moduleResolution" : "node",
+      "rootDirs" : [
+         ".",
+         "bazel-out/k8-fastbuild/bin"
+      ],
+      "strict" : true
+   },
+   "include" : [
+      "*.tsx",
+      "*.ts"
+   ]
+}

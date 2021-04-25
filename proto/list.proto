@@ -22,6 +22,4 @@ message List {
 
   optional ListData data = 3;
   optional ListMetadata metadata = 4;
-
-  repeated ListItem items = 5;
 }
