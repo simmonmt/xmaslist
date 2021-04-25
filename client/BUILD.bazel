@@ -13,13 +13,16 @@ sass(
     data = ["styles.scss"],
 )
 
+PROTO_DEPS = [
+    "//proto:user_service",
+]
+
 ts_project(
     srcs = glob([
         "*.ts",
         "*.tsx",
     ]),
-    deps = [
-        "//proto:list",
+    deps = PROTO_DEPS + [
         "@npm//@material-ui/core",
         "@npm//@material-ui/icons",
         "@npm//@types",
@@ -29,6 +32,7 @@ ts_project(
         "@npm//react",
         "@npm//react-dom",
         "@npm//react-router-dom",
+        "@npm//grpc-web",
     ],
 )
 
@@ -37,9 +41,8 @@ rollup_bundle(
     config_file = "rollup.config.js",
     entry_point = ":index.tsx",
     format = "iife",
-    deps = [
+    deps = PROTO_DEPS + [
         ":tsconfig",
-        "//proto:list",
         "@npm//:node_modules",
         "@npm//@rollup/plugin-commonjs",
         "@npm//@rollup/plugin-node-resolve",

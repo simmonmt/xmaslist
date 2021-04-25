@@ -18,10 +18,20 @@ ts_proto_library(
 proto_library(
     name = "list_proto",
     srcs = ["list.proto"],
-    deps = [ ":list_item_proto" ],
+    deps = [":list_item_proto"],
 )
 
 ts_proto_library(
     name = "list",
     proto = ":list_proto",
+)
+
+proto_library(
+    name = "user_service_proto",
+    srcs = ["user_service.proto"],
+)
+
+ts_proto_library(
+    name = "user_service",
+    proto = ":user_service_proto",
 )

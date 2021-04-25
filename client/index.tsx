@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { List } from "../proto/list_pb";
+import { UserServiceClient } from "../proto/user_service_grpc_web_pb";
+import { LoginRequest } from "../proto/user_service_pb";
 import App from "./app";
 
 ReactDOM.render(
@@ -10,5 +11,12 @@ ReactDOM.render(
   document.getElementById("root")
 );
 
-let list = new List();
-console.log(list);
+let req = new LoginRequest();
+console.log(req);
+
+const userService = new UserServiceClient(
+  "http://nash.simmonmt.org:8080",
+  null,
+  null
+);
+console.log(userService);
