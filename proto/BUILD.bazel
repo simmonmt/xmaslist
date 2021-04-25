@@ -1,5 +1,6 @@
 load("@npm//@bazel/labs:index.bzl", "ts_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 
 package(
     default_visibility = ["//visibility:public"],
@@ -34,4 +35,11 @@ proto_library(
 ts_proto_library(
     name = "user_service",
     proto = ":user_service_proto",
+)
+
+go_proto_library(
+    name = "user_service_go_proto",
+    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
+    importpath = "github.com/simmonmt/xmaslist/proto",
+    protos = [":user_service_proto"],
 )
