@@ -8,8 +8,9 @@
       ],
       "moduleResolution" : "node",
       "rootDirs" : [
-         ".",
-         "bazel-out/k8-fastbuild/bin"
+         // ../ because we're in //client not //.
+         "..",
+         "../bazel-out/k8-fastbuild/bin"
       ],
       "strict" : true
    },
