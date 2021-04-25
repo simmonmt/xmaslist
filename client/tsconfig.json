@@ -7,7 +7,7 @@
          "es5"
       ],
       "moduleResolution" : "node",
-      "traceResolution" : true,
+      // "traceResolution" : true,
       "rootDirs" : [
          // ../ because we're in //client not //.
          "..",
