@@ -3,6 +3,33 @@ const {nodeResolve} = require('@rollup/plugin-node-resolve');
 const replace = require('@rollup/plugin-replace');
 
 module.exports = {
+  onwarn: function(warning, warn) {
+    // Suppress specific warnings for packages we include, as we can't really
+    // fix them. This could be generalized to suppress anything that's not in
+    // our code, but lets try this smaller hammer first.
+
+    if (warning.code ==='EVAL' &&
+        warning.loc.file.includes('google-protobuf')) {
+      return;
+    }
+
+    if (warning.code === 'CIRCULAR_DEPENDENCY' &&
+        warning.cycle[0].includes('lorem-ipsum')) {
+      return;
+    }
+
+    // Other warning suppression
+
+    // We don't need a name -- the contents of index.tsx are to be executed
+    // immediately (and will be as long as there's no exported name).
+    if (warning.code === 'MISSING_NAME_OPTION_FOR_IIFE_EXPORT') {
+      return;
+    }
+
+    // Use the default handler for everything else.
+    warn(warning);
+  },
+
   plugins: [
     nodeResolve(),
     commonjs(),
