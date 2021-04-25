@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import { List } from "../proto/list_pb";
 import App from "./app";
-import { EchoRequest } from "./echo_pb";
 
 ReactDOM.render(
   <React.StrictMode>
@@ -10,5 +10,5 @@ ReactDOM.render(
   document.getElementById("root")
 );
 
-let foo = new EchoRequest();
-console.log(foo);
+let list = new List();
+console.log(list);

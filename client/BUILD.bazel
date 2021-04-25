@@ -2,18 +2,6 @@ load("@npm//@bazel/rollup:index.bzl", "rollup_bundle")
 load("@npm//@bazel/typescript:index.bzl", "ts_project")
 load("@npm//http-server-spa:index.bzl", "http_server_spa")
 load("@npm//sass:index.bzl", "sass")
-load("@npm//@bazel/labs:index.bzl", "ts_proto_library")
-load("@rules_proto//proto:defs.bzl", "proto_library")
-
-proto_library(
-    name = "echo_proto",
-    srcs = ["echo.proto"],
-)
-
-ts_proto_library(
-    name = "echo",
-    proto = ":echo_proto",
-)
 
 sass(
     name = "styles",
@@ -31,7 +19,7 @@ ts_project(
         "*.tsx",
     ]),
     deps = [
-        ":echo",
+        "//proto:list",
         "@npm//@material-ui/core",
         "@npm//@material-ui/icons",
         "@npm//@types",
@@ -50,8 +38,8 @@ rollup_bundle(
     entry_point = ":index.tsx",
     format = "iife",
     deps = [
-        ":echo",
         ":tsconfig",
+        "//proto:list",
         "@npm//:node_modules",
         "@npm//@rollup/plugin-commonjs",
         "@npm//@rollup/plugin-node-resolve",
