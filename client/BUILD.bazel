@@ -41,6 +41,7 @@ rollup_bundle(
     config_file = "rollup.config.js",
     entry_point = ":index.tsx",
     format = "iife",
+    visibility = ["//visibility:public"],
     deps = PROTO_DEPS + [
         ":tsconfig",
         "@npm//:node_modules",
@@ -48,6 +49,8 @@ rollup_bundle(
         "@npm//@rollup/plugin-node-resolve",
     ],
 )
+
+exports_files(["index.html"])
 
 http_server_spa(
     name = "server",

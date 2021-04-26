@@ -20,16 +20,5 @@ services:
   frontend:
     image: simmonmt/xmaslist/frontend
     container_name: frontend
-    command:
-      - "--port=8080"
-      - "--serve_dir=/docroot"
-      - "--index_file=index.html"
     ports:
       - "8080:8080"
-    volumes:
-      - type: bind
-        source: ../bazel-bin/client/bundle.js
-        target: /docroot/bundle.js
-      - type: bind
-        source: ../client/index.html
-        target: /docroot/index.html

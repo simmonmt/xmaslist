@@ -2,15 +2,30 @@ load("@io_bazel_rules_docker//go:image.bzl", "go_image")
 load("@io_bazel_rules_docker//container:container.bzl", "container_bundle", "container_image")
 
 go_image(
-    name = "frontend_image",
+    name = "frontend_binary",
     binary = "//frontend",
+)
+
+container_image(
+    name = "frontend_full",
+    base = ":frontend_binary",
+    cmd = [
+        "--index_file=index.html",
+        "--serve_dir=/docroot",
+        "--port=8080",
+    ],
+    directory = "/docroot",
+    files = [
+        "//client:bundle",
+        "//client:index.html",
+    ],
 )
 
 # Run this target to create the Docker image with the right name and
 # tag.
 container_bundle(
-    name = "frontend",
+    name = "docker",
     images = {
-        "simmonmt/xmaslist/frontend:latest": ":frontend_image",
+        "simmonmt/xmaslist/frontend:latest": ":frontend_full",
     },
 )

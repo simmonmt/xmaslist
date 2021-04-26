@@ -9,7 +9,7 @@ go_image(
 # Run this target to create the Docker image with the right name and
 # tag.
 container_bundle(
-    name = "backend",
+    name = "docker",
     images = {
         "simmonmt/xmaslist/backend:latest": ":backend_image",
     },
