@@ -3,7 +3,7 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_bundle", "con
 
 go_image(
     name = "backend_image",
-    binary = "//server:main",
+    binary = "//backend:main",
 )
 
 # Run this target to create the Docker image with the right name and
