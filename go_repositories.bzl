@@ -2,6 +2,13 @@ load("@bazel_gazelle//:deps.bzl", "go_repository")
 
 def go_repositories():
     go_repository(
+        name = "com_github_roberthodgen_spa_server",
+        importpath = "github.com/roberthodgen/spa-server",
+        sum = "h1:GDTuxylfsSbc8CHl6kNC9an/tUoe1EklYP5Uc6qoxCA=",
+        version = "v0.0.0-20171007154335-bb87b4ff3253",
+    )
+
+    go_repository(
         name = "org_golang_google_grpc",
         build_file_proto_mode = "disable",
         importpath = "google.golang.org/grpc",
