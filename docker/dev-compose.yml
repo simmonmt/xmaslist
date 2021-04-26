@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.17.0
+    container_name: envoy
+    volumes:
+      - type: bind
+        source: ../server/envoy.yaml
+        target: /etc/envoy/envoy.yaml
+    ports:
+      - "8081:8081"
+  backend:
+    image: simmonmt/xmaslist/backend
+    container_name: backend
+    command:
+      - "--port=9090"
+    ports:
+      - "9090:9090"
