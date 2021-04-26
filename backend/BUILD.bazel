@@ -1,15 +1,15 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 
 go_binary(
-    name = "main",
-    embed = [":server_lib"],
+    name = "backend",
+    embed = [":backend_lib"],
     visibility = ["//visibility:public"],
 )
 
 go_library(
-    name = "server_lib",
+    name = "backend_lib",
     srcs = ["main.go"],
-    importpath = "github.com/simmonmt/xmaslist/server",
+    importpath = "github.com/simmonmt/xmaslist/backend",
     visibility = ["//visibility:private"],
     deps = [
         "//proto:user_service_go_proto",
