@@ -6,7 +6,7 @@ services:
     container_name: envoy
     volumes:
       - type: bind
-        source: ../server/envoy.yaml
+        source: ../backend/envoy.yaml
         target: /etc/envoy/envoy.yaml
     ports:
       - "8081:8081"
@@ -17,3 +17,19 @@ services:
       - "--port=9090"
     ports:
       - "9090:9090"
+  frontend:
+    image: simmonmt/xmaslist/frontend
+    container_name: frontend
+    command:
+      - "--port=8080"
+      - "--serve_dir=/docroot"
+      - "--index_file=index.html"
+    ports:
+      - "8080:8080"
+    volumes:
+      - type: bind
+        source: ../bazel-bin/client/bundle.js
+        target: /docroot/bundle.js
+      - type: bind
+        source: ../client/index.html
+        target: /docroot/index.html
