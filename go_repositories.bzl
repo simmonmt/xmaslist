@@ -2,6 +2,13 @@ load("@bazel_gazelle//:deps.bzl", "go_repository")
 
 def go_repositories():
     go_repository(
+        name = "com_github_mattn_go_sqlite3",
+        importpath = "github.com/mattn/go-sqlite3",
+        sum = "h1:fxWBnXkxfM6sRiuH3bqJ4CfzZojMOLVc0UTsTglEghA=",
+        version = "v1.14.7",
+    )
+
+    go_repository(
         name = "com_github_roberthodgen_spa_server",
         importpath = "github.com/roberthodgen/spa-server",
         sum = "h1:GDTuxylfsSbc8CHl6kNC9an/tUoe1EklYP5Uc6qoxCA=",
