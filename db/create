@@ -1,0 +1,61 @@
+#!/bin/bash
+
+set -e
+
+function die {
+    echo "${PROGNAME}:" "$@" >&2
+    exit 1
+}
+
+function usage {
+    echo "Usage: ${PROGNAME} [--rm]" >&2
+    exit 2
+}
+
+PROGNAME=$(basename "$0")
+
+options=$(getopt -o '' --longoptions rm,load_test_data -- "$@")
+[[ $? -ne 0 ]] && usage
+eval set -- "$options"
+while : ; do
+    case "$1" in
+        --rm)
+            RMVOL=1
+            ;;
+        --load_test_data)
+            LOADTESTDATA=1
+            ;;
+        --)
+            shift
+            break
+            ;;
+    esac
+    shift
+done
+
+VOL=xmaslist_database
+
+if docker volume inspect ${VOL} >/dev/null 2>&1 ; then
+    [[ "$RMVOL" -ne 1 ]] && die "${VOL} exists"
+    echo "Removing existing volume ${VOL}"
+    docker volume rm ${VOL}
+fi
+
+DB_TMPFILE=/tmp/db.sqlite
+[[ -f "${DB_TMPFILE}" ]] && rm "${DB_TMPFILE}"
+
+CREATE_FLAGS=--db_file=${DB_TMPFILE}
+if [[ "${LOADTESTDATA}" -eq 1 ]] ; then
+    CREATE_FLAGS="${CREATE_FLAGS} --load_test_data"
+fi
+
+bazel run backend/cmd/create_database -- ${CREATE_FLAGS}
+
+docker volume create ${VOL}
+docker container create \
+       --name xmaslist_database_create \
+       -v ${VOL}:/db \
+       alpine
+docker cp /tmp/db.sqlite xmaslist_database_create:/db
+
+docker container rm xmaslist_database_create
