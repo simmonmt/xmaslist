@@ -5,7 +5,7 @@ go_library(
     srcs = ["main.go"],
     importpath = "github.com/simmonmt/xmaslist/frontend",
     visibility = ["//visibility:private"],
-    deps = ["@com_github_roberthodgen_spa_server//:go_default_library"],
+    deps = ["@com_github_roberthodgen_spa_server//:spa-server"],
 )
 
 go_binary(
