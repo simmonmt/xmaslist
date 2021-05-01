@@ -25,6 +25,7 @@ ts_project(
     deps = PROTO_DEPS + [
         "@npm//@material-ui/core",
         "@npm//@material-ui/icons",
+        "@npm//@material-ui/lab",
         "@npm//@types",
         "@npm//csstype",
         "@npm//google-protobuf",
