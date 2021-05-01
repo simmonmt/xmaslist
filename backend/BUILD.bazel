@@ -8,10 +8,16 @@ go_binary(
 
 go_library(
     name = "backend_lib",
-    srcs = ["main.go"],
+    srcs = [
+        "clock.go",
+        "main.go",
+    ],
     importpath = "github.com/simmonmt/xmaslist/backend",
     visibility = ["//visibility:private"],
     deps = [
+        "//backend/database",
+        "//backend/sessions",
+        "//backend/util",
         "//proto:user_service_go_proto",
         "@org_golang_google_grpc//:go_default_library",
         "@org_golang_google_grpc//reflection",

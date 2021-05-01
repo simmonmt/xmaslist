@@ -13,6 +13,10 @@ var (
 	loadTestData = flag.Bool("load_test_data", false, "load test data?")
 )
 
+func genPassword(user *database.User) string {
+	return user.Username + user.Username
+}
+
 func main() {
 	flag.Parse()
 
@@ -35,22 +39,20 @@ func main() {
 	if *loadTestData {
 		users := []*database.User{
 			&database.User{
-				Login:    "a",
-				Name:     "User A",
-				Password: database.HashPw("aa"),
+				Username: "a",
+				Fullname: "User A",
 				Admin:    true,
 			},
 			&database.User{
-				Login:    "b",
-				Name:     "User B",
-				Password: database.HashPw("bb"),
+				Username: "b",
+				Fullname: "User B",
 				Admin:    false,
 			},
 		}
 
 		for _, user := range users {
-			if err = db.AddUser(ctx, user); err != nil {
-				log.Fatalf("failed to add %v: %v", user.Login, err)
+			if _, err = db.AddUser(ctx, user, genPassword(user)); err != nil {
+				log.Fatalf("failed to add %v: %v", user.Username, err)
 			}
 		}
 	}

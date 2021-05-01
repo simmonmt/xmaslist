@@ -8,11 +8,12 @@ message LoginRequest {
 }
 
 message LoginResponse {
-  string session = 1;
+  bool success = 1;
+  string cookie = 2;
 }
 
 message LogoutRequest {
-  string session = 1;
+  string cookie = 1;
 }
 
 message LogoutResponse {}
