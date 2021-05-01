@@ -1,4 +1,5 @@
 import Button from "@material-ui/core/Button";
+import CircularProgress from "@material-ui/core/CircularProgress";
 import { createStyles, styled, withStyles } from "@material-ui/core/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import TextField from "@material-ui/core/TextField";
@@ -14,6 +15,7 @@ interface State {
   error: string;
   username: string;
   password: string;
+  submitting: boolean;
 }
 
 const inputStyles = {
@@ -21,7 +23,6 @@ const inputStyles = {
   width: "35ch",
 };
 
-const StyledButton = styled(Button)(inputStyles);
 const StyledTextField = styled(TextField)(inputStyles);
 
 class Login extends React.Component<Props, State> {
@@ -31,6 +32,7 @@ class Login extends React.Component<Props, State> {
       error: "",
       username: "",
       password: "",
+      submitting: false,
     };
   }
 
@@ -51,9 +53,12 @@ class Login extends React.Component<Props, State> {
     } else if (this.state.password.length === 0) {
       this.setState({ error: "Password is required" });
       return;
-    } else {
-      this.setState({ error: "" });
     }
+
+    this.setState({
+      error: "",
+      submitting: true,
+    });
   };
 
   render() {
@@ -69,6 +74,7 @@ class Login extends React.Component<Props, State> {
           id="username"
           label="Username/email"
           variant="standard"
+          disabled={this.state.submitting}
           autoComplete="username"
           value={this.state.username}
           onChange={this.handleUsernameChange}
@@ -78,19 +84,34 @@ class Login extends React.Component<Props, State> {
           label="Password"
           type="password"
           variant="standard"
+          disabled={this.state.submitting}
           autoComplete="current-password"
           value={this.state.password}
           onChange={this.handlePasswordChange}
         />
-        <StyledButton variant="contained" color="primary" type="submit">
-          Sign in
-        </StyledButton>
+        <div className={this.props.classes.buttonWrapper}>
+          <Button
+            classes={{ root: this.props.classes.button }}
+            variant="contained"
+            color="primary"
+            disabled={this.state.submitting}
+            type="submit"
+          >
+            Sign in
+          </Button>
+          {this.state.submitting && (
+            <CircularProgress
+              size={24}
+              className={this.props.classes.buttonProgress}
+            />
+          )}
+        </div>
       </form>
     );
   }
 }
 
-const styles = (theme: Theme) =>
+const loginStyles = (theme: Theme) =>
   createStyles({
     root: {
       width: "100%",
@@ -98,8 +119,22 @@ const styles = (theme: Theme) =>
       flexDirection: "column",
       alignItems: "center",
     },
+    button: {
+      width: "100%",
+    },
+    buttonWrapper: {
+      ...inputStyles,
+      position: "relative",
+    },
+    buttonProgress: {
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      marginTop: -12,
+      marginLeft: -12,
+    },
   });
 
-const StyledLogin: any = withStyles(styles)(Login);
+const StyledLogin: any = withStyles(loginStyles)(Login);
 
 export { StyledLogin as Login };
