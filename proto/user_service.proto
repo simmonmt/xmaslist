@@ -2,6 +2,12 @@ syntax = "proto3";
 
 package xmaslist;
 
+message UserInfo {
+  string username = 1;
+  string fullname = 2;
+  bool is_admin = 3;
+}
+
 message LoginRequest {
   string username = 1;
   string password = 2;
@@ -10,6 +16,7 @@ message LoginRequest {
 message LoginResponse {
   bool success = 1;
   string cookie = 2;
+  UserInfo user_info = 3;
 }
 
 message LogoutRequest {
