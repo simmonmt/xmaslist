@@ -1,5 +1,5 @@
 load("@npm//@bazel/rollup:index.bzl", "rollup_bundle")
-load("@npm//@bazel/typescript:index.bzl", "ts_project")
+load("@npm//@bazel/typescript:index.bzl", "ts_config", "ts_library", "ts_project")
 load("@npm//http-server-spa:index.bzl", "http_server_spa")
 load("@npm//sass:index.bzl", "sass")
 
@@ -17,12 +17,26 @@ PROTO_DEPS = [
     "//proto:user_service",
 ]
 
+ts_library(
+    name = "other",
+    srcs = ["user_storage.ts"],
+    tsconfig = ":tsconfig_main",
+    deps = PROTO_DEPS,
+)
+
 ts_project(
-    srcs = glob([
-        "*.ts",
-        "*.tsx",
-    ]),
+    srcs = glob(
+        include = [
+            "*.ts",
+            "*.tsx",
+        ],
+        exclude = [
+            "user_storage.ts",
+            "*_test.ts",
+        ],
+    ),
     deps = PROTO_DEPS + [
+        ":other",
         "@npm//@material-ui/core",
         "@npm//@material-ui/icons",
         "@npm//@material-ui/lab",
@@ -35,6 +49,29 @@ ts_project(
         "@npm//react-dom",
         "@npm//react-router-dom",
         "@npm//grpc-web",
+    ],
+)
+
+ts_config(
+    name = "tsconfig_main",
+    src = "tsconfig.json",
+)
+
+ts_config(
+    name = "tsconfig_test",
+    src = "tsconfig-test.json",
+    deps = [":tsconfig_main"],
+)
+
+ts_library(
+    name = "test_lib",
+    testonly = True,
+    srcs = glob(include = ["*_test.ts"]),
+    tsconfig = ":tsconfig_test",
+    deps = [
+        ":other",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
     ],
 )
 

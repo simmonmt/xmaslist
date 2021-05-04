@@ -3,6 +3,9 @@
       "jsx" : "react",
       "lib" : [
          "es2015.promise",
+	 "es2015.collection",
+	 "es2015.core",
+	 "es2015",
          "dom",
          "es5"
       ],
@@ -15,8 +18,8 @@
       ],
       "strict" : true
    },
-   "include" : [
-      "*.tsx",
-      "*.ts"
-   ]
+   //"include" : [
+   //   "*.tsx",
+   //   "*.ts"
+   //]
 }
