@@ -1,6 +1,6 @@
 import { UserInfo } from "../proto/user_service_pb";
 
-const STORAGE_NAME = "user_info";
+export const STORAGE_NAME = "user_info";
 
 export class UserStorage {
   private userInfo: UserInfo | null;
@@ -19,6 +19,7 @@ export class UserStorage {
       return null;
     }
 
+    console.log("UserStorage read UserInfo from local storage");
     const ser = new Uint8Array(
       atob(local)
         .split("")

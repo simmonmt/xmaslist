@@ -19,7 +19,7 @@ PROTO_DEPS = [
 ]
 
 ts_library(
-    name = "other",
+    name = "testable",
     srcs = ["user_storage.ts"],
     tsconfig = ":tsconfig_main",
     deps = PROTO_DEPS,
@@ -37,7 +37,7 @@ ts_project(
         ],
     ),
     deps = PROTO_DEPS + [
-        ":other",
+        ":testable",
         "@npm//@material-ui/core",
         "@npm//@material-ui/icons",
         "@npm//@material-ui/lab",
@@ -70,7 +70,8 @@ ts_library(
     srcs = ["user_storage_test.ts"],
     tsconfig = ":tsconfig_test",
     deps = [
-        ":other",
+        ":testable",
+        "//proto:user_service",
         "@npm//@types/jasmine",
         "@npm//@types/node",
     ],
