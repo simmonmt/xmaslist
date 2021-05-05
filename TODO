@@ -1,4 +1,3 @@
-client: Turn app into a class
 client: Instantiate UserModel in app
 client: Login page logs in
 client: Add a banner with login info and a logout button
