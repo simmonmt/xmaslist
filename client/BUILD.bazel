@@ -1,3 +1,4 @@
+load("@npm//@bazel/concatjs:index.bzl", "karma_web_test_suite")
 load("@npm//@bazel/rollup:index.bzl", "rollup_bundle")
 load("@npm//@bazel/typescript:index.bzl", "ts_config", "ts_library", "ts_project")
 load("@npm//http-server-spa:index.bzl", "http_server_spa")
@@ -66,12 +67,29 @@ ts_config(
 ts_library(
     name = "test_lib",
     testonly = True,
-    srcs = glob(include = ["*_test.ts"]),
+    srcs = ["user_storage_test.ts"],
     tsconfig = ":tsconfig_test",
     deps = [
         ":other",
         "@npm//@types/jasmine",
         "@npm//@types/node",
+    ],
+)
+
+karma_web_test_suite(
+    name = "tests",
+    srcs = [
+        "@npm//@bazel/labs/grpc_web:bootstrap_scripts",
+    ],
+    browsers = [
+        "@io_bazel_rules_webtesting//browsers:chromium-local",
+    ],
+    config_file = ":karma.conf.js",
+    tags = ["native"],
+    deps = [
+        ":test_lib",
+        "@npm//karma-jasmine-html-reporter",
+        "@npm//karma-mocha-reporter",
     ],
 )
 

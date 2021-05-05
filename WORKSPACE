@@ -58,6 +58,24 @@ load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
 protobuf_deps()
 
+# NOTE: Update the browsers load() below too
+http_archive(
+    name = "io_bazel_rules_webtesting",
+    sha256 = "9bb461d5ef08e850025480bab185fd269242d4e533bca75bfb748001ceb343c3",
+    urls = [
+        "https://github.com/bazelbuild/rules_webtesting/releases/download/0.3.3/rules_webtesting.tar.gz",
+    ],
+)
+
+load("@io_bazel_rules_webtesting//web:repositories.bzl", "web_test_repositories")
+
+web_test_repositories()
+
+# Webtesting 0.3.3 uses browsers 0.3.2
+load("@io_bazel_rules_webtesting//web/versioned:browsers-0.3.2.bzl", "browser_repositories")
+
+browser_repositories(chromium=True, firefox=False)
+
 http_archive(
     name = "io_bazel_rules_go",
     sha256 = "69de5c704a05ff37862f7e0f5534d4f479418afc21806c887db544a316f3cb6b",
