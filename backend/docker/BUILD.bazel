@@ -1,9 +1,11 @@
 load("@io_bazel_rules_docker//go:image.bzl", "go_image")
 load("@io_bazel_rules_docker//container:container.bzl", "container_bundle", "container_image")
 
-go_image(
+container_image(
     name = "backend_image",
-    binary = "//backend",
+    base = "@ubuntu_linux_amd64//image",
+    entrypoint = ["/backend"],
+    files = ["//backend"],
 )
 
 # Run this target to create the Docker image with the right name and
