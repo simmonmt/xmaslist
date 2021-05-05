@@ -34,26 +34,37 @@ type userServer struct {
 	db             *database.DB
 }
 
+func userInfoFromDatabaseUser(dbUser *database.User) *uspb.UserInfo {
+	return &uspb.UserInfo{
+		Username: dbUser.Username,
+		Fullname: dbUser.Fullname,
+		IsAdmin:  dbUser.Admin,
+	}
+}
+
 func (s *userServer) Login(ctx context.Context, req *uspb.LoginRequest) (*uspb.LoginResponse, error) {
 	if req.GetUsername() == "" || req.GetPassword() == "" {
 		return nil, fmt.Errorf("missing username or password")
 	}
 
-	userID, err := s.db.AuthenticateUser(ctx, req.GetUsername(), req.GetPassword())
+	userID, err := s.db.AuthenticateUser(
+		ctx, req.GetUsername(), req.GetPassword())
 	if err != nil {
 		return nil, err
 	}
 
 	user, err := s.db.LookupUser(ctx, userID)
 
-	cookie, err := s.sessionManager.CreateSession(ctx, user)
+	cookie, expiry, err := s.sessionManager.CreateSession(ctx, user)
 	if err != nil {
 		return nil, err
 	}
 
 	return &uspb.LoginResponse{
-		Success: true,
-		Cookie:  cookie,
+		Success:  true,
+		Cookie:   cookie,
+		Expiry:   expiry.Unix(),
+		UserInfo: userInfoFromDatabaseUser(user),
 	}, nil
 }
 

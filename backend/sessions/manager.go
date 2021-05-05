@@ -57,15 +57,15 @@ func NewManager(db *database.DB, clock util.Clock, sessionLength time.Duration, 
 	}
 }
 
-func (sm *Manager) CreateSession(ctx context.Context, user *database.User) (cookie string, err error) {
-	expiry := sm.clock.Now().Add(sm.sessionLength)
+func (sm *Manager) CreateSession(ctx context.Context, user *database.User) (cookie string, expiry time.Time, err error) {
+	expiry = sm.clock.Now().Add(sm.sessionLength)
 	session, err := sm.db.CreateSession(ctx, user.ID, sm.clock.Now(), expiry)
 	if err != nil {
-		return "", err
+		return "", time.Time{}, err
 	}
 
 	cookie = sm.validator.MakeCookie(session.ID)
-	return cookie, nil
+	return cookie, expiry, nil
 }
 
 func (sm *Manager) SessionIsActive(ctx context.Context, cookie string) (bool, error) {
