@@ -7,6 +7,7 @@ import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import Toolbar from "@material-ui/core/Toolbar";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import * as React from "react";
+import { Link } from "react-router-dom";
 import { UserModel } from "./user_model";
 
 interface Props {
@@ -51,7 +52,11 @@ class Banner extends React.Component<Props, State> {
         open={isProfileMenuOpen}
         onClose={() => this.handleProfileMenuClose()}
       >
-        <MenuItem onClick={() => this.handleProfileMenuLogout()}>
+        <MenuItem
+          component={Link}
+          to={"/logout"}
+          onClick={() => this.handleProfileMenuLogout()}
+        >
           Logout
         </MenuItem>
       </Menu>

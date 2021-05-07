@@ -33,44 +33,43 @@ class App extends React.Component<Props, State> {
 
   render() {
     return (
-      <div>
-        <Banner userModel={this.userModel} />
-        <Router>
-          <div>
-            <nav>
-              <ul>
-                <li>
-                  <Link to="/">Home</Link>
-                </li>
-                <li>
-                  <Link to="/view">View</Link>
-                </li>
-                <li>
-                  <Link to="/login">Login</Link>
-                </li>
-                <li>
-                  <Link to="/logout">Logout</Link>
-                </li>
-              </ul>
-            </nav>
+      <Router>
+        <div>
+          <Banner userModel={this.userModel} />
 
-            <Switch>
-              <Route path="/view">
-                <WishList />
-              </Route>
-              <Route path="/login">
-                <Login userModel={this.userModel} />
-              </Route>
-              <Route path="/logout">
-                <Logout userModel={this.userModel} />
-              </Route>
-              <Route path="/">
-                <Home />
-              </Route>
-            </Switch>
-          </div>
-        </Router>
-      </div>
+          <nav>
+            <ul>
+              <li>
+                <Link to="/">Home</Link>
+              </li>
+              <li>
+                <Link to="/view">View</Link>
+              </li>
+              <li>
+                <Link to="/login">Login</Link>
+              </li>
+              <li>
+                <Link to="/logout">Logout</Link>
+              </li>
+            </ul>
+          </nav>
+
+          <Switch>
+            <Route path="/view">
+              <WishList />
+            </Route>
+            <Route path="/login">
+              <Login userModel={this.userModel} />
+            </Route>
+            <Route path="/logout">
+              <Logout userModel={this.userModel} />
+            </Route>
+            <Route path="/">
+              <Home />
+            </Route>
+          </Switch>
+        </div>
+      </Router>
     );
   }
 }
