@@ -10,10 +10,13 @@ import { UserStorage } from "./user_storage";
 
 const COOKIE_NAME = "session";
 
+export type Listener = (loggedIn: boolean) => void;
+
 export class UserModel {
   private readonly userService: UserServicePromiseClient;
   private readonly userStorage: UserStorage;
   private readonly cookies: Cookies;
+  private listeners: Listener[];
 
   constructor(
     userService: UserServicePromiseClient,
@@ -23,6 +26,7 @@ export class UserModel {
     this.userService = userService;
     this.userStorage = userStorage;
     this.cookies = cookies;
+    this.listeners = [];
 
     const cookie = this.cookies.get(COOKIE_NAME);
     const userInfo = this.userStorage.read();
@@ -70,6 +74,7 @@ export class UserModel {
             sameSite: true,
           });
           this.userStorage.write(userInfo);
+          this.callListeners(true);
           return true;
         }
         return Promise.reject(new Error("invalid username or password"));
@@ -93,7 +98,18 @@ export class UserModel {
       .then((unused: LogoutResponse) => {
         this.cookies.remove(COOKIE_NAME);
         this.userStorage.clear();
+        this.callListeners(false);
         return true;
       });
+  }
+
+  registerListener(listener: Listener) {
+    this.listeners.push(listener);
+  }
+
+  private callListeners(isLoggedIn: boolean) {
+    for (const listener of this.listeners) {
+      listener(isLoggedIn);
+    }
   }
 }
