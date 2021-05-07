@@ -83,7 +83,7 @@ export class UserModel {
 
   logout(): Promise<boolean> {
     if (!this.isLoggedIn()) {
-      return Promise.reject(new Error("not logged in"));
+      return Promise.resolve(true);
     }
 
     let req = new LogoutRequest();
