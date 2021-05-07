@@ -1,4 +1,4 @@
-client: Instantiate UserModel in app
-client: Login page logs in
+client: does /login work correctly with expired cookies?
+client: add /logout page that redirects to /login
 client: Add a banner with login info and a logout button
 client: Authenticated routes

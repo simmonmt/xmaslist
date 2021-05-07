@@ -50,7 +50,7 @@ ts_project(
         "@npm//google-protobuf",
         "@npm//lorem-ipsum",
         "@npm//react",
-        "@npm//react-cookie",
+        "@npm//universal-cookie",
         "@npm//react-dom",
         "@npm//react-router-dom",
         "@npm//grpc-web",

@@ -6,9 +6,13 @@ import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
 import Alert from "@material-ui/lab/Alert";
 import * as React from "react";
+import { Redirect, useLocation } from "react-router-dom";
+import { UserModel } from "./user_model";
 
 interface Props {
+  userModel: UserModel;
   classes: any;
+  redirect: string;
 }
 
 interface State {
@@ -59,9 +63,26 @@ class Login extends React.Component<Props, State> {
       error: "",
       submitting: true,
     });
+
+    this.props.userModel.login(this.state.username, this.state.password).then(
+      () => {
+        this.setState({
+          submitting: false,
+        });
+
+        console.log("Successful login");
+      },
+      (err: Error) => {
+        this.setState({ error: err.message });
+      }
+    );
   };
 
   render() {
+    if (this.props.userModel.isLoggedIn()) {
+      return <Redirect to={this.props.redirect} />;
+    }
+
     return (
       <form className={this.props.classes.root} onSubmit={this.handleSubmit}>
         <Typography variant="h2">Please sign in</Typography>
@@ -137,4 +158,23 @@ const loginStyles = (theme: Theme) =>
 
 const StyledLogin: any = withStyles(loginStyles)(Login);
 
-export { StyledLogin as Login };
+interface WrappedLoginProps {
+  userModel: UserModel;
+}
+
+// withRedirect() causes type errors (somehow Material UI gets around them using
+// createStyles, but react-router does not. The alternative is useLocation(),
+// which is a Hook, and apparently hooks aren't usable in class components. So
+// we make a function component solely to call useLocation then pass that as a
+// prop to the class component. I'm sure there's a better way to do this.
+function LoginWithRedirect(props: WrappedLoginProps) {
+  const params = new URLSearchParams(useLocation().search);
+  let redirect = params.get("redirect");
+  if (!redirect) {
+    redirect = "/";
+  }
+
+  return <StyledLogin userModel={props.userModel} redirect={redirect} />;
+}
+
+export { LoginWithRedirect as Login };

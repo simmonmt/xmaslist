@@ -1,4 +1,4 @@
-import { Cookies } from "react-cookie";
+import Cookies from "universal-cookie";
 import { UserServicePromiseClient } from "../proto/user_service_grpc_web_pb";
 import {
   LoginRequest,
@@ -91,6 +91,7 @@ export class UserModel {
     return this.userService
       .logout(req, undefined)
       .then((unused: LogoutResponse) => {
+        this.cookies.remove(COOKIE_NAME);
         this.userStorage.clear();
         return true;
       });
