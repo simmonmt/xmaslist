@@ -20,6 +20,7 @@ interface State {
   username: string;
   password: string;
   submitting: boolean;
+  isLoggedIn: boolean;
 }
 
 const inputStyles = {
@@ -37,7 +38,12 @@ class Login extends React.Component<Props, State> {
       username: "",
       password: "",
       submitting: false,
+      isLoggedIn: false,
     };
+  }
+
+  componentDidMount() {
+    this.setState({ isLoggedIn: this.props.userModel.isLoggedIn() });
   }
 
   handleUsernameChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -66,8 +72,10 @@ class Login extends React.Component<Props, State> {
 
     this.props.userModel.login(this.state.username, this.state.password).then(
       () => {
-        // We don't need to clean up state.submitting because this instance
-        // will never be mounted again.
+        this.setState({
+          submitting: false,
+          isLoggedIn: true,
+        });
       },
       (err: Error) => {
         this.setState({ error: err.message });

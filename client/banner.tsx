@@ -8,13 +8,15 @@ import Toolbar from "@material-ui/core/Toolbar";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import * as React from "react";
 import { Link } from "react-router-dom";
+import { UserModel } from "./user_model";
 
 interface Props {
-  isLoggedIn: boolean;
+  userModel: UserModel;
   classes: any;
 }
 
 interface State {
+  isLoggedIn: boolean;
   profileMenuAnchorElement: HTMLElement | null;
 }
 
@@ -23,12 +25,18 @@ class Banner extends React.Component<Props, State> {
     super(props);
     console.log("banner constructor");
     this.state = {
+      isLoggedIn: false,
       profileMenuAnchorElement: null,
     };
   }
 
   componentDidMount() {
-    console.log("banner mounted");
+    console.log("banner did mount", this);
+
+    this.setState({ isLoggedIn: this.props.userModel.isLoggedIn() });
+    this.props.userModel.registerListener((isLoggedIn) => {
+      this.setState({ isLoggedIn: isLoggedIn });
+    });
   }
 
   componentWillUnmount() {
@@ -62,7 +70,7 @@ class Banner extends React.Component<Props, State> {
     );
 
     let userButtons = <span />;
-    if (this.props.isLoggedIn) {
+    if (this.state.isLoggedIn) {
       userButtons = (
         <IconButton
           edge="end"
