@@ -74,7 +74,10 @@ web_test_repositories()
 # Webtesting 0.3.3 uses browsers 0.3.2
 load("@io_bazel_rules_webtesting//web/versioned:browsers-0.3.2.bzl", "browser_repositories")
 
-browser_repositories(chromium=True, firefox=False)
+browser_repositories(
+    chromium = True,
+    firefox = False,
+)
 
 http_archive(
     name = "io_bazel_rules_go",
