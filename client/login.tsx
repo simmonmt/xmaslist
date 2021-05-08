@@ -71,7 +71,7 @@ class Login extends React.Component<Props, State> {
         this.props.onLogin(user);
       },
       (err: Error) => {
-        this.setState({ error: err.message });
+        this.setState({ error: err.message, submitting: false });
       }
     );
   };
