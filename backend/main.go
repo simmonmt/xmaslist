@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -13,11 +12,10 @@ import (
 
 	"github.com/simmonmt/xmaslist/backend/database"
 	"github.com/simmonmt/xmaslist/backend/sessions"
+	"github.com/simmonmt/xmaslist/backend/userservice"
 	"github.com/simmonmt/xmaslist/backend/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-
-	uspb "github.com/simmonmt/xmaslist/proto/user_service"
 )
 
 var (
@@ -28,58 +26,6 @@ var (
 	sessionSecretPath = flag.String(
 		"session_secret", "", "path to session secret file")
 )
-
-type userServer struct {
-	clock          Clock
-	sessionManager *sessions.Manager
-	db             *database.DB
-}
-
-func userInfoFromDatabaseUser(dbUser *database.User) *uspb.UserInfo {
-	return &uspb.UserInfo{
-		Username: dbUser.Username,
-		Fullname: dbUser.Fullname,
-		IsAdmin:  dbUser.Admin,
-	}
-}
-
-func (s *userServer) Login(ctx context.Context, req *uspb.LoginRequest) (*uspb.LoginResponse, error) {
-	if req.GetUsername() == "" || req.GetPassword() == "" {
-		return nil, fmt.Errorf("missing username or password")
-	}
-
-	userID, err := s.db.AuthenticateUser(
-		ctx, req.GetUsername(), req.GetPassword())
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := s.db.LookupUser(ctx, userID)
-
-	cookie, expiry, err := s.sessionManager.CreateSession(ctx, user)
-	if err != nil {
-		return nil, err
-	}
-
-	return &uspb.LoginResponse{
-		Success:  true,
-		Cookie:   cookie,
-		Expiry:   expiry.Unix(),
-		UserInfo: userInfoFromDatabaseUser(user),
-	}, nil
-}
-
-func (s *userServer) Logout(ctx context.Context, req *uspb.LogoutRequest) (*uspb.LogoutResponse, error) {
-	if req.GetCookie() == "" {
-		return nil, fmt.Errorf("missing cookie in request")
-	}
-
-	if err := s.sessionManager.DeactivateSession(ctx, req.GetCookie()); err != nil {
-		log.Printf("logout failure: %v", err)
-	}
-
-	return &uspb.LogoutResponse{}, nil
-}
 
 func readSessionSecret(path string) (string, error) {
 	a, err := ioutil.ReadFile(path)
@@ -138,15 +84,9 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	handlers := &userServer{
-		clock:          clock,
-		sessionManager: sessionManager,
-		db:             db,
-	}
-
 	opts := []grpc.ServerOption{}
 	server := grpc.NewServer(opts...)
-	uspb.RegisterUserServiceServer(server, handlers)
+	userservice.RegisterHandlers(server, clock, sessionManager, db)
 	reflection.Register(server)
 
 	log.Printf("serving on port %v...\n", *port)
