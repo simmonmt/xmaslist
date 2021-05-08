@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/simmonmt/xmaslist/backend/database"
+	"github.com/simmonmt/xmaslist/backend/listservice"
 	"github.com/simmonmt/xmaslist/backend/sessions"
 	"github.com/simmonmt/xmaslist/backend/userservice"
 	"github.com/simmonmt/xmaslist/backend/util"
@@ -87,6 +88,7 @@ func main() {
 	opts := []grpc.ServerOption{}
 	server := grpc.NewServer(opts...)
 	userservice.RegisterHandlers(server, clock, sessionManager, db)
+	listservice.RegisterHandlers(server, clock, sessionManager, db)
 	reflection.Register(server)
 
 	log.Printf("serving on port %v...\n", *port)

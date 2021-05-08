@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "listservice",
+    srcs = ["list_service.go"],
+    importpath = "github.com/simmonmt/xmaslist/backend/listservice",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//backend/database",
+        "//backend/sessions",
+        "//backend/util",
+        "//proto:list_service_go_proto",
+        "@org_golang_google_grpc//:go_default_library",
+    ],
+)
