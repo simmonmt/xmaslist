@@ -5,19 +5,30 @@ import {
   LoginResponse,
   LogoutRequest,
   LogoutResponse,
+  UserInfo,
 } from "../proto/user_service_pb";
 import { UserStorage } from "./user_storage";
 
 const COOKIE_NAME = "session";
 
-export type Listener = (loggedIn: boolean) => void;
+export class User {
+  readonly username: string;
+  readonly fullname: string;
+  readonly isAdmin: boolean;
+
+  constructor(userInfo: UserInfo) {
+    const mkStr = (s: string | null): string => (s ? s : "UNKNOWN");
+
+    this.username = mkStr(userInfo.getUsername());
+    this.fullname = mkStr(userInfo.getFullname());
+    this.isAdmin = Boolean(userInfo.getIsAdmin());
+  }
+}
 
 export class UserModel {
   private readonly userService: UserServicePromiseClient;
   private readonly userStorage: UserStorage;
   private readonly cookies: Cookies;
-  private listeners = new Map<number, Listener>();
-  private lastListenerId = 1000;
 
   constructor(
     userService: UserServicePromiseClient,
@@ -37,23 +48,12 @@ export class UserModel {
     }
   }
 
-  username(): string {
+  getUser(): User | null {
     const userInfo = this.userStorage.read();
-    return userInfo ? userInfo.getUsername() : "";
-  }
-  fullname(): string {
-    const userInfo = this.userStorage.read();
-    return userInfo ? userInfo.getFullname() : "";
-  }
-  isAdmin(): boolean {
-    const userInfo = this.userStorage.read();
-    return userInfo ? userInfo.getIsAdmin() : false;
-  }
-  isLoggedIn(): boolean {
-    return this.userStorage.read() !== null;
+    return userInfo ? new User(userInfo) : null;
   }
 
-  login(username: string, password: string): Promise<boolean> {
+  login(username: string, password: string): Promise<User> {
     let req = new LoginRequest();
     req.setUsername(username);
     req.setPassword(password);
@@ -74,8 +74,7 @@ export class UserModel {
             sameSite: true,
           });
           this.userStorage.write(userInfo);
-          this.callListeners(true);
-          return true;
+          return new User(userInfo);
         }
         return Promise.reject(new Error("invalid username or password"));
       },
@@ -87,7 +86,7 @@ export class UserModel {
   }
 
   logout(): Promise<boolean> {
-    if (!this.isLoggedIn()) {
+    if (this.userStorage.read() === null) {
       return Promise.resolve(true);
     }
 
@@ -98,26 +97,7 @@ export class UserModel {
       .then((unused: LogoutResponse) => {
         this.cookies.remove(COOKIE_NAME);
         this.userStorage.clear();
-        this.callListeners(false);
         return true;
       });
-  }
-
-  registerListener(listener: Listener): number {
-    const id = ++this.lastListenerId;
-    this.listeners.set(id, listener);
-    return id;
-  }
-
-  unregisterListener(id: number) {
-    if (!this.listeners.delete(id)) {
-      throw new Error("attempt to unregister nonexistient listener");
-    }
-  }
-
-  private callListeners(isLoggedIn: boolean) {
-    this.listeners.forEach((listener) => {
-      listener(isLoggedIn);
-    });
   }
 }

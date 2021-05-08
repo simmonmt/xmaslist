@@ -7,10 +7,9 @@ import Typography from "@material-ui/core/Typography";
 import Alert from "@material-ui/lab/Alert";
 import * as React from "react";
 import { Redirect, useLocation } from "react-router-dom";
-import { UserModel } from "./user_model";
+import { User, UserModel } from "./user_model";
 
-interface Props extends React.HTMLAttributes<HTMLElement> {
-  userModel: UserModel;
+interface Props extends WrappedLoginProps {
   classes: any;
   redirect: string;
 }
@@ -20,7 +19,6 @@ interface State {
   username: string;
   password: string;
   submitting: boolean;
-  isLoggedIn: boolean;
 }
 
 const inputStyles = {
@@ -38,12 +36,7 @@ class Login extends React.Component<Props, State> {
       username: "",
       password: "",
       submitting: false,
-      isLoggedIn: false,
     };
-  }
-
-  componentDidMount() {
-    this.setState({ isLoggedIn: this.props.userModel.isLoggedIn() });
   }
 
   handleUsernameChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -71,11 +64,11 @@ class Login extends React.Component<Props, State> {
     });
 
     this.props.userModel.login(this.state.username, this.state.password).then(
-      () => {
+      (user: User) => {
         this.setState({
           submitting: false,
-          isLoggedIn: true,
         });
+        this.props.onLogin(user);
       },
       (err: Error) => {
         this.setState({ error: err.message });
@@ -84,7 +77,7 @@ class Login extends React.Component<Props, State> {
   };
 
   render() {
-    if (this.props.userModel.isLoggedIn()) {
+    if (this.props.user !== null) {
       return <Redirect to={this.props.redirect} />;
     }
 
@@ -163,8 +156,10 @@ const loginStyles = (theme: Theme) =>
 
 const StyledLogin: any = withStyles(loginStyles)(Login);
 
-interface WrappedLoginProps {
+interface WrappedLoginProps extends React.HTMLAttributes<HTMLElement> {
   userModel: UserModel;
+  user: User | null;
+  onLogin: (user: User) => void;
 }
 
 // withRedirect() causes type errors (somehow Material UI gets around them using
@@ -179,7 +174,7 @@ function LoginWithRedirect(props: WrappedLoginProps) {
     redirect = "/";
   }
 
-  return <StyledLogin userModel={props.userModel} redirect={redirect} />;
+  return <StyledLogin {...props} redirect={redirect} />;
 }
 
 export { LoginWithRedirect as Login };

@@ -7,6 +7,7 @@ import { UserModel } from "./user_model";
 
 interface Props {
   userModel: UserModel;
+  onLogout: () => void;
   classes: any;
 }
 
@@ -36,6 +37,7 @@ class Logout extends React.Component<Props, State> {
 
   componentDidMount() {
     this.props.userModel.logout().then(() => {
+      this.props.onLogout();
       this.setState({ loggedOut: true });
     });
   }

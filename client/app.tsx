@@ -1,17 +1,20 @@
 import * as React from "react";
-import { BrowserRouter as Router, Link, Route, Switch } from "react-router-dom";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import Cookies from "universal-cookie";
 import { UserServicePromiseClient } from "../proto/user_service_grpc_web_pb";
 import { Banner } from "./banner";
 import { Login } from "./login";
 import { Logout } from "./logout";
-import { UserModel } from "./user_model";
+import { ProtectedRoute, ProtectedRouteProps } from "./protected_route";
+import { User, UserModel } from "./user_model";
 import { UserStorage } from "./user_storage";
 import { WishList } from "./wishlist";
 
 interface Props {}
 
-interface State {}
+interface State {
+  user: User | null;
+}
 
 class App extends React.Component<Props, State> {
   private readonly userModel: UserModel;
@@ -29,48 +32,54 @@ class App extends React.Component<Props, State> {
     this.cookies = new Cookies();
 
     this.userModel = new UserModel(userService, userStorage, this.cookies);
+    this.state = {
+      user: this.userModel.getUser(),
+    };
   }
 
   render() {
+    const defaultProtectedRouteProps: ProtectedRouteProps = {
+      isLoggedIn: this.state.user !== null,
+      authPath: "/login",
+    };
+
     return (
       <Router>
         <div>
-          <Banner userModel={this.userModel} />
-
-          <nav>
-            <ul>
-              <li>
-                <Link to="/">Home</Link>
-              </li>
-              <li>
-                <Link to="/view">View</Link>
-              </li>
-              <li>
-                <Link to="/login">Login</Link>
-              </li>
-              <li>
-                <Link to="/logout">Logout</Link>
-              </li>
-            </ul>
-          </nav>
+          <Banner user={this.state.user} />
 
           <Switch>
-            <Route path="/view">
-              <WishList />
-            </Route>
             <Route path="/login">
-              <Login userModel={this.userModel} />
+              <Login
+                user={this.state.user}
+                userModel={this.userModel}
+                onLogin={(user: User) => this.handleLogin(user)}
+              />
             </Route>
             <Route path="/logout">
-              <Logout userModel={this.userModel} />
+              <Logout
+                userModel={this.userModel}
+                onLogout={() => this.handleLogout()}
+              />
             </Route>
-            <Route path="/">
+            <ProtectedRoute {...defaultProtectedRouteProps} path="/view">
+              <WishList />
+            </ProtectedRoute>
+            <ProtectedRoute {...defaultProtectedRouteProps} path="/">
               <Home />
-            </Route>
+            </ProtectedRoute>
           </Switch>
         </div>
       </Router>
     );
+  }
+
+  private handleLogin(user: User) {
+    this.setState({ user: user });
+  }
+
+  private handleLogout() {
+    this.setState({ user: null });
   }
 }
 
