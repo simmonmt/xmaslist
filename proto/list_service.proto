@@ -1,74 +1,89 @@
-syntax = "proto2";
+syntax = "proto3";
 
 import "proto/list.proto";
 import "proto/list_item.proto";
 
-package proto;
+package xmaslist;
 
-message GetListsRequest {}
+option go_package = "github.com/simmonmt/xmaslist/proto/list_service";
+
+message GetListsRequest {
+  bool all_lists = 1;
+}
 
 message GetListsResponse {
   repeated List lists = 1;
 }
 
 message NewListRequest {
-  optional ListData data = 1;
+  ListData data = 1;
 }
 
 message NewListResponse {
-  optional List list = 1;
+  List list = 1;
 }
 
 message DeleteListRequest {
-  optional string list_id = 1;
+  string list_id = 1;
 }
 
 message DeleteListResponse {}
 
 message UpdateListRequest {
-  optional string list_id = 1;
-  optional int32 list_version = 2;
+  string list_id = 1;
+  int32 list_version = 2;
 
-  optional ListData data = 3;
+  ListData data = 3;
 }
 
 message UpdateListResponse {
-  optional List list = 1;
+  List list = 1;
 }
 
 message GetListItemsRequest {
-  optional string list_id = 1;
+  string list_id = 1;
 }
 
 message GetListItemsResponse {
   repeated ListItem items = 1;
 }
 
-message NewListItemRequest {
-  optional string list_id = 1;
-  optional ListItemData data = 2;
+message AddListItemRequest {
+  string list_id = 1;
+  ListItemData data = 2;
 }
 
-message NewListItemResponse {
-  optional ListItem item = 1;
+message AddListItemResponse {
+  ListItem item = 1;
 }
 
 message DeleteListItemRequest {
-  optional string list_id = 1;
-  optional string item_id = 2;
+  string list_id = 1;
+  string item_id = 2;
 }
 
 message DeleteListItemResponse {}
 
 message UpdateListItemRequest {
-  optional string list_id = 1;
-  optional string item_id = 2;
-  optional int32 list_version = 3;
+  string list_id = 1;
+  string item_id = 2;
+  int32 list_version = 3;
 
-  optional ListItemData data = 4;
-  optional ListItemState state = 5;
+  ListItemData data = 4;
+  ListItemState state = 5;
 }
 
 message UpdateListItemResponse {
-  optional ListItem item = 1;
+  ListItem item = 1;
+}
+
+service ListService {
+  rpc GetLists(GetListsRequest) returns (GetListsResponse);
+  rpc NewList(NewListRequest) returns (NewListResponse);
+  rpc DeleteList(DeleteListRequest) returns (DeleteListResponse);
+  rpc UpdateList(UpdateListRequest) returns (UpdateListResponse);
+  rpc GetListItems(GetListItemsRequest) returns (GetListItemsResponse);
+  rpc AddListItem(AddListItemRequest) returns (AddListItemResponse);
+  rpc DeleteListItem(DeleteListItemRequest) returns (DeleteListItemResponse);
+  rpc UpdateListItem(UpdateListItemRequest) returns (UpdateListItemResponse);
 }

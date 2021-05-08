@@ -1,25 +1,25 @@
-syntax = "proto2";
+syntax = "proto3";
 
-//import "proto/list_item.proto";
+package xmaslist;
 
-package proto;
+option go_package = "github.com/simmonmt/xmaslist/proto/list_service";
 
 message ListData {
-  optional string name = 1;
-  optional string beneficiary = 2;
-  optional int64 event_date = 3;
+  string name = 1;
+  string beneficiary = 2;
+  int64 event_date = 3;
 }
 
 message ListMetadata {
-  optional int64 created = 1;
-  optional int64 updated = 2;
-  optional int64 owner = 3;
+  int64 created = 1;
+  int64 updated = 2;
+  int64 owner = 3;
 }
 
 message List {
-  optional string id = 1;
-  optional int32 version = 2;
+  string id = 1;
+  int32 version = 2;
 
-  optional ListData data = 3;
-  optional ListMetadata metadata = 4;
+  ListData data = 3;
+  ListMetadata metadata = 4;
 }

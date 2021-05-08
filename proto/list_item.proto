@@ -1,34 +1,36 @@
-syntax = "proto2";
+syntax = "proto3";
 
-package proto;
+package xmaslist;
+
+option go_package = "github.com/simmonmt/xmaslist/proto/list_service";
 
 message ListItemLink {
-  optional string name = 1;
-  optional string url = 2;
+  string name = 1;
+  string url = 2;
 }
 
 message ListItemData {
-  optional string name = 1;
-  optional string desc = 2;
+  string name = 1;
+  string desc = 2;
   repeated ListItemLink links = 3;
 }
 
 message ListItemMetadata {
-  optional int64 created = 1;
-  optional int64 updated = 2;
-  optional int32 claimed_by = 3;
-  optional int32 claimed_when = 4;
+  int64 created = 1;
+  int64 updated = 2;
+  int32 claimed_by = 3;
+  int32 claimed_when = 4;
 }
 
 message ListItemState {
-  optional bool claimed = 1;
+  bool claimed = 1;
 }
 
 message ListItem {
-  optional string id = 1;
-  optional int32 version = 2;
+  string id = 1;
+  int32 version = 2;
 
-  optional ListItemData data = 3;
-  optional ListItemState state = 4;
-  optional ListItemMetadata metadata = 5;
+  ListItemData data = 3;
+  ListItemState state = 4;
+  ListItemMetadata metadata = 5;
 }
