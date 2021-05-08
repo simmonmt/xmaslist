@@ -272,10 +272,10 @@
   resolved "https://registry.npmjs.org/@types/estree/-/estree-0.0.39.tgz"
   integrity sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==
 
-"@types/google-protobuf@^3.15.1":
-  version "3.15.1"
-  resolved "https://registry.npmjs.org/@types/google-protobuf/-/google-protobuf-3.15.1.tgz"
-  integrity sha512-GpEv+jQXPTK7U7oznibH/L6BZMANKNISVZaSM6d5O2nnuKw8N3YIoyxaKrbIR4H4HF8ksxoFzU0kpdksJK7jfw==
+"@types/google-protobuf@^3.15.2":
+  version "3.15.2"
+  resolved "https://registry.yarnpkg.com/@types/google-protobuf/-/google-protobuf-3.15.2.tgz#70753e948cabeb416d71299dc35c3f562a10fb0f"
+  integrity sha512-ubeqvw7sl6CdgeiIilsXB2jIFoD/D0F+/LIEp7xEBEXRNtDJcf05FRINybsJtL7GlkWOUVn6gJs2W9OF+xI6lg==
 
 "@types/history@*":
   version "4.7.8"
@@ -823,10 +823,10 @@ glob@^7.1.3, glob@^7.1.6:
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
-google-protobuf@^3.15.8:
-  version "3.15.8"
-  resolved "https://registry.npmjs.org/google-protobuf/-/google-protobuf-3.15.8.tgz"
-  integrity sha512-2jtfdqTaSxk0cuBJBtTTWsot4WtR9RVr2rXg7x7OoqiuOKopPrwXpM1G4dXIkLcUNRh3RKzz76C8IOkksZSeOw==
+google-protobuf@^3.17.0-rc.1:
+  version "3.17.0-rc.1"
+  resolved "https://registry.yarnpkg.com/google-protobuf/-/google-protobuf-3.17.0-rc.1.tgz#da68b3816fec5646750fbd221c02aae32f295b06"
+  integrity sha512-ghxMq3VSaW8/Re/r7je3WmLv7DvXvQCzToBmhZgEFQMDc1ZjvM08yAK4AGUctzbdFWmW6fizftEXOKScumPqLQ==
 
 graceful-fs@^4.1.2, graceful-fs@^4.1.6, graceful-fs@^4.2.0, graceful-fs@^4.2.4:
   version "4.2.6"
