@@ -21,9 +21,10 @@ interface State {
 }
 
 class Banner extends React.Component<Props, State> {
+  private userListenerId = 0;
+
   constructor(props: Props) {
     super(props);
-    console.log("banner constructor");
     this.state = {
       isLoggedIn: false,
       profileMenuAnchorElement: null,
@@ -31,16 +32,16 @@ class Banner extends React.Component<Props, State> {
   }
 
   componentDidMount() {
-    console.log("banner did mount", this);
-
     this.setState({ isLoggedIn: this.props.userModel.isLoggedIn() });
-    this.props.userModel.registerListener((isLoggedIn) => {
-      this.setState({ isLoggedIn: isLoggedIn });
-    });
+    this.userListenerId = this.props.userModel.registerListener(
+      (isLoggedIn) => {
+        this.setState({ isLoggedIn: isLoggedIn });
+      }
+    );
   }
 
   componentWillUnmount() {
-    console.log("banner will unmount");
+    this.props.userModel.unregisterListener(this.userListenerId);
   }
 
   render() {

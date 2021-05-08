@@ -16,7 +16,8 @@ export class UserModel {
   private readonly userService: UserServicePromiseClient;
   private readonly userStorage: UserStorage;
   private readonly cookies: Cookies;
-  private listeners: Listener[];
+  private listeners = new Map<number, Listener>();
+  private lastListenerId = 1000;
 
   constructor(
     userService: UserServicePromiseClient,
@@ -26,7 +27,6 @@ export class UserModel {
     this.userService = userService;
     this.userStorage = userStorage;
     this.cookies = cookies;
-    this.listeners = [];
 
     const cookie = this.cookies.get(COOKIE_NAME);
     const userInfo = this.userStorage.read();
@@ -103,13 +103,21 @@ export class UserModel {
       });
   }
 
-  registerListener(listener: Listener) {
-    this.listeners.push(listener);
+  registerListener(listener: Listener): number {
+    const id = ++this.lastListenerId;
+    this.listeners.set(id, listener);
+    return id;
+  }
+
+  unregisterListener(id: number) {
+    if (!this.listeners.delete(id)) {
+      throw new Error("attempt to unregister nonexistient listener");
+    }
   }
 
   private callListeners(isLoggedIn: boolean) {
-    for (const listener of this.listeners) {
+    this.listeners.forEach((listener) => {
       listener(isLoggedIn);
-    }
+    });
   }
 }
