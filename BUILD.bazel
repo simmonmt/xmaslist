@@ -4,7 +4,6 @@ load("@bazel_gazelle//:def.bzl", "gazelle")
 GAZELLE_EXCLUDES = [
     "--exclude=client",
     "--exclude=node_modules",
-    "--exclude=proto",  # TODO: remove
 ]
 
 # gazelle:prefix github.com/simmonmt/xmaslist
