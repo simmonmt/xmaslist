@@ -11,7 +11,9 @@ import { WishList } from "./wishlist";
 
 interface Props {}
 
-interface State {}
+interface State {
+  isLoggedIn: boolean;
+}
 
 class App extends React.Component<Props, State> {
   private readonly userModel: UserModel;
@@ -19,6 +21,9 @@ class App extends React.Component<Props, State> {
 
   constructor(props: Props) {
     super(props);
+    this.state = {
+      isLoggedIn: false,
+    };
 
     const userService = new UserServicePromiseClient(
       "http://nash.simmonmt.org:8081",
@@ -29,14 +34,20 @@ class App extends React.Component<Props, State> {
     this.cookies = new Cookies();
 
     this.userModel = new UserModel(userService, userStorage, this.cookies);
-    this.userModel.registerListener(() => this.forceUpdate());
+  }
+
+  componentDidMount() {
+    this.setState({ isLoggedIn: this.userModel.isLoggedIn() });
+    this.userModel.registerListener((isLoggedIn) => {
+      this.setState({ isLoggedIn: isLoggedIn });
+    });
   }
 
   render() {
     return (
       <Router>
         <div>
-          <Banner isLoggedIn={this.userModel.isLoggedIn()} />
+          <Banner isLoggedIn={this.state.isLoggedIn} />
 
           <nav>
             <ul>
