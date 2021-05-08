@@ -8,32 +8,31 @@ import Toolbar from "@material-ui/core/Toolbar";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { UserModel } from "./user_model";
 
 interface Props {
-  userModel: UserModel;
+  isLoggedIn: boolean;
   classes: any;
 }
 
 interface State {
-  isLoggedIn: boolean;
-  fullname: string;
-
   profileMenuAnchorElement: HTMLElement | null;
 }
 
 class Banner extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
+    console.log("banner constructor");
     this.state = {
-      isLoggedIn: this.props.userModel.isLoggedIn(),
-      fullname: this.props.userModel.fullname(),
       profileMenuAnchorElement: null,
     };
+  }
 
-    this.props.userModel.registerListener(
-      this.handleLoginStateChange.bind(this)
-    );
+  componentDidMount() {
+    console.log("banner mounted");
+  }
+
+  componentWillUnmount() {
+    console.log("banner will unmount");
   }
 
   render() {
@@ -63,7 +62,7 @@ class Banner extends React.Component<Props, State> {
     );
 
     let userButtons = <span />;
-    if (this.state.isLoggedIn) {
+    if (this.props.isLoggedIn) {
       userButtons = (
         <IconButton
           edge="end"
@@ -88,18 +87,6 @@ class Banner extends React.Component<Props, State> {
         {renderProfileMenu}
       </div>
     );
-  }
-
-  private handleLoginStateChange() {
-    if (!this.props.userModel.isLoggedIn()) {
-      this.setState({ isLoggedIn: false });
-      return;
-    }
-
-    this.setState({
-      isLoggedIn: true,
-      fullname: this.props.userModel.fullname(),
-    });
   }
 
   private handleProfileMenuOpen(event: React.MouseEvent<HTMLElement>) {

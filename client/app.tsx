@@ -29,13 +29,14 @@ class App extends React.Component<Props, State> {
     this.cookies = new Cookies();
 
     this.userModel = new UserModel(userService, userStorage, this.cookies);
+    this.userModel.registerListener(() => this.forceUpdate());
   }
 
   render() {
     return (
       <Router>
         <div>
-          <Banner userModel={this.userModel} />
+          <Banner isLoggedIn={this.userModel.isLoggedIn()} />
 
           <nav>
             <ul>

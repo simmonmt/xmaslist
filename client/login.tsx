@@ -9,7 +9,7 @@ import * as React from "react";
 import { Redirect, useLocation } from "react-router-dom";
 import { UserModel } from "./user_model";
 
-interface Props {
+interface Props extends React.HTMLAttributes<HTMLElement> {
   userModel: UserModel;
   classes: any;
   redirect: string;
@@ -66,11 +66,8 @@ class Login extends React.Component<Props, State> {
 
     this.props.userModel.login(this.state.username, this.state.password).then(
       () => {
-        this.setState({
-          submitting: false,
-        });
-
-        console.log("Successful login");
+        // We don't need to clean up state.submitting because this instance
+        // will never be mounted again.
       },
       (err: Error) => {
         this.setState({ error: err.message });
