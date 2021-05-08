@@ -1,4 +1,10 @@
-client: does /login work correctly with expired cookies?
-client: add /logout page that redirects to /login
-client: Add a banner with login info and a logout button
-client: Authenticated routes
+client: Notice when the session expires and redirect to /login
+        We can't just do this from within the protected route handler
+        because it's not called frequently enough. The user could play
+        around with a single page past expiry without causing a route
+        to change.
+
+        What about having an onExpiry callback from the user model
+        that nulls out the user in the app? While we're doing
+        time-based things, maybe a callback from the user model saying
+        we're getting close to expiry so we can extend it?
