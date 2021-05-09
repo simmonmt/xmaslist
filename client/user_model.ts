@@ -1,12 +1,12 @@
 import Cookies from "universal-cookie";
-import { UserServicePromiseClient } from "../proto/user_service_grpc_web_pb";
+import { LoginServicePromiseClient } from "../proto/login_service_grpc_web_pb";
 import {
   LoginRequest,
   LoginResponse,
   LogoutRequest,
   LogoutResponse,
   UserInfo,
-} from "../proto/user_service_pb";
+} from "../proto/login_service_pb";
 import { UserStorage } from "./user_storage";
 
 const COOKIE_NAME = "session";
@@ -26,12 +26,12 @@ export class User {
 }
 
 export class UserModel {
-  private readonly userService: UserServicePromiseClient;
+  private readonly userService: LoginServicePromiseClient;
   private readonly userStorage: UserStorage;
   private readonly cookies: Cookies;
 
   constructor(
-    userService: UserServicePromiseClient,
+    userService: LoginServicePromiseClient,
     userStorage: UserStorage,
     cookies: Cookies
   ) {

@@ -1,4 +1,4 @@
-import { UserInfo } from "../proto/user_service_pb";
+import { UserInfo } from "../proto/login_service_pb";
 import { UserStorage } from "./user_storage";
 
 describe("user storage", () => {

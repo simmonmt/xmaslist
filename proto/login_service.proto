@@ -26,7 +26,7 @@ message LogoutRequest {
 
 message LogoutResponse {}
 
-service UserService {
+service LoginService {
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc Logout(LogoutRequest) returns (LogoutResponse);
 }

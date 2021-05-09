@@ -13,7 +13,7 @@ import (
 	"github.com/simmonmt/xmaslist/backend/database"
 	"github.com/simmonmt/xmaslist/backend/listservice"
 	"github.com/simmonmt/xmaslist/backend/sessions"
-	"github.com/simmonmt/xmaslist/backend/userservice"
+	"github.com/simmonmt/xmaslist/backend/loginservice"
 	"github.com/simmonmt/xmaslist/backend/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -87,7 +87,7 @@ func main() {
 
 	opts := []grpc.ServerOption{}
 	server := grpc.NewServer(opts...)
-	userservice.RegisterHandlers(server, clock, sessionManager, db)
+	loginservice.RegisterHandlers(server, clock, sessionManager, db)
 	listservice.RegisterHandlers(server, clock, sessionManager, db)
 	reflection.Register(server)
 

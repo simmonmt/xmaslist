@@ -1,7 +1,7 @@
 import * as React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import Cookies from "universal-cookie";
-import { UserServicePromiseClient } from "../proto/user_service_grpc_web_pb";
+import { LoginServicePromiseClient } from "../proto/login_service_grpc_web_pb";
 import { Banner } from "./banner";
 import { Login } from "./login";
 import { Logout } from "./logout";
@@ -23,7 +23,7 @@ class App extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
 
-    const userService = new UserServicePromiseClient(
+    const userService = new LoginServicePromiseClient(
       "http://nash.simmonmt.org:8081",
       null,
       null

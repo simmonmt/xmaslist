@@ -1,15 +1,15 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "userservice",
-    srcs = ["user_service.go"],
-    importpath = "github.com/simmonmt/xmaslist/backend/userservice",
+    name = "loginservice",
+    srcs = ["login_service.go"],
+    importpath = "github.com/simmonmt/xmaslist/backend/loginservice",
     visibility = ["//visibility:public"],
     deps = [
         "//backend/database",
         "//backend/sessions",
         "//backend/util",
-        "//proto:user_service_go_proto",
+        "//proto:login_service_go_proto",
         "@org_golang_google_grpc//:go_default_library",
     ],
 )

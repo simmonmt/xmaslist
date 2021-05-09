@@ -15,7 +15,7 @@ sass(
 )
 
 PROTO_DEPS = [
-    "//proto:user_service",
+    "//proto:login_service",
 ]
 
 # # It's not clear to me how to use karma_web_test_suite on a ts_project. All of
@@ -75,7 +75,7 @@ ts_config(
 #     tsconfig = ":tsconfig_test",
 #     deps = [
 #         ":testable",
-#         "//proto:user_service",
+#         "//proto:login_service",
 #         "@npm//@types/jasmine",
 #         "@npm//@types/node",
 #     ],

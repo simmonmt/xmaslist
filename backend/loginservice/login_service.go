@@ -1,4 +1,4 @@
-package userservice
+package loginservice
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/simmonmt/xmaslist/backend/util"
 	"google.golang.org/grpc"
 
-	uspb "github.com/simmonmt/xmaslist/proto/user_service"
+	lspb "github.com/simmonmt/xmaslist/proto/login_service"
 )
 
 type userServer struct {
@@ -19,15 +19,15 @@ type userServer struct {
 	db             *database.DB
 }
 
-func userInfoFromDatabaseUser(dbUser *database.User) *uspb.UserInfo {
-	return &uspb.UserInfo{
+func userInfoFromDatabaseUser(dbUser *database.User) *lspb.UserInfo {
+	return &lspb.UserInfo{
 		Username: dbUser.Username,
 		Fullname: dbUser.Fullname,
 		IsAdmin:  dbUser.Admin,
 	}
 }
 
-func (s *userServer) Login(ctx context.Context, req *uspb.LoginRequest) (*uspb.LoginResponse, error) {
+func (s *userServer) Login(ctx context.Context, req *lspb.LoginRequest) (*lspb.LoginResponse, error) {
 	if req.GetUsername() == "" || req.GetPassword() == "" {
 		return nil, fmt.Errorf("missing username or password")
 	}
@@ -45,7 +45,7 @@ func (s *userServer) Login(ctx context.Context, req *uspb.LoginRequest) (*uspb.L
 		return nil, err
 	}
 
-	return &uspb.LoginResponse{
+	return &lspb.LoginResponse{
 		Success:  true,
 		Cookie:   cookie,
 		Expiry:   expiry.Unix(),
@@ -53,7 +53,7 @@ func (s *userServer) Login(ctx context.Context, req *uspb.LoginRequest) (*uspb.L
 	}, nil
 }
 
-func (s *userServer) Logout(ctx context.Context, req *uspb.LogoutRequest) (*uspb.LogoutResponse, error) {
+func (s *userServer) Logout(ctx context.Context, req *lspb.LogoutRequest) (*lspb.LogoutResponse, error) {
 	if req.GetCookie() == "" {
 		return nil, fmt.Errorf("missing cookie in request")
 	}
@@ -62,7 +62,7 @@ func (s *userServer) Logout(ctx context.Context, req *uspb.LogoutRequest) (*uspb
 		log.Printf("logout failure: %v", err)
 	}
 
-	return &uspb.LogoutResponse{}, nil
+	return &lspb.LogoutResponse{}, nil
 }
 
 func RegisterHandlers(server *grpc.Server, clock util.Clock, sessionManager *sessions.Manager, db *database.DB) {
@@ -72,5 +72,5 @@ func RegisterHandlers(server *grpc.Server, clock util.Clock, sessionManager *ses
 		db:             db,
 	}
 
-	uspb.RegisterUserServiceServer(server, handlers)
+	lspb.RegisterLoginServiceServer(server, handlers)
 }
