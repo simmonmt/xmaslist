@@ -10,6 +10,10 @@ services:
         target: /etc/envoy/envoy.yaml
     ports:
       - "8081:8081"
+    command:
+      - "envoy"
+      - "-c"
+      - "/etc/envoy/envoy.yaml"
   backend:
     image: simmonmt/xmaslist/backend
     container_name: backend
