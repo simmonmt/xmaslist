@@ -21,12 +21,16 @@ static_resources:
             - name: local_service
               domains: ["*"]
               routes:
-              - match: { prefix: "/" }
+              - match: { prefix: "/xmaslist" }
                 route:
-                  cluster: server
+                  cluster: backend
                   timeout: 0s
                   max_stream_duration:
                     grpc_timeout_header_max: 0s
+              - match: { prefix: "/" }
+                route:
+                  cluster: frontend
+                  timeout: 0s
               cors:
                 allow_origin_string_match:
                 - prefix: "*"
@@ -39,7 +43,7 @@ static_resources:
           - name: envoy.filters.http.cors
           - name: envoy.filters.http.router
   clusters:
-  - name: server
+  - name: backend
     connect_timeout: 0.25s
     dns_refresh_rate: 60s
     type: logical_dns
@@ -54,3 +58,28 @@ static_resources:
                   socket_address:
                     address: nash.simmonmt.org
                     port_value: 9090
+  - name: frontend
+    health_checks:
+    - http_health_check:
+        path: "/"
+      timeout: 5s
+      interval: 5s
+      unhealthy_threshold: 5
+      healthy_threshold: 1
+    connect_timeout: 0.25s
+    dns_refresh_rate: 60s
+    type: logical_dns
+    lb_policy: round_robin
+    load_assignment:
+      cluster_name: cluster_0
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: nash.simmonmt.org
+                    port_value: 8080
+admin:
+  address:
+    socket_address: { address: 0.0.0.0, port_value: 8082 }
+  access_log_path: "/dev/stdout"

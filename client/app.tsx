@@ -23,11 +23,10 @@ class App extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
 
-    const userService = new LoginServicePromiseClient(
-      "http://nash.simmonmt.org:8081",
-      null,
-      null
-    );
+    const rpcUrl = document.location.origin;
+    console.log("rpcUrl", rpcUrl);
+
+    const userService = new LoginServicePromiseClient(rpcUrl, null, null);
     const userStorage = new UserStorage();
     this.cookies = new Cookies();
 
