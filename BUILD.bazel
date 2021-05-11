@@ -21,6 +21,16 @@ gazelle(
     extra_args = GAZELLE_EXCLUDES,
 )
 
+# Run as:
+#   bazel run :gazelle_updaterepos -- -args github.com/whatever
+gazelle(
+    name = "gazelle_updaterepos",
+    command = "update-repos",
+    extra_args = [
+        "--to_macro=go_repositories.bzl%go_repositories",
+    ],
+)
+
 gazelle(name = "gazelle_cmd")
 
 nogo(
