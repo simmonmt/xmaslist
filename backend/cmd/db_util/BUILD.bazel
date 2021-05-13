@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "db_util_lib",
+    srcs = ["db_util.go"],
+    importpath = "github.com/simmonmt/xmaslist/backend/cmd/db_util",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//backend/database",
+        "@com_github_google_subcommands//:go_default_library",
+    ],
+)
+
+go_binary(
+    name = "db_util",
+    embed = [":db_util_lib"],
+    visibility = ["//visibility:public"],
+)
