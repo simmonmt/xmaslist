@@ -6,6 +6,7 @@ go_library(
         "command.go",
         "db_util.go",
         "user_add.go",
+        "user_list.go",
         "user_lookup.go",
     ],
     importpath = "github.com/simmonmt/xmaslist/cmd/db_util",

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sort"
 	"testing"
 	"time"
 
@@ -49,12 +50,22 @@ func createTestDatabase() (db *DB, err error) {
 		user.ID = userID
 	}
 
+	sort.Sort(UsersByID(users))
+
 	return db, nil
 }
 
 func deleteAllSessions() error {
 	_, err := db.db.ExecContext(ctx, `DELETE FROM SESSIONS`)
 	return err
+}
+
+func userIDs(users []*User) []int {
+	ids := []int{}
+	for _, user := range users {
+		ids = append(ids, user.ID)
+	}
+	return ids
 }
 
 func TestAuthenticateUser(t *testing.T) {
@@ -83,6 +94,41 @@ func TestLookupUser(t *testing.T) {
 			t.Errorf("LookupUser(_, %v) = %+v, %v, want %+v, nil",
 				user.ID, gotUser, err, user)
 		}
+	}
+}
+
+func TestListUsers(t *testing.T) {
+	got, err := db.ListUsers(ctx)
+	if err != nil {
+		t.Errorf("ListUsers() = %v, want nil", err)
+		return
+	}
+
+	sort.Sort(UsersByID(got))
+	if !reflect.DeepEqual(users, got) {
+		t.Errorf("ListUsers() = %+v, want %+v", users, got)
+	}
+}
+
+func TestUsersByID(t *testing.T) {
+	tmp := make([]*User, len(users))
+	copy(tmp, users)
+
+	wantIDs := userIDs(tmp)
+	sort.Ints(wantIDs)
+
+	sort.Sort(UsersByID(tmp))
+	gotIDs := userIDs(tmp)
+	if !reflect.DeepEqual(wantIDs, gotIDs) {
+		t.Errorf("sort; want %v, got %v", wantIDs, gotIDs)
+	}
+
+	sort.Sort(sort.Reverse(sort.IntSlice(wantIDs)))
+
+	sort.Sort(sort.Reverse(UsersByID(tmp)))
+	gotIDs = userIDs(tmp)
+	if !reflect.DeepEqual(wantIDs, gotIDs) {
+		t.Errorf("sort rev; want %v, got %v", wantIDs, gotIDs)
 	}
 }
 

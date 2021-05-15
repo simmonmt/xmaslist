@@ -25,6 +25,7 @@ func (c *userCommand) Execute(ctx context.Context, f *flag.FlagSet, args ...inte
 	cdr := subcommands.NewCommander(f, subcommanderName("user"))
 	cdr.Register(cdr.HelpCommand(), "")
 	cdr.Register(&userAddCommand{}, "")
+	cdr.Register(&userListCommand{}, "")
 	cdr.Register(&userLookupCommand{}, "")
 	return cdr.Execute(ctx)
 }

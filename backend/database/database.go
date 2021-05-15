@@ -37,6 +37,12 @@ type User struct {
 	Admin              bool
 }
 
+type UsersByID []*User
+
+func (a UsersByID) Len() int           { return len(a) }
+func (a UsersByID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a UsersByID) Less(i, j int) bool { return a[i].ID < a[j].ID }
+
 type Session struct {
 	ID              int
 	UserID          int
@@ -101,6 +107,26 @@ func (db *DB) LookupUserByID(ctx context.Context, userID int) (*User, error) {
 		return nil, err
 	}
 	return user, err
+}
+
+func (db *DB) ListUsers(ctx context.Context) ([]*User, error) {
+	query := `SELECT id, username, fullname, admin FROM users`
+
+	users := []*User{}
+	rows, err := db.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		user := &User{}
+		if err := rows.Scan(&user.ID, &user.Username, &user.Fullname, &user.Admin); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
 }
 
 func (db *DB) CreateSession(ctx context.Context, userID int, created, expiry time.Time) (*Session, error) {
