@@ -39,7 +39,7 @@ func (c *userLookupCommand) Execute(ctx context.Context, f *flag.FlagSet, args .
 		return c.failure("failed to open database: %v", err)
 	}
 
-	user, err := db.LookupUser(ctx, userID)
+	user, err := db.LookupUserByID(ctx, userID)
 	if err != nil {
 		return c.failure("failed to lookup user: %v", err)
 	}

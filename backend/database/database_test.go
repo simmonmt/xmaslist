@@ -78,7 +78,7 @@ func TestAuthenticateUser(t *testing.T) {
 
 func TestLookupUser(t *testing.T) {
 	for _, user := range users {
-		gotUser, err := db.LookupUser(ctx, user.ID)
+		gotUser, err := db.LookupUserByID(ctx, user.ID)
 		if err != nil || !reflect.DeepEqual(gotUser, user) {
 			t.Errorf("LookupUser(_, %v) = %+v, %v, want %+v, nil",
 				user.ID, gotUser, err, user)

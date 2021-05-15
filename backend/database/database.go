@@ -88,7 +88,7 @@ func (db *DB) AuthenticateUser(ctx context.Context, username, password string) (
 	return userID, nil
 }
 
-func (db *DB) LookupUser(ctx context.Context, userID int) (*User, error) {
+func (db *DB) LookupUserByID(ctx context.Context, userID int) (*User, error) {
 	query := `SELECT username, fullname, admin FROM users WHERE id = ?`
 
 	user := &User{ID: userID}

@@ -38,7 +38,7 @@ func (s *userServer) Login(ctx context.Context, req *lspb.LoginRequest) (*lspb.L
 		return nil, err
 	}
 
-	user, err := s.db.LookupUser(ctx, userID)
+	user, err := s.db.LookupUserByID(ctx, userID)
 
 	cookie, expiry, err := s.sessionManager.CreateSession(ctx, user)
 	if err != nil {
