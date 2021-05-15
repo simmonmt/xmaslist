@@ -8,7 +8,7 @@ go_library(
         "user_add.go",
         "user_lookup.go",
     ],
-    importpath = "github.com/simmonmt/xmaslist/backend/cmd/db_util",
+    importpath = "github.com/simmonmt/xmaslist/cmd/db_util",
     visibility = ["//visibility:private"],
     deps = [
         "//backend/database",

@@ -30,7 +30,7 @@ function user_add {
         die "bad admin value"
     fi
 
-    bazel-bin/backend/cmd/db_util/db_util_/db_util user add ${adminflag} \
+    bazel-bin/cmd/db_util/db_util_/db_util user add ${adminflag} \
           "${dbfile}" "${username}" "${fullname}" "${password}"
 }
 
@@ -66,9 +66,9 @@ fi
 DB_TMPFILE=/tmp/db.sqlite
 [[ -f "${DB_TMPFILE}" ]] && rm "${DB_TMPFILE}"
 
-sqlite3 ${DB_TMPFILE} <db/schema.txt
+sqlite3 ${DB_TMPFILE} <db/schema/schema.txt
 if [[ "${LOADTESTDATA}" -eq 1 ]] ; then
-    bazel build backend/cmd/db_util
+    bazel build cmd/db_util
 
     user_add ${DB_TMPFILE} a "User A" aa admin
     user_add ${DB_TMPFILE} b "User B" bb
