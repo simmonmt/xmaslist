@@ -2,7 +2,11 @@ load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 
 go_library(
     name = "db_util_lib",
-    srcs = ["db_util.go"],
+    srcs = [
+        "command.go",
+        "db_util.go",
+        "user_lookup.go",
+    ],
     importpath = "github.com/simmonmt/xmaslist/backend/cmd/db_util",
     visibility = ["//visibility:private"],
     deps = [
