@@ -12,6 +12,28 @@ function usage {
     exit 2
 }
 
+function user_add {
+    local dbfile="$1"
+    local username="$2"
+    local fullname="$3"
+    local password="$4"
+
+    [[ -n "${dbfile}" ]] || die "missing dbfile"
+    [[ -n "${username}" ]] || die "missing username"
+    [[ -n "${fullname}" ]] || die "missing fullname"
+    [[ -n "${password}" ]] || die "missing password"
+
+    local adminflag=""
+    if [[ "$5" == "admin" ]]; then
+        adminflag="--admin"
+    elif [[ -n "$5" ]] ; then
+        die "bad admin value"
+    fi
+
+    bazel-bin/backend/cmd/db_util/db_util_/db_util user add ${adminflag} \
+          "${dbfile}" "${username}" "${fullname}" "${password}"
+}
+
 PROGNAME=$(basename "$0")
 
 options=$(getopt -o '' --longoptions rm,load_test_data -- "$@")
@@ -44,12 +66,13 @@ fi
 DB_TMPFILE=/tmp/db.sqlite
 [[ -f "${DB_TMPFILE}" ]] && rm "${DB_TMPFILE}"
 
-CREATE_FLAGS=--db_file=${DB_TMPFILE}
+sqlite3 ${DB_TMPFILE} <db/schema.txt
 if [[ "${LOADTESTDATA}" -eq 1 ]] ; then
-    CREATE_FLAGS="${CREATE_FLAGS} --load_test_data"
-fi
+    bazel build backend/cmd/db_util
 
-bazel run backend/cmd/create_database -- ${CREATE_FLAGS}
+    user_add ${DB_TMPFILE} a "User A" aa admin
+    user_add ${DB_TMPFILE} b "User B" bb
+fi
 
 docker volume create ${VOL}
 docker container create \

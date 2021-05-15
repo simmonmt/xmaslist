@@ -1,0 +1,11 @@
+CREATE TABLE users (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                username TEXT UNIQUE,
+                                fullname TEXT,
+                                password TEXT,
+                                admin BOOL);
+
+CREATE TABLE sessions (id INTEGER NOT NULL PRIMARY KEY
+	                              AUTOINCREMENT,
+	                           user INTEGER REFERENCES users(id),
+	                           created INTEGER,
+                                   expiry INTEGER);
