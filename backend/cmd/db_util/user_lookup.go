@@ -24,15 +24,14 @@ func (c *userLookupCommand) Usage() string {
 func (c *userLookupCommand) SetFlags(f *flag.FlagSet) {}
 
 func (c *userLookupCommand) Execute(ctx context.Context, f *flag.FlagSet, args ...interface{}) subcommands.ExitStatus {
-	strs, err := requiredStringArgs(2, args[1:])
-	if err != nil {
-		return c.usage("%v", err)
+	var dbPath, userArg string
+	if err := c.unpackArgs(f, &dbPath, &userArg); err != nil {
+		return c.usage("Error: %v\n%s", err, c.Usage())
 	}
-	dbPath, userArg := strs[0], strs[1]
 
 	userID, err := strconv.Atoi(userArg)
 	if err != nil {
-		return c.usage("invalid userid: %v", err)
+		return c.usage("Error: invalid userid: %v\n%s", err, c.Usage())
 	}
 
 	db, err := database.Open(dbPath)
