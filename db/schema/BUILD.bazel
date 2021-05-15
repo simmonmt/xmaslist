@@ -1,0 +1,9 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "schema",
+    srcs = ["schema.go"],
+    embedsrcs = ["schema.txt"],
+    importpath = "github.com/simmonmt/xmaslist/db/schema",
+    visibility = ["//visibility:public"],
+)

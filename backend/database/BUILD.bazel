@@ -5,11 +5,18 @@ go_library(
     srcs = ["database.go"],
     importpath = "github.com/simmonmt/xmaslist/backend/database",
     visibility = ["//visibility:public"],
-    deps = ["@com_github_mattn_go_sqlite3//:go-sqlite3"],
+    deps = [
+        "@com_github_mattn_go_sqlite3//:go-sqlite3",
+    ],
 )
 
 go_test(
     name = "database_test",
     srcs = ["database_test.go"],
-    embed = [":database"],
+    embed = [
+        ":database",
+    ],
+    deps = [
+        "//db/schema",
+    ],
 )

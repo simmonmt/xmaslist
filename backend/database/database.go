@@ -43,31 +43,6 @@ type Session struct {
 	Created, Expiry time.Time
 }
 
-func (db *DB) CreateTables(ctx context.Context) error {
-	queries := map[string]string{"users": `
-            CREATE TABLE users (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                                username TEXT UNIQUE,
-                                fullname TEXT,
-                                password TEXT,
-                                admin BOOL);
-            `, "sessions": `
-            CREATE TABLE sessions (id INTEGER NOT NULL PRIMARY KEY
-	                              AUTOINCREMENT,
-	                           user INTEGER REFERENCES users(id),
-	                           created INTEGER,
-                                   expiry INTEGER);
-            `}
-
-	for name, query := range queries {
-		_, err := db.db.ExecContext(ctx, query)
-		if err != nil {
-			return fmt.Errorf("table create %v failed: %v", name, err)
-		}
-	}
-
-	return nil
-}
-
 func (db *DB) AddUser(ctx context.Context, user *User, password string) (int, error) {
 	if user.ID != 0 {
 		panic("ID must be 0")

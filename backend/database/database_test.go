@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/simmonmt/xmaslist/db/schema"
 )
 
 var (
@@ -31,7 +33,7 @@ func createTestDatabase() (db *DB, err error) {
 		return nil, err
 	}
 
-	if err = db.CreateTables(ctx); err != nil {
+	if _, err := db.db.ExecContext(ctx, schema.Get()); err != nil {
 		return nil, err
 	}
 
