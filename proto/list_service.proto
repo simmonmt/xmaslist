@@ -7,11 +7,11 @@ package xmaslist;
 
 option go_package = "github.com/simmonmt/xmaslist/proto/list_service";
 
-message GetListsRequest {
+message ListListsRequest {
   bool all_lists = 1;
 }
 
-message GetListsResponse {
+message ListListsResponse {
   repeated List lists = 1;
 }
 
@@ -40,11 +40,11 @@ message UpdateListResponse {
   List list = 1;
 }
 
-message GetListItemsRequest {
+message ListListItemsRequest {
   string list_id = 1;
 }
 
-message GetListItemsResponse {
+message ListListItemsResponse {
   repeated ListItem items = 1;
 }
 
@@ -78,11 +78,11 @@ message UpdateListItemResponse {
 }
 
 service ListService {
-  rpc GetLists(GetListsRequest) returns (GetListsResponse);
+  rpc ListLists(ListListsRequest) returns (ListListsResponse);
   rpc NewList(NewListRequest) returns (NewListResponse);
   rpc DeleteList(DeleteListRequest) returns (DeleteListResponse);
   rpc UpdateList(UpdateListRequest) returns (UpdateListResponse);
-  rpc GetListItems(GetListItemsRequest) returns (GetListItemsResponse);
+  rpc ListListItems(ListListItemsRequest) returns (ListListItemsResponse);
   rpc AddListItem(AddListItemRequest) returns (AddListItemResponse);
   rpc DeleteListItem(DeleteListItemRequest) returns (DeleteListItemResponse);
   rpc UpdateListItem(UpdateListItemRequest) returns (UpdateListItemResponse);

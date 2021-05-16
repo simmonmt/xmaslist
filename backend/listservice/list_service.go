@@ -31,7 +31,7 @@ func getSession(ctx context.Context) (*sessions.Session, error) {
 	return val.(*sessions.Session), nil
 }
 
-func (s *listServer) GetLists(ctx context.Context, req *lspb.GetListsRequest) (*lspb.GetListsResponse, error) {
+func (s *listServer) ListLists(ctx context.Context, req *lspb.ListListsRequest) (*lspb.ListListsResponse, error) {
 	session, err := getSession(ctx)
 	if session == nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (s *listServer) UpdateList(ctx context.Context, req *lspb.UpdateListRequest
 	return nil, status.Errorf(codes.Unimplemented, "not implemented")
 }
 
-func (s *listServer) GetListItems(ctx context.Context, req *lspb.GetListItemsRequest) (*lspb.GetListItemsResponse, error) {
+func (s *listServer) ListListItems(ctx context.Context, req *lspb.ListListItemsRequest) (*lspb.ListListItemsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "not implemented")
 }
 
