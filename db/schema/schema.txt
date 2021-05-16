@@ -4,8 +4,36 @@ CREATE TABLE users (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                                 password TEXT,
                                 admin BOOL);
 
+CREATE UNIQUE INDEX users_by_username ON users (username);
+
 CREATE TABLE sessions (id INTEGER NOT NULL PRIMARY KEY
 	                              AUTOINCREMENT,
 	                           user INTEGER REFERENCES users(id),
 	                           created INTEGER,
                                    expiry INTEGER);
+
+CREATE TABLE lists (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    version INTEGER,
+                    owner INTEGER REFERENCES users(id),
+                    name TEXT,
+                    beneficiary TEXT,
+                    event_date INTEGER,
+                    created INTEGER,
+                    updated INTEGER);
+
+CREATE TABLE items (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    list INTEGER REFERENCES lists(id),
+                    version INTEGER,
+                    name TEXT,
+                    desc TEXT,
+                    created INTEGER,
+                    updated INTEGER,
+                    claimed_by INTEGER REFERENCES users(id),
+                    claimed_when INTEGER);
+
+CREATE TABLE itemlinks (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                        item INTEGER REFERENCES items(id),
+                        name TEXT,
+                        url TEXT);
+
+CREATE INDEX itemlinks_by_item ON itemlinks (item);
