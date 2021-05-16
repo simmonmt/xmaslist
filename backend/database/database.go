@@ -29,6 +29,20 @@ type Session struct {
 	Created, Expiry time.Time
 }
 
+type asSeconds struct {
+	*time.Time
+}
+
+func (p asSeconds) Scan(src interface{}) error {
+	secs, ok := src.(int64)
+	if !ok {
+		return fmt.Errorf("src isn't int64")
+	}
+
+	*p.Time = time.Unix(secs, 0)
+	return nil
+}
+
 func hashPassword(pw string) string {
 	sum := sha256.Sum256([]byte(pw))
 	return fmt.Sprintf("%x", sum)
@@ -182,9 +196,12 @@ func (db *DB) CreateSession(ctx context.Context, userID int, created, expiry tim
 func (db *DB) LookupSession(ctx context.Context, sessionID int) (*Session, error) {
 	query := `SELECT user, created, expiry FROM sessions WHERE id = ?`
 
-	var user, created, expiry int64
+	session := &Session{
+		ID: sessionID,
+	}
 	err := db.db.QueryRowContext(ctx, query, sessionID).Scan(
-		&user, &created, &expiry)
+		&session.UserID, asSeconds{&session.Created},
+		asSeconds{&session.Expiry})
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
 		return nil, nil
@@ -192,12 +209,7 @@ func (db *DB) LookupSession(ctx context.Context, sessionID int) (*Session, error
 		return nil, err
 	}
 
-	return &Session{
-		ID:      sessionID,
-		UserID:  int(user),
-		Created: time.Unix(created, 0),
-		Expiry:  time.Unix(expiry, 0),
-	}, nil
+	return session, nil
 }
 
 func (db *DB) DeleteSession(ctx context.Context, sessionID int) error {
