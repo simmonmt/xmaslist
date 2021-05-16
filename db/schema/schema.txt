@@ -19,7 +19,8 @@ CREATE TABLE lists (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                     beneficiary TEXT,
                     event_date INTEGER,
                     created INTEGER,
-                    updated INTEGER);
+                    updated INTEGER,
+                    active BOOL);
 
 CREATE TABLE items (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                     list INTEGER REFERENCES lists(id),
