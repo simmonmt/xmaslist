@@ -1,21 +1,24 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/simmonmt/xmaslist/backend/database"
 	"github.com/simmonmt/xmaslist/backend/listservice"
-	"github.com/simmonmt/xmaslist/backend/sessions"
 	"github.com/simmonmt/xmaslist/backend/loginservice"
+	"github.com/simmonmt/xmaslist/backend/sessions"
 	"github.com/simmonmt/xmaslist/backend/util"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -26,7 +29,14 @@ var (
 		"user_session_length", 24*time.Hour, "length of user sessions")
 	sessionSecretPath = flag.String(
 		"session_secret", "", "path to session secret file")
+
+	grpcLog grpclog.LoggerV2
 )
+
+func init() {
+	grpcLog = grpclog.NewLoggerV2(os.Stdout, os.Stderr, os.Stderr)
+	grpclog.SetLoggerV2(grpcLog)
+}
 
 func readSessionSecret(path string) (string, error) {
 	a, err := ioutil.ReadFile(path)
@@ -40,6 +50,16 @@ func readSessionSecret(path string) (string, error) {
 	}
 
 	return secret, nil
+}
+
+func loggingInterceptor(interceptor grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
+		start := time.Now()
+		res, err = interceptor(ctx, req, info, handler)
+		grpcLog.Infof("Request - Method:%s Duration:%s Error:%v\n",
+			info.FullMethod, time.Since(start), err)
+		return
+	}
 }
 
 func main() {
@@ -85,7 +105,13 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	opts := []grpc.ServerOption{}
+	authInterceptor := AuthInterceptor{
+		sessionManager: sessionManager,
+	}
+
+	opts := []grpc.ServerOption{
+		grpc.UnaryInterceptor(loggingInterceptor(authInterceptor.intercept)),
+	}
 	server := grpc.NewServer(opts...)
 	loginservice.RegisterHandlers(server, clock, sessionManager, db)
 	listservice.RegisterHandlers(server, clock, sessionManager, db)

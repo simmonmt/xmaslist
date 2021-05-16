@@ -9,6 +9,7 @@ go_binary(
 go_library(
     name = "backend_lib",
     srcs = [
+        "auth.go",
         "clock.go",
         "main.go",
     ],
@@ -21,6 +22,10 @@ go_library(
         "//backend/sessions",
         "//backend/util",
         "@org_golang_google_grpc//:go_default_library",
+        "@org_golang_google_grpc//codes",
+        "@org_golang_google_grpc//grpclog",
+        "@org_golang_google_grpc//metadata",
         "@org_golang_google_grpc//reflection",
+        "@org_golang_google_grpc//status",
     ],
 )
