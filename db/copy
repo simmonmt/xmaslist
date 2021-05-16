@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -e
+
+function die {
+    echo "${PROGNAME}:" "$@" >&2
+    exit 1
+}
+
+function usage {
+    echo "Usage: ${PROGNAME} outfile" >&2
+    exit 2
+}
+
+PROGNAME=$(basename "$0")
+
+[[ $# -ne 1 ]] && usage
+OUTFILE="${1}"
+
+VOL=xmaslist_database
+
+CONTAINER=xmaslist_database_copy
+docker container create \
+       --name "${CONTAINER}" \
+       -v ${VOL}:/db \
+       alpine
+docker cp "${CONTAINER}":/db/db.sqlite "${OUTFILE}"
+
+docker container rm "${CONTAINER}"
