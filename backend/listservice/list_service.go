@@ -40,7 +40,7 @@ func (s *listServer) ListLists(ctx context.Context, req *lspb.ListListsRequest) 
 	return nil, status.Errorf(codes.Unimplemented, "not implemented")
 }
 
-func (s *listServer) NewList(ctx context.Context, req *lspb.NewListRequest) (*lspb.NewListResponse, error) {
+func (s *listServer) CreateList(ctx context.Context, req *lspb.CreateListRequest) (*lspb.CreateListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "not implemented")
 }
 
@@ -56,7 +56,7 @@ func (s *listServer) ListListItems(ctx context.Context, req *lspb.ListListItemsR
 	return nil, status.Errorf(codes.Unimplemented, "not implemented")
 }
 
-func (s *listServer) AddListItem(ctx context.Context, req *lspb.AddListItemRequest) (*lspb.AddListItemResponse, error) {
+func (s *listServer) CreateListItem(ctx context.Context, req *lspb.CreateListItemRequest) (*lspb.CreateListItemResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "not implemented")
 }
 
