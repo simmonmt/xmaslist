@@ -11,6 +11,24 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type User struct {
+	ID                 int
+	Username, Fullname string
+	Admin              bool
+}
+
+type UsersByID []*User
+
+func (a UsersByID) Len() int           { return len(a) }
+func (a UsersByID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a UsersByID) Less(i, j int) bool { return a[i].ID < a[j].ID }
+
+type Session struct {
+	ID              int
+	UserID          int
+	Created, Expiry time.Time
+}
+
 func hashPassword(pw string) string {
 	sum := sha256.Sum256([]byte(pw))
 	return fmt.Sprintf("%x", sum)
@@ -31,22 +49,10 @@ func Open(path string) (*DB, error) {
 	}, nil
 }
 
-type User struct {
-	ID                 int
-	Username, Fullname string
-	Admin              bool
-}
-
-type UsersByID []*User
-
-func (a UsersByID) Len() int           { return len(a) }
-func (a UsersByID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a UsersByID) Less(i, j int) bool { return a[i].ID < a[j].ID }
-
-type Session struct {
-	ID              int
-	UserID          int
-	Created, Expiry time.Time
+func (db *DB) Close() error {
+	err := db.db.Close()
+	db.db = nil
+	return err
 }
 
 func (db *DB) AddUser(ctx context.Context, user *User, password string) (int, error) {
@@ -202,10 +208,4 @@ func (db *DB) DeleteSession(ctx context.Context, sessionID int) error {
 	}
 
 	return nil
-}
-
-func (db *DB) Close() error {
-	err := db.db.Close()
-	db.db = nil
-	return err
 }
