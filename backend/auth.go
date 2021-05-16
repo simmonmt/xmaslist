@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
+	"github.com/simmonmt/xmaslist/backend/request"
 	"github.com/simmonmt/xmaslist/backend/sessions"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -19,35 +19,42 @@ type AuthInterceptor struct {
 func (ai *AuthInterceptor) intercept(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// Skip auth for LoginService because LoginService does its own auth.
 	if !strings.HasPrefix(info.FullMethod, "/xmaslist.LoginService/") {
-		if err := ai.isAuthorized(ctx); err != nil {
+		session, err := ai.authorize(ctx)
+		if err != nil {
 			return nil, err
 		}
+
+		ctx = context.WithValue(ctx, request.SessionKey, session)
 	}
 
 	return handler(ctx, req)
 }
 
-func (ai *AuthInterceptor) isAuthorized(ctx context.Context) error {
+func (ai *AuthInterceptor) authorize(ctx context.Context) (*sessions.Session, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return status.Errorf(codes.InvalidArgument, "no metadata found")
+		return nil, status.Errorf(codes.InvalidArgument, "no metadata found")
 	}
 
 	authHeader, ok := md["authorization"]
 	if !ok || len(authHeader) == 0 {
-		return status.Errorf(codes.Unauthenticated, "no auth token found")
+		return nil, status.Errorf(codes.Unauthenticated, "no cookie found")
 	}
 
-	token := authHeader[0]
-	fmt.Printf("got token %v\n", token)
-	authorized, err := ai.sessionManager.SessionIsActive(ctx, token)
+	cookie := authHeader[0]
+	valid, sessionID := ai.sessionManager.SessionIDFromCookie(cookie)
+	if !valid {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid cookie")
+	}
+
+	session, err := ai.sessionManager.LookupActiveSession(ctx, sessionID)
 	if err != nil {
-		return status.Errorf(codes.Internal, "%v", err)
+		return nil, status.Errorf(codes.Internal, "%v", err)
+	}
+	if session == nil {
+		return nil, status.Errorf(codes.Unauthenticated,
+			"no active session")
 	}
 
-	if !authorized {
-		return status.Errorf(codes.Unauthenticated, "no active session")
-	}
-
-	return nil
+	return session, nil
 }

@@ -19,6 +19,7 @@ go_library(
         "//backend/database",
         "//backend/listservice",
         "//backend/loginservice",
+        "//backend/request",
         "//backend/sessions",
         "//backend/util",
         "@org_golang_google_grpc//:go_default_library",

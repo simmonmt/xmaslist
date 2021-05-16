@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -39,6 +38,12 @@ func (v *cookieValidator) Validate(cookie string) (valid bool, sessionID int) {
 	return true, sessionID
 }
 
+type Session struct {
+	ID              int
+	User            *database.User
+	Created, Expiry time.Time
+}
+
 type Manager struct {
 	db            *database.DB
 	sessionLength time.Duration
@@ -57,6 +62,10 @@ func NewManager(db *database.DB, clock util.Clock, sessionLength time.Duration, 
 	}
 }
 
+func (sm *Manager) SessionIDFromCookie(cookie string) (bool, int) {
+	return sm.validator.Validate(cookie)
+}
+
 func (sm *Manager) CreateSession(ctx context.Context, user *database.User) (cookie string, expiry time.Time, err error) {
 	expiry = sm.clock.Now().Add(sm.sessionLength)
 	session, err := sm.db.CreateSession(ctx, user.ID, sm.clock.Now(), expiry)
@@ -68,23 +77,28 @@ func (sm *Manager) CreateSession(ctx context.Context, user *database.User) (cook
 	return cookie, expiry, nil
 }
 
-func (sm *Manager) SessionIsActive(ctx context.Context, cookie string) (bool, error) {
-	validSession, sessionID := sm.validator.Validate(cookie)
-	if !validSession {
-		return false, nil
-	}
-
+func (sm *Manager) LookupActiveSession(ctx context.Context, sessionID int) (*Session, error) {
 	session, err := sm.db.LookupSession(ctx, sessionID)
 	if err != nil {
-		log.Printf("validateUser session lookup failure: %v", err)
-		return false, err
+		return nil, fmt.Errorf("session lookup failure: %v", err)
 	}
 
-	if session == nil {
-		return false, nil
+	if session == nil || !sm.clock.Now().Before(session.Expiry) {
+		return nil, nil
 	}
 
-	return sm.clock.Now().Before(session.Expiry), nil
+	user, err := sm.db.LookupUserByID(ctx, session.UserID)
+	if err != nil || user == nil {
+		return nil, fmt.Errorf("failed to find user for session: %v",
+			err)
+	}
+
+	return &Session{
+		ID:      sessionID,
+		User:    user,
+		Created: session.Created,
+		Expiry:  session.Expiry,
+	}, nil
 }
 
 func (sm *Manager) DeactivateSession(ctx context.Context, cookie string) error {

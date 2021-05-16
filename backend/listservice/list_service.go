@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/simmonmt/xmaslist/backend/database"
+	"github.com/simmonmt/xmaslist/backend/request"
 	"github.com/simmonmt/xmaslist/backend/sessions"
 	"github.com/simmonmt/xmaslist/backend/util"
 	"google.golang.org/grpc"
@@ -21,7 +22,21 @@ type listServer struct {
 	db             *database.DB
 }
 
+func getSession(ctx context.Context) (*sessions.Session, error) {
+	val := ctx.Value(request.SessionKey)
+	if val == nil {
+		return nil, status.Errorf(codes.Internal, "missing session")
+	}
+
+	return val.(*sessions.Session), nil
+}
+
 func (s *listServer) GetLists(ctx context.Context, req *lspb.GetListsRequest) (*lspb.GetListsResponse, error) {
+	session, err := getSession(ctx)
+	if session == nil {
+		return nil, err
+	}
+
 	return nil, status.Errorf(codes.Unimplemented, "not implemented")
 }
 
