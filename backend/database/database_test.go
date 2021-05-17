@@ -10,6 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/simmonmt/xmaslist/db/schema"
 )
 
@@ -20,6 +23,7 @@ var (
 		&User{Username: "a", Fullname: "User A", Admin: false},
 		&User{Username: "b", Fullname: "User B", Admin: false},
 	}
+	usersByUsername = map[string]int{}
 
 	passwords = map[string]string{
 		"a": "aa",
@@ -49,6 +53,7 @@ func createTestDatabase() (db *DB, err error) {
 		}
 
 		user.ID = userID
+		usersByUsername[user.Username] = userID
 	}
 
 	sort.Sort(UsersByID(users))
@@ -65,6 +70,14 @@ func userIDs(users []*User) []int {
 	ids := []int{}
 	for _, user := range users {
 		ids = append(ids, user.ID)
+	}
+	return ids
+}
+
+func listIDs(lists []*List) []int {
+	ids := []int{}
+	for _, list := range lists {
+		ids = append(ids, list.ID)
 	}
 	return ids
 }
@@ -236,6 +249,201 @@ func TestSessions(t *testing.T) {
 	// delete session 2 again (expect noop)
 	if err := db.DeleteSession(ctx, sess2ID); err != nil {
 		t.Errorf(`DeleteSession(_, %v) = %v, want nil`, sess1ID, err)
+		return
+	}
+}
+
+func TestListsByID(t *testing.T) {
+	lists := []*List{
+		&List{ID: 3},
+		&List{ID: 5},
+		&List{ID: 1},
+	}
+
+	wantIDs := listIDs(lists)
+	sort.Ints(wantIDs)
+
+	sort.Sort(ListsByID(lists))
+	gotIDs := listIDs(lists)
+	if !reflect.DeepEqual(wantIDs, gotIDs) {
+		t.Errorf("sort; want %v, got %v", wantIDs, gotIDs)
+	}
+
+	sort.Sort(sort.Reverse(sort.IntSlice(wantIDs)))
+
+	sort.Sort(sort.Reverse(ListsByID(lists)))
+	gotIDs = listIDs(lists)
+	if !reflect.DeepEqual(wantIDs, gotIDs) {
+		t.Errorf("sort rev; want %v, got %v", wantIDs, gotIDs)
+	}
+}
+
+func TestListLists(t *testing.T) {
+	makeStamp := func(userID int) time.Time {
+		return time.Unix(int64(userID*1000), 0)
+	}
+
+	listDatas := map[string]*ListData{
+		"a": &ListData{Name: "l1", Beneficiary: "b1",
+			EventDate: time.Unix(1, 0), Active: true},
+		"b": &ListData{Name: "l2", Beneficiary: "b2",
+			EventDate: time.Unix(2, 0), Active: true},
+	}
+
+	lists := []*List{}
+
+	for owner, listData := range listDatas {
+		ownerID := usersByUsername[owner]
+		stamp := makeStamp(ownerID)
+
+		list, err := db.CreateList(ctx, ownerID, listData, stamp)
+		if err != nil {
+			t.Errorf("CreateList(_, %v, %+v, %v) = %v, %v, want _, nil",
+				ownerID, listData, stamp, list, err)
+			return
+		}
+
+		lists = append(lists, list)
+	}
+
+	got, err := db.ListLists(ctx, IncludeInactiveLists(true))
+	if err != nil {
+		t.Errorf("ListLists(include_inactive=true) = %v, want nil",
+			err)
+		return
+	}
+
+	sort.Sort(ListsByID(lists))
+	if !reflect.DeepEqual(got, lists) {
+		t.Errorf("ListLists(include_inactive=true) = %v, want %v",
+			got, lists)
+		return
+	}
+
+	got, err = db.ListLists(ctx, OnlyListWithID(lists[1].ID))
+	if err != nil {
+		t.Errorf("ListLists(only=%d) = _, %v, want _, nil",
+			lists[1].ID, err)
+		return
+	}
+
+	if len(got) != 1 {
+		t.Errorf("ListLists(only=%d) returned %d elems, wanted 1",
+			lists[1].ID, len(got))
+		return
+	}
+
+	wantOwnerID := usersByUsername["b"]
+	want := &List{
+		ID:       lists[1].ID,
+		OwnerID:  wantOwnerID,
+		Version:  0,
+		ListData: *listDatas["b"],
+		Created:  makeStamp(wantOwnerID),
+		Updated:  makeStamp(wantOwnerID),
+	}
+
+	if !reflect.DeepEqual(got[0], want) {
+		t.Errorf("ListLists(only=%d) = [%+v], nil, want [%+v], nil",
+			lists[1].ID, got[0], want)
+		return
+	}
+}
+
+func statusCode(err error) (codes.Code, error) {
+	s, ok := status.FromError(err)
+	if !ok {
+		return codes.Unknown, fmt.Errorf("not a status")
+	}
+	return s.Code(), nil
+}
+
+func readList(ctx context.Context, listID int) (*List, error) {
+	lists, err := db.ListLists(ctx, OnlyListWithID(listID))
+	if err != nil {
+		return nil, err
+	}
+
+	if len(lists) != 1 {
+		return nil, fmt.Errorf("returned %d elems, wanted 1",
+			len(lists))
+	}
+
+	return lists[0], nil
+}
+
+func TestUpdateList(t *testing.T) {
+	listData := &ListData{Name: "ul", Beneficiary: "bul",
+		EventDate: time.Unix(3, 0), Active: true}
+	ownerID := usersByUsername["a"]
+	otherUserID := usersByUsername["b"]
+	created := time.Unix(3000, 0)
+	updated := time.Unix(4000, 0)
+
+	list, err := db.CreateList(ctx, ownerID, listData, created)
+	if err != nil {
+		t.Errorf("failed to create list: %v", err)
+		return
+	}
+
+	_, err = db.UpdateList(ctx, list.ID, list.Version+1, ownerID,
+		updated, func(listData *ListData) error { panic("unreached") })
+	if err == nil {
+		t.Errorf("UpdateList(bad version %v) = %v, want nil",
+			list.Version+1, err)
+		return
+	}
+	if code, err := statusCode(err); err != nil || code != codes.FailedPrecondition {
+		t.Errorf("UpdateList(bad version %v) error want status failed precondition, got %v, %v",
+			list.Version+1, code, err)
+		return
+	}
+
+	if got, err := readList(ctx, list.ID); err != nil || !reflect.DeepEqual(list, got) {
+		t.Errorf("list unexpectedly changed: want %+v, got %+v",
+			list, got)
+		return
+	}
+
+	_, err = db.UpdateList(ctx, list.ID, list.Version, otherUserID,
+		updated, func(listData *ListData) error { panic("unreached") })
+	if err == nil {
+		t.Errorf("UpdateList(bad user %v) = %v, want nil",
+			otherUserID, err)
+		return
+	}
+	if code, err := statusCode(err); err != nil || code != codes.PermissionDenied {
+		t.Errorf("UpdateList(bad user %v) error want status permission denied, got %v, %v",
+			otherUserID, code, err)
+	}
+
+	if got, err := readList(ctx, list.ID); err != nil || !reflect.DeepEqual(list, got) {
+		t.Errorf("list unexpectedly changed: want %+v, got %+v",
+			list, got)
+		return
+	}
+
+	want := *list
+	want.Version++
+	want.Name = "UL"
+	want.Active = false
+	want.Updated = updated
+
+	got, err := db.UpdateList(ctx, list.ID, list.Version, ownerID, updated,
+		func(listData *ListData) error {
+			listData.Name = "UL"
+			listData.Active = false
+			return nil
+		})
+	if err != nil || !reflect.DeepEqual(&want, got) {
+		t.Errorf("UpdateList() = %v, %v, want %v, nil",
+			got, err, &want)
+		return
+	}
+
+	if got, err := readList(ctx, list.ID); err != nil || !reflect.DeepEqual(&want, got) {
+		t.Errorf("list didn't change: want %+v, got %+v",
+			&want, got)
 		return
 	}
 }
