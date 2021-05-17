@@ -44,7 +44,7 @@ func (s *listServer) CreateList(ctx context.Context, req *lspb.CreateListRequest
 	return nil, status.Errorf(codes.Unimplemented, "not implemented")
 }
 
-func (s *listServer) DeleteList(ctx context.Context, req *lspb.DeleteListRequest) (*lspb.DeleteListResponse, error) {
+func (s *listServer) DeactivateList(ctx context.Context, req *lspb.DeactivateListRequest) (*lspb.DeactivateListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "not implemented")
 }
 

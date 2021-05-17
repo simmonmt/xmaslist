@@ -15,6 +15,14 @@ message ListListsResponse {
   repeated List lists = 1;
 }
 
+message GetListRequest {
+  string list_id = 1;
+}
+
+message GetListResponse {
+  List list = 1;
+}
+
 message CreateListRequest {
   ListData data = 1;
 }
@@ -23,11 +31,11 @@ message CreateListResponse {
   List list = 1;
 }
 
-message DeleteListRequest {
+message DeactivateListRequest {
   string list_id = 1;
 }
 
-message DeleteListResponse {}
+message DeactivateListResponse {}
 
 message UpdateListRequest {
   string list_id = 1;
@@ -80,7 +88,7 @@ message UpdateListItemResponse {
 service ListService {
   rpc ListLists(ListListsRequest) returns (ListListsResponse);
   rpc CreateList(CreateListRequest) returns (CreateListResponse);
-  rpc DeleteList(DeleteListRequest) returns (DeleteListResponse);
+  rpc DeactivateList(DeactivateListRequest) returns (DeactivateListResponse);
   rpc UpdateList(UpdateListRequest) returns (UpdateListResponse);
   rpc ListListItems(ListListItemsRequest) returns (ListListItemsResponse);
   rpc CreateListItem(CreateListItemRequest) returns (CreateListItemResponse);
