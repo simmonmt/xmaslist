@@ -3,9 +3,10 @@ syntax = "proto3";
 package xmaslist;
 
 message UserInfo {
-  string username = 1;
-  string fullname = 2;
-  bool is_admin = 3;
+  int32 id = 1;
+  string username = 2;
+  string fullname = 3;
+  bool is_admin = 4;
 }
 
 message LoginRequest {

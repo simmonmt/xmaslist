@@ -21,6 +21,7 @@ type userServer struct {
 
 func userInfoFromDatabaseUser(dbUser *database.User) *lspb.UserInfo {
 	return &lspb.UserInfo{
+		Id:       int32(dbUser.ID),
 		Username: dbUser.Username,
 		Fullname: dbUser.Fullname,
 		IsAdmin:  dbUser.Admin,
