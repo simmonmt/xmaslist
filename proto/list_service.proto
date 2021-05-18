@@ -87,6 +87,7 @@ message UpdateListItemResponse {
 
 service ListService {
   rpc ListLists(ListListsRequest) returns (ListListsResponse);
+  rpc GetList(GetListRequest) returns (GetListResponse);
   rpc CreateList(CreateListRequest) returns (CreateListResponse);
   rpc DeactivateList(DeactivateListRequest) returns (DeactivateListResponse);
   rpc UpdateList(UpdateListRequest) returns (UpdateListResponse);
