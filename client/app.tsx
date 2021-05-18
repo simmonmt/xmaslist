@@ -1,8 +1,11 @@
 import * as React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import Cookies from "universal-cookie";
+import { ListServicePromiseClient } from "../proto/list_service_grpc_web_pb";
 import { LoginServicePromiseClient } from "../proto/login_service_grpc_web_pb";
 import { Banner } from "./banner";
+import { Home } from "./home";
+import { ListModel } from "./list_model";
 import { Login } from "./login";
 import { Logout } from "./logout";
 import { ProtectedRoute, ProtectedRouteProps } from "./protected_route";
@@ -16,6 +19,7 @@ interface State {
 }
 
 class App extends React.Component<Props, State> {
+  private readonly listModel: ListModel;
   private readonly userModel: UserModel;
   private readonly cookies: Cookies;
 
@@ -29,7 +33,10 @@ class App extends React.Component<Props, State> {
     const userStorage = new UserStorage();
     this.cookies = new Cookies();
 
+    const listService = new ListServicePromiseClient(rpcUrl, null, null);
+
     this.userModel = new UserModel(userService, userStorage, this.cookies);
+    this.listModel = new ListModel(listService, this.userModel);
     this.state = {
       user: this.userModel.getUser(),
     };
@@ -61,7 +68,7 @@ class App extends React.Component<Props, State> {
               />
             </Route>
             <ProtectedRoute {...defaultProtectedRouteProps} path="/">
-              <Home />
+              <Home listModel={this.listModel} />
             </ProtectedRoute>
           </Switch>
         </div>
@@ -76,10 +83,6 @@ class App extends React.Component<Props, State> {
   private handleLogout() {
     this.setState({ user: null });
   }
-}
-
-function Home() {
-  return <h2>Home</h2>;
 }
 
 export { App };
