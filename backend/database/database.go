@@ -251,7 +251,7 @@ func (db *DB) DeleteSession(ctx context.Context, sessionID int) error {
 func (db *DB) CreateList(ctx context.Context, ownerID int, listData *ListData, now time.Time) (*List, error) {
 	list := &List{
 		ListData: *listData,
-		Version:  0,
+		Version:  1,
 		OwnerID:  ownerID,
 		Created:  now,
 		Updated:  now,

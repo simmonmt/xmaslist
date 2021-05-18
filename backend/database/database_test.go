@@ -337,7 +337,7 @@ func TestListLists(t *testing.T) {
 	want := &List{
 		ID:       lists[1].ID,
 		OwnerID:  wantOwnerID,
-		Version:  0,
+		Version:  1,
 		ListData: *listDatas["b"],
 		Created:  makeStamp(wantOwnerID),
 		Updated:  makeStamp(wantOwnerID),
