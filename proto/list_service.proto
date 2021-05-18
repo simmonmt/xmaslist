@@ -33,6 +33,7 @@ message CreateListResponse {
 
 message DeactivateListRequest {
   string list_id = 1;
+  int32 list_version = 2;
 }
 
 message DeactivateListResponse {}
