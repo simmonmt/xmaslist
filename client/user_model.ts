@@ -53,6 +53,10 @@ export class UserModel {
     return userInfo ? new User(userInfo) : null;
   }
 
+  getSessionCookie(): string | null {
+    return this.cookies.get(COOKIE_NAME);
+  }
+
   login(username: string, password: string): Promise<User> {
     let req = new LoginRequest();
     req.setUsername(username);
