@@ -1,4 +1,3 @@
-# load("@npm//@bazel/concatjs:index.bzl", "karma_web_test_suite")
 load("@npm//@bazel/rollup:index.bzl", "rollup_bundle")
 load("@npm//@bazel/typescript:index.bzl", "ts_config", "ts_library", "ts_project")
 load("@npm//http-server-spa:index.bzl", "http_server_spa")
@@ -18,18 +17,6 @@ PROTO_DEPS = [
     "//proto:login_service",
 ]
 
-# # It's not clear to me how to use karma_web_test_suite on a ts_project. All of
-# # the node_js examples use ts_library, so that's what we do here. The weirdness
-# # comes (I think) when you try to make something else depend on a
-# # ts_project. If user_storage.ts is in a ts_project, user_storage_test.ts won't
-# # be able to include it.
-# ts_library(
-#     name = "testable",
-#     srcs = ["user_storage.ts"],
-#     tsconfig = ":tsconfig_main",
-#     deps = PROTO_DEPS,
-# )
-
 ts_project(
     srcs = glob(
         include = [
@@ -41,7 +28,6 @@ ts_project(
         ],
     ),
     deps = PROTO_DEPS + [
-        #":testable",
         "@npm//@material-ui/core",
         "@npm//@material-ui/icons",
         "@npm//@material-ui/lab",
@@ -61,42 +47,6 @@ ts_config(
     name = "tsconfig_main",
     src = "tsconfig.json",
 )
-
-# ts_config(
-#     name = "tsconfig_test",
-#     src = "tsconfig-test.json",
-#     deps = [":tsconfig_main"],
-# )
-
-# ts_library(
-#     name = "test_lib",
-#     testonly = True,
-#     srcs = ["user_storage_test.ts"],
-#     tsconfig = ":tsconfig_test",
-#     deps = [
-#         ":testable",
-#         "//proto:login_service",
-#         "@npm//@types/jasmine",
-#         "@npm//@types/node",
-#     ],
-# )
-
-# karma_web_test_suite(
-#     name = "tests",
-#     srcs = [
-#         "@npm//@bazel/labs/grpc_web:bootstrap_scripts",
-#     ],
-#     browsers = [
-#         "@io_bazel_rules_webtesting//browsers:chromium-local",
-#     ],
-#     config_file = ":karma.conf.js",
-#     tags = ["native"],
-#     deps = [
-#         ":test_lib",
-#         "@npm//karma-jasmine-html-reporter",
-#         "@npm//karma-mocha-reporter",
-#     ],
-# )
 
 rollup_bundle(
     name = "bundle",

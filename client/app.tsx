@@ -8,7 +8,6 @@ import { Logout } from "./logout";
 import { ProtectedRoute, ProtectedRouteProps } from "./protected_route";
 import { User, UserModel } from "./user_model";
 import { UserStorage } from "./user_storage";
-import { WishList } from "./wishlist";
 
 interface Props {}
 
@@ -61,9 +60,6 @@ class App extends React.Component<Props, State> {
                 onLogout={() => this.handleLogout()}
               />
             </Route>
-            <ProtectedRoute {...defaultProtectedRouteProps} path="/view">
-              <WishList />
-            </ProtectedRoute>
             <ProtectedRoute {...defaultProtectedRouteProps} path="/">
               <Home />
             </ProtectedRoute>
