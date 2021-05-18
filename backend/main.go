@@ -18,8 +18,10 @@ import (
 	"github.com/simmonmt/xmaslist/backend/sessions"
 	"github.com/simmonmt/xmaslist/backend/util"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -52,14 +54,24 @@ func readSessionSecret(path string) (string, error) {
 	return secret, nil
 }
 
-func loggingInterceptor(interceptor grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
-		start := time.Now()
-		res, err = interceptor(ctx, req, info, handler)
-		grpcLog.Infof("Request - Method:%s Duration:%s Error:%v\n",
-			info.FullMethod, time.Since(start), err)
-		return
+func loggingInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
+	start := time.Now()
+	res, err = handler(ctx, req)
+	grpcLog.Infof("Request - Method:%s Duration:%s Error:%v\n",
+		info.FullMethod, time.Since(start), err)
+	return
+}
+
+func errorRewriteInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	res, err := handler(ctx, req)
+	if err != nil {
+		if _, ok := status.FromError(err); ok {
+			return nil, err
+		}
+		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
+
+	return res, err
 }
 
 func main() {
@@ -110,7 +122,10 @@ func main() {
 	}
 
 	opts := []grpc.ServerOption{
-		grpc.UnaryInterceptor(loggingInterceptor(authInterceptor.intercept)),
+		grpc.ChainUnaryInterceptor(
+			loggingInterceptor,
+			errorRewriteInterceptor,
+			authInterceptor.intercept),
 	}
 	server := grpc.NewServer(opts...)
 	loginservice.RegisterHandlers(server, clock, sessionManager, db)
