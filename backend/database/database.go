@@ -320,7 +320,8 @@ func (db *DB) doUpdateList(ctx context.Context, txn *sql.Tx, listID int, listVer
 
 	if list.OwnerID != userID {
 		return nil, status.Errorf(codes.PermissionDenied,
-			"user %v does not own list %v")
+			"user %v does not own list %v (owner %v)",
+			userID, list.ID, list.OwnerID)
 	}
 
 	if err := update(&list.ListData); err != nil {
@@ -346,8 +347,7 @@ func (db *DB) doUpdateList(ctx context.Context, txn *sql.Tx, listID int, listVer
 		sql.Named("updated", list.Updated.Unix()),
 		sql.Named("id", listID))
 	if err != nil {
-		return nil, status.Errorf(codes.Internal,
-			"write failed: %v", err)
+		return nil, fmt.Errorf("write failed: %v", err)
 	}
 
 	return list, err
