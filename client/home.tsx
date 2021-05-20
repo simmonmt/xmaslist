@@ -1,10 +1,13 @@
 import LinearProgress from "@material-ui/core/LinearProgress";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemText from "@material-ui/core/ListItemText";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import { Status, StatusCode } from "grpc-web";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
-import { List } from "../proto/list_pb";
+import { List as ListProto } from "../proto/list_pb";
 import { ListModel } from "./list_model";
 
 interface Props {
@@ -17,7 +20,7 @@ interface State {
   loading: boolean;
   loggedIn: boolean;
   errorMessage: string;
-  lists: List[];
+  lists: ListProto[];
 }
 
 class Home extends React.Component<Props, State> {
@@ -33,7 +36,7 @@ class Home extends React.Component<Props, State> {
 
   componentDidMount() {
     this.props.listModel.listLists(false).then(
-      (lists: List[]) => {
+      (lists: ListProto[]) => {
         this.setState({
           loading: false,
           lists: lists,
@@ -59,10 +62,26 @@ class Home extends React.Component<Props, State> {
         {!this.state.loggedIn && <Redirect to="/logout" />}
         {this.state.loading && <LinearProgress />}
         {this.state.errorMessage && <div>{this.state.errorMessage}</div>}
-        {this.state.lists.map((list) => (
-          <div>{list.getData() && list.getData()!.getName()}</div>
-        ))}
+        <List>{this.state.lists.map((list) => this.listElement(list))}</List>
       </div>
+    );
+  }
+
+  private listElement(list: ListProto) {
+    const data = list.getData();
+    if (!data) {
+      return;
+    }
+
+    let eventDate = new Date(data.getEventDate() * 1000).toLocaleDateString(
+      undefined,
+      { year: "numeric", month: "long", day: "numeric" }
+    );
+
+    return (
+      <ListItem button>
+        <ListItemText primary={data.getName()} secondary={eventDate} />
+      </ListItem>
     );
   }
 }
