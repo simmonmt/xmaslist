@@ -6,7 +6,7 @@ services:
     container_name: envoy
     volumes:
       - type: bind
-        source: ../backend/envoy.yaml
+        source: ./envoy.yaml
         target: /etc/envoy/envoy.yaml
     ports:
       - "8081:8081"
