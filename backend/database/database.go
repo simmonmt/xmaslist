@@ -117,7 +117,8 @@ func (db *DB) AddUser(ctx context.Context, user *User, password string) (int, er
 }
 
 var (
-	invalidUserPassword = fmt.Errorf("invalid user/password")
+	invalidUserPassword = status.Errorf(codes.PermissionDenied,
+		"invalid user/password")
 )
 
 func (db *DB) AuthenticateUser(ctx context.Context, username, password string) (int, error) {

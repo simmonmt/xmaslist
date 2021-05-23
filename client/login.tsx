@@ -1,3 +1,4 @@
+import { Status, StatusCode } from "grpc-web";
 import Button from "@material-ui/core/Button";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { createStyles, styled, withStyles } from "@material-ui/core/styles";
@@ -70,8 +71,12 @@ class Login extends React.Component<Props, State> {
         });
         this.props.onLogin(user);
       },
-      (err: Error) => {
-        this.setState({ error: err.message, submitting: false });
+      (status: Status) => {
+        let message = "An error occurred";
+        if (status.code === StatusCode.PERMISSION_DENIED) {
+          message = "Invalid username/password";
+        }
+        this.setState({ error: message, submitting: false });
       }
     );
   };

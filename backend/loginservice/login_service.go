@@ -47,7 +47,6 @@ func (s *userServer) Login(ctx context.Context, req *lspb.LoginRequest) (*lspb.L
 	}
 
 	return &lspb.LoginResponse{
-		Success:  true,
 		Cookie:   cookie,
 		Expiry:   expiry.Unix(),
 		UserInfo: userInfoFromDatabaseUser(user),

@@ -62,31 +62,24 @@ export class UserModel {
     req.setUsername(username);
     req.setPassword(password);
 
-    return this.userService.login(req, undefined).then(
-      (resp: LoginResponse) => {
-        if (resp.getSuccess()) {
-          const cookie = resp.getCookie();
-          const userInfo = resp.getUserInfo();
-          const expiry = new Date(resp.getExpiry() * 1000);
-          if (!cookie || !userInfo || !expiry) {
-            console.log("bad login response");
-            return Promise.reject(new Error("an error occurred"));
-          }
-
-          this.cookies.set(COOKIE_NAME, cookie, {
-            expires: expiry,
-            sameSite: true,
-          });
-          this.userStorage.write(userInfo);
-          return new User(userInfo);
+    return this.userService
+      .login(req, undefined)
+      .then((resp: LoginResponse) => {
+        const cookie = resp.getCookie();
+        const userInfo = resp.getUserInfo();
+        const expiry = new Date(resp.getExpiry() * 1000);
+        if (!cookie || !userInfo || !expiry) {
+          console.log("bad login response");
+          return Promise.reject(new Error("an error occurred"));
         }
-        return Promise.reject(new Error("invalid username or password"));
-      },
-      (err: Error) => {
-        console.log("Login failure", err);
-        return Promise.reject(new Error("an error occurred"));
-      }
-    );
+
+        this.cookies.set(COOKIE_NAME, cookie, {
+          expires: expiry,
+          sameSite: true,
+        });
+        this.userStorage.write(userInfo);
+        return new User(userInfo);
+      });
   }
 
   logout(): Promise<boolean> {
