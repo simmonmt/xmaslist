@@ -93,6 +93,7 @@ class Login extends React.Component<Props, State> {
           id="username"
           label="Username/email"
           variant="standard"
+          autoFocus={true}
           disabled={this.state.submitting}
           autoComplete="username"
           value={this.state.username}
