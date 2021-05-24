@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+import "proto/user_info.proto";
+
+package xmaslist;
+
+message GetUsersRequest {
+  repeated int32 ids = 1;
+}
+
+message GetUsersResponse {
+  repeated UserInfo users = 1;
+}
+
+service UserService {
+  rpc GetUsers(GetUsersRequest) returns (GetUsersResponse);
+}

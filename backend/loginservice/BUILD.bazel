@@ -10,6 +10,7 @@ go_library(
         "//backend/sessions",
         "//backend/util",
         "//proto:login_service_go_proto",
+        "//proto:user_info_go_proto",
         "@org_golang_google_grpc//:go_default_library",
     ],
 )

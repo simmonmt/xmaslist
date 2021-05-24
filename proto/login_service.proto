@@ -1,13 +1,10 @@
 syntax = "proto3";
 
+import "proto/user_info.proto";
+
 package xmaslist;
 
-message UserInfo {
-  int32 id = 1;
-  string username = 2;
-  string fullname = 3;
-  bool is_admin = 4;
-}
+option go_package = "github.com/simmonmt/xmaslist/proto/login_service";
 
 message LoginRequest {
   string username = 1;

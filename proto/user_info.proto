@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package xmaslist;
+
+option go_package = "github.com/simmonmt/xmaslist/proto/user_info";
+
+message UserInfo {
+  int32 id = 1;
+  string username = 2;
+  string fullname = 3;
+  bool is_admin = 4;
+}

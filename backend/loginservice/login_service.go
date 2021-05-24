@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	lspb "github.com/simmonmt/xmaslist/proto/login_service"
+	uipb "github.com/simmonmt/xmaslist/proto/user_info"
 )
 
 type userServer struct {
@@ -19,8 +20,8 @@ type userServer struct {
 	db             *database.DB
 }
 
-func userInfoFromDatabaseUser(dbUser *database.User) *lspb.UserInfo {
-	return &lspb.UserInfo{
+func userInfoFromDatabaseUser(dbUser *database.User) *uipb.UserInfo {
+	return &uipb.UserInfo{
 		Id:       int32(dbUser.ID),
 		Username: dbUser.Username,
 		Fullname: dbUser.Fullname,
