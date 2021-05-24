@@ -57,7 +57,7 @@ go_proto_library(
 proto_library(
     name = "auth_service_proto",
     srcs = ["auth_service.proto"],
-    deps = [ ":user_info_proto" ],
+    deps = [":user_info_proto"],
 )
 
 ts_proto_library(
@@ -70,12 +70,12 @@ go_proto_library(
     compilers = ["@io_bazel_rules_go//proto:go_grpc"],
     importpath = "github.com/simmonmt/xmaslist/proto/auth_service",
     protos = [":auth_service_proto"],
-    deps = [ ":user_info_go_proto" ],
+    deps = [":user_info_go_proto"],
 )
 
 proto_library(
     name = "user_info_proto",
-    srcs = ["user_info.proto" ],
+    srcs = ["user_info.proto"],
 )
 
 ts_proto_library(
@@ -92,7 +92,7 @@ go_proto_library(
 proto_library(
     name = "user_service_proto",
     srcs = ["user_service.proto"],
-    deps = [ ":user_info_proto" ],
+    deps = [":user_info_proto"],
 )
 
 ts_proto_library(
@@ -105,5 +105,5 @@ go_proto_library(
     compilers = ["@io_bazel_rules_go//proto:go_grpc"],
     importpath = "github.com/simmonmt/xmaslist/proto/user_service",
     protos = [":user_service_proto"],
-    deps = [ ":user_info_go_proto" ],
+    deps = [":user_info_go_proto"],
 )
