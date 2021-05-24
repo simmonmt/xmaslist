@@ -16,6 +16,7 @@ import (
 	"github.com/simmonmt/xmaslist/backend/database"
 	"github.com/simmonmt/xmaslist/backend/listservice"
 	"github.com/simmonmt/xmaslist/backend/sessions"
+	"github.com/simmonmt/xmaslist/backend/userservice"
 	"github.com/simmonmt/xmaslist/backend/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -130,6 +131,7 @@ func main() {
 	server := grpc.NewServer(opts...)
 	authservice.RegisterHandlers(server, clock, sessionManager, db)
 	listservice.RegisterHandlers(server, clock, sessionManager, db)
+	userservice.RegisterHandlers(server, clock, db)
 	reflection.Register(server)
 
 	log.Printf("serving on port %v...\n", *port)

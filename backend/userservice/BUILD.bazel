@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "userservice",
+    srcs = ["user_service.go"],
+    importpath = "github.com/simmonmt/xmaslist/backend/userservice",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//backend/database",
+        "//backend/request",
+        "//backend/sessions",
+        "//backend/util",
+        "//proto:user_service_go_proto",
+        "@org_golang_google_grpc//:go_default_library",
+        "@org_golang_google_grpc//codes",
+        "@org_golang_google_grpc//status",
+    ],
+)
