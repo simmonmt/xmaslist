@@ -16,6 +16,7 @@ sass(
 PROTO_DEPS = [
     "//proto:list_service",
     "//proto:login_service",
+    "//proto:user_info",
 ]
 
 ts_project(

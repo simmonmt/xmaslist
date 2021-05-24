@@ -3,7 +3,7 @@ import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import Typography from "@material-ui/core/Typography";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
-import { UserModel } from "./user_model";
+import { UserModel } from "./auth_model";
 
 interface Props {
   userModel: UserModel;

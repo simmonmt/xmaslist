@@ -9,8 +9,8 @@ import { ListModel } from "./list_model";
 import { Login } from "./login";
 import { Logout } from "./logout";
 import { ProtectedRoute, ProtectedRouteProps } from "./protected_route";
-import { User, UserModel } from "./user_model";
-import { UserStorage } from "./user_storage";
+import { User, UserModel } from "./auth_model";
+import { UserStorage } from "./auth_storage";
 
 interface Props {}
 

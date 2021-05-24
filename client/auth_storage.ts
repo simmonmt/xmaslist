@@ -1,4 +1,4 @@
-import { UserInfo } from "../proto/login_service_pb";
+import { UserInfo } from "../proto/user_info_pb";
 
 export const STORAGE_NAME = "user_info";
 

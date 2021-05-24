@@ -7,7 +7,7 @@ import {
   ListListsRequest,
   ListListsResponse,
 } from "../proto/list_service_pb";
-import { UserModel } from "./user_model";
+import { UserModel } from "./auth_model";
 
 export class ListModel {
   private readonly listService: ListServicePromiseClient;

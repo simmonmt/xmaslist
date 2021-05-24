@@ -5,9 +5,9 @@ import {
   LoginResponse,
   LogoutRequest,
   LogoutResponse,
-  UserInfo,
 } from "../proto/login_service_pb";
-import { UserStorage } from "./user_storage";
+import { UserInfo } from "../proto/user_info_pb";
+import { UserStorage } from "./auth_storage";
 
 const COOKIE_NAME = "session";
 
