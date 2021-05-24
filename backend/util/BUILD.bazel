@@ -2,7 +2,14 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "util",
-    srcs = ["clock.go"],
+    srcs = [
+        "clock.go",
+        "convert.go",
+    ],
     importpath = "github.com/simmonmt/xmaslist/backend/util",
     visibility = ["//visibility:public"],
+    deps = [
+        "//backend/database",
+        "//proto:user_info_go_proto",
+    ],
 )

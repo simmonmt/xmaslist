@@ -37,6 +37,16 @@ func (s *userServer) GetUsers(ctx context.Context, req *uspb.GetUsersRequest) (*
 	}
 
 	resp := &uspb.GetUsersResponse{}
+	for _, id := range req.GetIds() {
+		user, err := s.db.LookupUserByID(ctx, int(id))
+		if err != nil {
+			return nil, err
+		}
+		if user != nil {
+			resp.Users = append(resp.Users,
+				util.UserInfoFromDatabaseUser(user))
+		}
+	}
 
 	return resp, nil
 }
