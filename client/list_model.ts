@@ -7,15 +7,15 @@ import {
   ListListsRequest,
   ListListsResponse,
 } from "../proto/list_service_pb";
-import { UserModel } from "./auth_model";
+import { AuthModel } from "./auth_model";
 
 export class ListModel {
   private readonly listService: ListServicePromiseClient;
-  private readonly userModel: UserModel;
+  private readonly authModel: AuthModel;
 
-  constructor(listService: ListServicePromiseClient, userModel: UserModel) {
+  constructor(listService: ListServicePromiseClient, authModel: AuthModel) {
     this.listService = listService;
-    this.userModel = userModel;
+    this.authModel = authModel;
   }
 
   listLists(includeInactive: boolean): Promise<List[]> {
@@ -46,7 +46,7 @@ export class ListModel {
   }
 
   private metadata(): Metadata {
-    const cookie = this.userModel.getSessionCookie();
+    const cookie = this.authModel.getSessionCookie();
     return { authorization: cookie ? cookie : "" };
   }
 }

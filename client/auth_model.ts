@@ -7,7 +7,7 @@ import {
   LogoutResponse,
 } from "../proto/login_service_pb";
 import { UserInfo } from "../proto/user_info_pb";
-import { UserStorage } from "./auth_storage";
+import { AuthStorage } from "./auth_storage";
 
 const COOKIE_NAME = "session";
 
@@ -25,14 +25,14 @@ export class User {
   }
 }
 
-export class UserModel {
+export class AuthModel {
   private readonly userService: LoginServicePromiseClient;
-  private readonly userStorage: UserStorage;
+  private readonly userStorage: AuthStorage;
   private readonly cookies: Cookies;
 
   constructor(
     userService: LoginServicePromiseClient,
-    userStorage: UserStorage,
+    userStorage: AuthStorage,
     cookies: Cookies
   ) {
     this.userService = userService;

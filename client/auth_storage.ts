@@ -2,7 +2,7 @@ import { UserInfo } from "../proto/user_info_pb";
 
 export const STORAGE_NAME = "user_info";
 
-export class UserStorage {
+export class AuthStorage {
   private userInfo: UserInfo | null;
 
   constructor() {
@@ -19,7 +19,7 @@ export class UserStorage {
       return null;
     }
 
-    console.log("UserStorage read UserInfo from local storage");
+    console.log("AuthStorage read UserInfo from local storage");
     const ser = new Uint8Array(
       atob(local)
         .split("")

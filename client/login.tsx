@@ -8,7 +8,7 @@ import Typography from "@material-ui/core/Typography";
 import Alert from "@material-ui/lab/Alert";
 import * as React from "react";
 import { Redirect, useLocation } from "react-router-dom";
-import { User, UserModel } from "./auth_model";
+import { User, AuthModel } from "./auth_model";
 
 interface Props extends WrappedLoginProps {
   classes: any;
@@ -64,7 +64,7 @@ class Login extends React.Component<Props, State> {
       submitting: true,
     });
 
-    this.props.userModel.login(this.state.username, this.state.password).then(
+    this.props.authModel.login(this.state.username, this.state.password).then(
       (user: User) => {
         this.setState({
           submitting: false,
@@ -163,7 +163,7 @@ const loginStyles = (theme: Theme) =>
 const StyledLogin: any = withStyles(loginStyles)(Login);
 
 interface WrappedLoginProps extends React.HTMLAttributes<HTMLElement> {
-  userModel: UserModel;
+  authModel: AuthModel;
   user: User | null;
   onLogin: (user: User) => void;
 }

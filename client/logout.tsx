@@ -3,10 +3,10 @@ import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import Typography from "@material-ui/core/Typography";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
-import { UserModel } from "./auth_model";
+import { AuthModel } from "./auth_model";
 
 interface Props {
-  userModel: UserModel;
+  authModel: AuthModel;
   onLogout: () => void;
   classes: any;
 }
@@ -36,7 +36,7 @@ class Logout extends React.Component<Props, State> {
   }
 
   componentDidMount() {
-    this.props.userModel.logout().then(() => {
+    this.props.authModel.logout().then(() => {
       this.props.onLogout();
       this.setState({ loggedOut: true });
     });

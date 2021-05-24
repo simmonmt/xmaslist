@@ -9,8 +9,8 @@ import { ListModel } from "./list_model";
 import { Login } from "./login";
 import { Logout } from "./logout";
 import { ProtectedRoute, ProtectedRouteProps } from "./protected_route";
-import { User, UserModel } from "./auth_model";
-import { UserStorage } from "./auth_storage";
+import { User, AuthModel } from "./auth_model";
+import { AuthStorage } from "./auth_storage";
 
 interface Props {}
 
@@ -20,7 +20,7 @@ interface State {
 
 class App extends React.Component<Props, State> {
   private readonly listModel: ListModel;
-  private readonly userModel: UserModel;
+  private readonly authModel: AuthModel;
   private readonly cookies: Cookies;
 
   constructor(props: Props) {
@@ -30,15 +30,15 @@ class App extends React.Component<Props, State> {
     console.log("rpcUrl", rpcUrl);
 
     const userService = new LoginServicePromiseClient(rpcUrl, null, null);
-    const userStorage = new UserStorage();
+    const userStorage = new AuthStorage();
     this.cookies = new Cookies();
 
     const listService = new ListServicePromiseClient(rpcUrl, null, null);
 
-    this.userModel = new UserModel(userService, userStorage, this.cookies);
-    this.listModel = new ListModel(listService, this.userModel);
+    this.authModel = new AuthModel(userService, userStorage, this.cookies);
+    this.listModel = new ListModel(listService, this.authModel);
     this.state = {
-      user: this.userModel.getUser(),
+      user: this.authModel.getUser(),
     };
   }
 
@@ -57,13 +57,13 @@ class App extends React.Component<Props, State> {
             <Route path="/login">
               <Login
                 user={this.state.user}
-                userModel={this.userModel}
+                authModel={this.authModel}
                 onLogin={(user: User) => this.handleLogin(user)}
               />
             </Route>
             <Route path="/logout">
               <Logout
-                userModel={this.userModel}
+                authModel={this.authModel}
                 onLogout={() => this.handleLogout()}
               />
             </Route>
