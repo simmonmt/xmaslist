@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/simmonmt/xmaslist/backend/authservice"
 	"github.com/simmonmt/xmaslist/backend/database"
 	"github.com/simmonmt/xmaslist/backend/listservice"
-	"github.com/simmonmt/xmaslist/backend/loginservice"
 	"github.com/simmonmt/xmaslist/backend/sessions"
 	"github.com/simmonmt/xmaslist/backend/util"
 	"google.golang.org/grpc"
@@ -128,7 +128,7 @@ func main() {
 			authInterceptor.intercept),
 	}
 	server := grpc.NewServer(opts...)
-	loginservice.RegisterHandlers(server, clock, sessionManager, db)
+	authservice.RegisterHandlers(server, clock, sessionManager, db)
 	listservice.RegisterHandlers(server, clock, sessionManager, db)
 	reflection.Register(server)
 

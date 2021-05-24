@@ -15,7 +15,7 @@ sass(
 
 PROTO_DEPS = [
     "//proto:list_service",
-    "//proto:login_service",
+    "//proto:auth_service",
     "//proto:user_info",
 ]
 

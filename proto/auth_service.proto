@@ -23,7 +23,7 @@ message LogoutRequest {
 
 message LogoutResponse {}
 
-service LoginService {
+service AuthService {
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc Logout(LogoutRequest) returns (LogoutResponse);
 }

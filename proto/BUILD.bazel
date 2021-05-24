@@ -55,21 +55,21 @@ go_proto_library(
 )
 
 proto_library(
-    name = "login_service_proto",
-    srcs = ["login_service.proto"],
+    name = "auth_service_proto",
+    srcs = ["auth_service.proto"],
     deps = [ ":user_info_proto" ],
 )
 
 ts_proto_library(
-    name = "login_service",
-    proto = ":login_service_proto",
+    name = "auth_service",
+    proto = ":auth_service_proto",
 )
 
 go_proto_library(
-    name = "login_service_go_proto",
+    name = "auth_service_go_proto",
     compilers = ["@io_bazel_rules_go//proto:go_grpc"],
-    importpath = "github.com/simmonmt/xmaslist/proto/login_service",
-    protos = [":login_service_proto"],
+    importpath = "github.com/simmonmt/xmaslist/proto/auth_service",
+    protos = [":auth_service_proto"],
     deps = [ ":user_info_go_proto" ],
 )
 

@@ -1,11 +1,11 @@
 import Cookies from "universal-cookie";
-import { LoginServicePromiseClient } from "../proto/login_service_grpc_web_pb";
+import { AuthServicePromiseClient } from "../proto/auth_service_grpc_web_pb";
 import {
   LoginRequest,
   LoginResponse,
   LogoutRequest,
   LogoutResponse,
-} from "../proto/login_service_pb";
+} from "../proto/auth_service_pb";
 import { UserInfo } from "../proto/user_info_pb";
 import { AuthStorage } from "./auth_storage";
 
@@ -26,30 +26,30 @@ export class User {
 }
 
 export class AuthModel {
-  private readonly userService: LoginServicePromiseClient;
-  private readonly userStorage: AuthStorage;
+  private readonly authService: AuthServicePromiseClient;
+  private readonly authStorage: AuthStorage;
   private readonly cookies: Cookies;
 
   constructor(
-    userService: LoginServicePromiseClient,
-    userStorage: AuthStorage,
+    authService: AuthServicePromiseClient,
+    authStorage: AuthStorage,
     cookies: Cookies
   ) {
-    this.userService = userService;
-    this.userStorage = userStorage;
+    this.authService = authService;
+    this.authStorage = authStorage;
     this.cookies = cookies;
 
     const cookie = this.cookies.get(COOKIE_NAME);
-    const userInfo = this.userStorage.read();
+    const userInfo = this.authStorage.read();
     if (!cookie !== !userInfo) {
       console.log("Unknown user model state; clearing");
       this.cookies.remove(COOKIE_NAME);
-      this.userStorage.clear();
+      this.authStorage.clear();
     }
   }
 
   getUser(): User | null {
-    const userInfo = this.userStorage.read();
+    const userInfo = this.authStorage.read();
     return userInfo ? new User(userInfo) : null;
   }
 
@@ -62,7 +62,7 @@ export class AuthModel {
     req.setUsername(username);
     req.setPassword(password);
 
-    return this.userService
+    return this.authService
       .login(req, undefined)
       .then((resp: LoginResponse) => {
         const cookie = resp.getCookie();
@@ -77,23 +77,23 @@ export class AuthModel {
           expires: expiry,
           sameSite: true,
         });
-        this.userStorage.write(userInfo);
+        this.authStorage.write(userInfo);
         return new User(userInfo);
       });
   }
 
   logout(): Promise<boolean> {
-    if (this.userStorage.read() === null) {
+    if (this.authStorage.read() === null) {
       return Promise.resolve(true);
     }
 
     let req = new LogoutRequest();
     req.setCookie(this.cookies.get(COOKIE_NAME));
-    return this.userService
+    return this.authService
       .logout(req, undefined)
       .then((unused: LogoutResponse) => {
         this.cookies.remove(COOKIE_NAME);
-        this.userStorage.clear();
+        this.authStorage.clear();
         return true;
       });
   }

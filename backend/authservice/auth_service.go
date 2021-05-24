@@ -1,4 +1,4 @@
-package loginservice
+package authservice
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/simmonmt/xmaslist/backend/util"
 	"google.golang.org/grpc"
 
-	lspb "github.com/simmonmt/xmaslist/proto/login_service"
+	aspb "github.com/simmonmt/xmaslist/proto/auth_service"
 	uipb "github.com/simmonmt/xmaslist/proto/user_info"
 )
 
@@ -29,7 +29,7 @@ func userInfoFromDatabaseUser(dbUser *database.User) *uipb.UserInfo {
 	}
 }
 
-func (s *userServer) Login(ctx context.Context, req *lspb.LoginRequest) (*lspb.LoginResponse, error) {
+func (s *userServer) Login(ctx context.Context, req *aspb.LoginRequest) (*aspb.LoginResponse, error) {
 	if req.GetUsername() == "" || req.GetPassword() == "" {
 		return nil, fmt.Errorf("missing username or password")
 	}
@@ -47,14 +47,14 @@ func (s *userServer) Login(ctx context.Context, req *lspb.LoginRequest) (*lspb.L
 		return nil, err
 	}
 
-	return &lspb.LoginResponse{
+	return &aspb.LoginResponse{
 		Cookie:   cookie,
 		Expiry:   expiry.Unix(),
 		UserInfo: userInfoFromDatabaseUser(user),
 	}, nil
 }
 
-func (s *userServer) Logout(ctx context.Context, req *lspb.LogoutRequest) (*lspb.LogoutResponse, error) {
+func (s *userServer) Logout(ctx context.Context, req *aspb.LogoutRequest) (*aspb.LogoutResponse, error) {
 	if req.GetCookie() == "" {
 		return nil, fmt.Errorf("missing cookie in request")
 	}
@@ -63,7 +63,7 @@ func (s *userServer) Logout(ctx context.Context, req *lspb.LogoutRequest) (*lspb
 		log.Printf("logout failure: %v", err)
 	}
 
-	return &lspb.LogoutResponse{}, nil
+	return &aspb.LogoutResponse{}, nil
 }
 
 func RegisterHandlers(server *grpc.Server, clock util.Clock, sessionManager *sessions.Manager, db *database.DB) {
@@ -73,5 +73,5 @@ func RegisterHandlers(server *grpc.Server, clock util.Clock, sessionManager *ses
 		db:             db,
 	}
 
-	lspb.RegisterLoginServiceServer(server, handlers)
+	aspb.RegisterAuthServiceServer(server, handlers)
 }

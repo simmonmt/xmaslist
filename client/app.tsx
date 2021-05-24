@@ -2,7 +2,7 @@ import * as React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import Cookies from "universal-cookie";
 import { ListServicePromiseClient } from "../proto/list_service_grpc_web_pb";
-import { LoginServicePromiseClient } from "../proto/login_service_grpc_web_pb";
+import { AuthServicePromiseClient } from "../proto/auth_service_grpc_web_pb";
 import { Banner } from "./banner";
 import { Home } from "./home";
 import { ListModel } from "./list_model";
@@ -29,7 +29,7 @@ class App extends React.Component<Props, State> {
     const rpcUrl = document.location.origin;
     console.log("rpcUrl", rpcUrl);
 
-    const userService = new LoginServicePromiseClient(rpcUrl, null, null);
+    const userService = new AuthServicePromiseClient(rpcUrl, null, null);
     const userStorage = new AuthStorage();
     this.cookies = new Cookies();
 

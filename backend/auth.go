@@ -18,7 +18,7 @@ type AuthInterceptor struct {
 
 func (ai *AuthInterceptor) intercept(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// Skip auth for LoginService because LoginService does its own auth.
-	if !strings.HasPrefix(info.FullMethod, "/xmaslist.LoginService/") {
+	if !strings.HasPrefix(info.FullMethod, "/xmaslist.AuthService/") {
 		session, err := ai.authorize(ctx)
 		if err != nil {
 			return nil, err

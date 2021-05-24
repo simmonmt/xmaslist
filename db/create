@@ -36,7 +36,15 @@ function user_add {
 
 PROGNAME=$(basename "$0")
 
-options=$(getopt -o '' --longoptions rm,load_test_data -- "$@")
+GETOPT=getopt
+if which -s brew ; then
+    prefix=$(brew --prefix gnu-getopt 2>/dev/null)
+    if [[ -n "${prefix}" ]] ; then
+	GETOPT="${prefix}/bin/getopt"
+    fi
+fi
+
+options=$(${GETOPT} -o '' --longoptions rm,load_test_data -- "$@")
 [[ $? -ne 0 ]] && usage
 eval set -- "$options"
 while : ; do
