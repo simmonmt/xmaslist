@@ -6,24 +6,10 @@ import {
   LogoutRequest,
   LogoutResponse,
 } from "../proto/auth_service_pb";
-import { UserInfo } from "../proto/user_info_pb";
+import { User } from "./user";
 import { AuthStorage } from "./auth_storage";
 
 const COOKIE_NAME = "session";
-
-export class User {
-  readonly username: string;
-  readonly fullname: string;
-  readonly isAdmin: boolean;
-
-  constructor(userInfo: UserInfo) {
-    const mkStr = (s: string | null): string => (s ? s : "UNKNOWN");
-
-    this.username = mkStr(userInfo.getUsername());
-    this.fullname = mkStr(userInfo.getFullname());
-    this.isAdmin = Boolean(userInfo.getIsAdmin());
-  }
-}
 
 export class AuthModel {
   private readonly authService: AuthServicePromiseClient;

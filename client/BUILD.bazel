@@ -17,6 +17,7 @@ PROTO_DEPS = [
     "//proto:list_service",
     "//proto:auth_service",
     "//proto:user_info",
+    "//proto:user_service",
 ]
 
 ts_project(

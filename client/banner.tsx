@@ -8,7 +8,7 @@ import Toolbar from "@material-ui/core/Toolbar";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { User } from "./auth_model";
+import { User } from "./user";
 
 interface Props {
   user: User | null;

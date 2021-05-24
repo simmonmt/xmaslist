@@ -8,7 +8,8 @@ import Typography from "@material-ui/core/Typography";
 import Alert from "@material-ui/lab/Alert";
 import * as React from "react";
 import { Redirect, useLocation } from "react-router-dom";
-import { User, AuthModel } from "./auth_model";
+import { AuthModel } from "./auth_model";
+import { User } from "./user";
 
 interface Props extends WrappedLoginProps {
   classes: any;
