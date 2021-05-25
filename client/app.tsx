@@ -2,6 +2,7 @@ import * as React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import Cookies from "universal-cookie";
 import { ListServicePromiseClient } from "../proto/list_service_grpc_web_pb";
+import { UserServicePromiseClient } from "../proto/user_service_grpc_web_pb";
 import { AuthServicePromiseClient } from "../proto/auth_service_grpc_web_pb";
 import { Banner } from "./banner";
 import { Home } from "./home";
@@ -12,6 +13,7 @@ import { ProtectedRoute, ProtectedRouteProps } from "./protected_route";
 import { AuthModel } from "./auth_model";
 import { User } from "./user";
 import { AuthStorage } from "./auth_storage";
+import { UserModel } from "./user_model";
 
 interface Props {}
 
@@ -20,8 +22,9 @@ interface State {
 }
 
 class App extends React.Component<Props, State> {
-  private readonly listModel: ListModel;
   private readonly authModel: AuthModel;
+  private readonly listModel: ListModel;
+  private readonly userModel: UserModel;
   private readonly cookies: Cookies;
 
   constructor(props: Props) {
@@ -30,14 +33,16 @@ class App extends React.Component<Props, State> {
     const rpcUrl = document.location.origin;
     console.log("rpcUrl", rpcUrl);
 
-    const userService = new AuthServicePromiseClient(rpcUrl, null, null);
-    const userStorage = new AuthStorage();
+    const authService = new AuthServicePromiseClient(rpcUrl, null, null);
+    const authStorage = new AuthStorage();
     this.cookies = new Cookies();
 
     const listService = new ListServicePromiseClient(rpcUrl, null, null);
+    const userService = new UserServicePromiseClient(rpcUrl, null, null);
 
-    this.authModel = new AuthModel(userService, userStorage, this.cookies);
+    this.authModel = new AuthModel(authService, authStorage, this.cookies);
     this.listModel = new ListModel(listService, this.authModel);
+    this.userModel = new UserModel(userService, this.authModel);
     this.state = {
       user: this.authModel.getUser(),
     };
@@ -69,7 +74,7 @@ class App extends React.Component<Props, State> {
               />
             </Route>
             <ProtectedRoute {...defaultProtectedRouteProps} path="/">
-              <Home listModel={this.listModel} />
+              <Home listModel={this.listModel} userModel={this.userModel} />
             </ProtectedRoute>
           </Switch>
         </div>

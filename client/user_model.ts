@@ -15,24 +15,26 @@ export class UserModel {
     this.authModel = authModel;
   }
 
-  getUsers(ids: number[]): Promise<User[]> {
-    const res: User[] = [];
+  getUser(id: number): User | undefined {
+    return this.users.get(id);
+  }
+
+  loadUsers(ids: number[]): Promise<boolean> {
     let missingIds = new Set<number>();
     for (const id of ids) {
-      let user = this.users.get(id);
-      if (user) {
-        res.push(user);
-      } else if (!this.badUsers.has(id)) {
+      if (!this.users.has(id) && !this.badUsers.has(id)) {
         missingIds.add(id);
       }
     }
+    console.log("loadusers missingids", missingIds);
 
     if (!missingIds.size) {
-      return Promise.resolve(res);
+      return Promise.resolve(true);
     }
 
     const req = new GetUsersRequest();
     req.setIdsList(Array.from(missingIds.values()));
+    console.log("fetching", Array.from(missingIds.values()));
 
     return this.userService
       .getUsers(req, this.metadata())
@@ -41,14 +43,15 @@ export class UserModel {
           const user = new User(userInfo);
           this.users.set(user.id, user);
           missingIds.delete(user.id);
-          res.push(user);
+          console.log("got", user.id);
         }
 
+        console.log("still missing", Array.from(missingIds.values()));
         for (const id of Array.from(missingIds.values())) {
           this.badUsers.add(id);
         }
 
-        return res;
+        return Promise.resolve(true);
       });
   }
 

@@ -9,9 +9,11 @@ import * as React from "react";
 import { Redirect } from "react-router-dom";
 import { List as ListProto } from "../proto/list_pb";
 import { ListModel } from "./list_model";
+import { UserModel } from "./user_model";
 
 interface Props {
   listModel: ListModel;
+  userModel: UserModel;
   onShouldLogout: () => void;
   classes: any;
 }
@@ -35,14 +37,29 @@ class Home extends React.Component<Props, State> {
   }
 
   componentDidMount() {
-    this.props.listModel.listLists(false).then(
-      (lists: ListProto[]) => {
+    let gotLists: ListProto[] = [];
+
+    this.props.listModel
+      .listLists(false)
+      .then((lists: ListProto[]) => {
+        console.log("got lists", lists);
+        let needIds = new Set<number>();
+        for (const list of lists) {
+          needIds.add(list.getMetadata()!.getOwner());
+        }
+
+        gotLists = lists;
+        console.log("loading users", needIds);
+        return this.props.userModel.loadUsers(Array.from(needIds.values()));
+      })
+      .then((unused: boolean) => {
+        console.log("loaded users");
         this.setState({
           loading: false,
-          lists: lists,
+          lists: gotLists,
         });
-      },
-      (status: Status) => {
+      })
+      .catch((status: Status) => {
         if (status.code === StatusCode.UNAUTHENTICATED) {
           this.setState({ loggedIn: false });
           return;
@@ -52,8 +69,7 @@ class Home extends React.Component<Props, State> {
           loading: false,
           errorMessage: status.details,
         });
-      }
-    );
+      });
   }
 
   render() {
@@ -69,7 +85,8 @@ class Home extends React.Component<Props, State> {
 
   private listElement(list: ListProto) {
     const data = list.getData();
-    if (!data) {
+    const meta = list.getMetadata();
+    if (!data || !meta) {
       return;
     }
 
@@ -78,9 +95,17 @@ class Home extends React.Component<Props, State> {
       { year: "numeric", month: "long", day: "numeric" }
     );
 
+    const ownerUser = this.props.userModel.getUser(meta.getOwner());
+    const owner = ownerUser ? ownerUser.username : "unknown";
+
+    let secondary =
+      `Owner: ${owner} ` +
+      `For: ${data.getBeneficiary()} ` +
+      `On: ${eventDate}`;
+
     return (
       <ListItem button>
-        <ListItemText primary={data.getName()} secondary={eventDate} />
+        <ListItemText primary={data.getName()} secondary={secondary} />
       </ListItem>
     );
   }
