@@ -26,6 +26,13 @@ module.exports = {
       return;
     }
 
+    // This warning fires on a check to see if 'this' is defined. Nothing to
+    // be fixed upstream -- the code is being properly defensive.
+    if (warning.code === 'THIS_IS_UNDEFINED' &&
+        warning.loc.file.includes('universal-cookie/es6/Cookies.js')) {
+      return;
+    }
+
     // Use the default handler for everything else.
     warn(warning);
   },
