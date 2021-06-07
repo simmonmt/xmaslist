@@ -6,6 +6,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
+	"net/url"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -79,7 +81,17 @@ type DB struct {
 }
 
 func Open(path string) (*DB, error) {
-	db, err := sql.Open("sqlite3", path)
+	args := url.Values{}
+	args.Set("_mutex", "full")
+
+	url := url.URL{
+		Scheme:   "file",
+		Path:     path,
+		RawQuery: args.Encode(),
+	}
+	log.Printf("DSN = %s\n", url.String())
+
+	db, err := sql.Open("sqlite3", url.String())
 	if err != nil {
 		return nil, err
 	}

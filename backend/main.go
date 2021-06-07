@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -95,17 +94,7 @@ func main() {
 
 	clock := &util.RealClock{}
 
-	dbArgs := url.Values{}
-	dbArgs.Set("_mutex", "full")
-
-	dbURL := url.URL{
-		Scheme:   "file",
-		Path:     *dbPath,
-		RawQuery: dbArgs.Encode(),
-	}
-	log.Printf("DSN = %s\n", dbURL.String())
-
-	db, err := database.Open(dbURL.String())
+	db, err := database.Open(*dbPath)
 	if err != nil {
 		log.Fatalf("failed to open database: %v", err)
 	}
