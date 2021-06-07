@@ -333,16 +333,7 @@ func TestListLists(t *testing.T) {
 		return
 	}
 
-	wantOwnerID := usersByUsername["b"]
-	want := &List{
-		ID:       lists[1].ID,
-		OwnerID:  wantOwnerID,
-		Version:  1,
-		ListData: *listDatas["b"],
-		Created:  makeStamp(wantOwnerID),
-		Updated:  makeStamp(wantOwnerID),
-	}
-
+	want := lists[1]
 	if !reflect.DeepEqual(got[0], want) {
 		t.Errorf("ListLists(only=%d) = [%+v], nil, want [%+v], nil",
 			lists[1].ID, got[0], want)
