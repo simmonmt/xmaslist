@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"strconv"
 	"time"
 
 	"github.com/google/subcommands"
@@ -13,7 +14,7 @@ type listCreateCommand struct {
 	baseCommand
 
 	active      bool
-	ownerID     int
+	owner       string
 	name        string
 	beneficiary string
 	eventDate   string
@@ -30,14 +31,14 @@ func (c *listCreateCommand) Usage() string {
 
 func (c *listCreateCommand) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&c.active, "active", true, "Whether list is active")
-	f.IntVar(&c.ownerID, "owner", -1, "Owner ID")
+	f.StringVar(&c.owner, "owner", "", "Owner")
 	f.StringVar(&c.beneficiary, "beneficiary", "", "Beneficiary")
 	f.StringVar(&c.eventDate, "event_date", "", "Event Date")
 	f.StringVar(&c.name, "name", "", "Event name")
 }
 
 func (c *listCreateCommand) Execute(ctx context.Context, f *flag.FlagSet, args ...interface{}) subcommands.ExitStatus {
-	if c.ownerID == -1 {
+	if c.owner == "" {
 		return c.usage("--owner is required")
 	}
 	if c.beneficiary == "" {
@@ -69,7 +70,19 @@ func (c *listCreateCommand) Execute(ctx context.Context, f *flag.FlagSet, args .
 		return c.failure("failed to open database: %v", err)
 	}
 
-	list, err := db.CreateList(ctx, c.ownerID, listData, time.Now())
+	owner, err := strconv.Atoi(c.owner)
+	if err != nil {
+		user, err := db.LookupUserByUsername(ctx, c.owner)
+		if err != nil {
+			return c.failure("failed to lookup user %v: %v", c.owner, err)
+		}
+		if user == nil {
+			return c.failure("no such user %v", c.owner)
+		}
+		owner = user.ID
+	}
+
+	list, err := db.CreateList(ctx, owner, listData, time.Now())
 	if err != nil {
 		return c.failure("failed to create list: %v", err)
 	}
