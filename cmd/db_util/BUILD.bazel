@@ -5,9 +5,12 @@ go_library(
     srcs = [
         "command.go",
         "db_util.go",
+        "list_create.go",
+        "list_list.go",
         "user_add.go",
         "user_list.go",
         "user_lookup.go",
+        "util.go",
     ],
     importpath = "github.com/simmonmt/xmaslist/cmd/db_util",
     visibility = ["//visibility:private"],
