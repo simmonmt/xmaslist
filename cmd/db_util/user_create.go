@@ -8,24 +8,24 @@ import (
 	"github.com/simmonmt/xmaslist/backend/database"
 )
 
-type userAddCommand struct {
+type userCreateCommand struct {
 	baseCommand
 
 	isAdmin bool
 }
 
-func (c *userAddCommand) Name() string     { return "add" }
-func (c *userAddCommand) Synopsis() string { return "Add a single user" }
-func (c *userAddCommand) Usage() string {
-	return `user add db_path [--admin] username fullname password
+func (c *userCreateCommand) Name() string     { return "create" }
+func (c *userCreateCommand) Synopsis() string { return "Create a single user" }
+func (c *userCreateCommand) Usage() string {
+	return `user create db_path [--admin] username fullname password
 `
 }
 
-func (c *userAddCommand) SetFlags(f *flag.FlagSet) {
-	f.BoolVar(&c.isAdmin, "admin", false, "Add admin user")
+func (c *userCreateCommand) SetFlags(f *flag.FlagSet) {
+	f.BoolVar(&c.isAdmin, "admin", false, "Create admin user")
 }
 
-func (c *userAddCommand) Execute(ctx context.Context, f *flag.FlagSet, args ...interface{}) subcommands.ExitStatus {
+func (c *userCreateCommand) Execute(ctx context.Context, f *flag.FlagSet, args ...interface{}) subcommands.ExitStatus {
 	user := &database.User{}
 	var dbPath, password string
 	if err := c.unpackArgs(f, &dbPath, &user.Username, &user.Fullname, &password); err != nil {
@@ -40,8 +40,8 @@ func (c *userAddCommand) Execute(ctx context.Context, f *flag.FlagSet, args ...i
 
 	userID, err := db.CreateUser(ctx, user, password)
 	if err != nil {
-		return c.failure("failed to add user: %v", err)
+		return c.failure("failed to create user: %v", err)
 	}
 
-	return c.success("Added user %v", userID)
+	return c.success("Created user %v", userID)
 }

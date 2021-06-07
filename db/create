@@ -12,7 +12,7 @@ function usage {
     exit 2
 }
 
-function user_add {
+function user_create {
     local dbfile="$1"
     local username="$2"
     local fullname="$3"
@@ -30,7 +30,7 @@ function user_add {
         die "bad admin value"
     fi
 
-    bazel-bin/cmd/db_util/db_util_/db_util user add ${adminflag} \
+    bazel-bin/cmd/db_util/db_util_/db_util user create ${adminflag} \
           "${dbfile}" "${username}" "${fullname}" "${password}"
 }
 
@@ -107,8 +107,8 @@ sqlite3 ${DB_TMPFILE} <db/schema/schema.txt
 if [[ "${LOADTESTDATA}" -eq 1 ]] ; then
     bazel build cmd/db_util
 
-    user_add ${DB_TMPFILE} a "User A" aa admin
-    user_add ${DB_TMPFILE} b "User B" bb
+    user_create ${DB_TMPFILE} a "User A" aa admin
+    user_create ${DB_TMPFILE} b "User B" bb
 
     bazel-bin/cmd/db_util/db_util_/db_util user list ${DB_TMPFILE}
 
