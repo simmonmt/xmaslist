@@ -121,6 +121,19 @@ func TestLookupUser(t *testing.T) {
 			t.Errorf("LookupUser(_, %v) = %+v, %v, want %+v, nil",
 				user.ID, gotUser, err, user)
 		}
+
+		gotUser, err = db.LookupUserByUsername(ctx, user.Username)
+		if err != nil || !reflect.DeepEqual(gotUser, user) {
+			t.Errorf("LookupUser(_, %v) = %+v, %v, want %+v, nil",
+				user.Username, gotUser, err, user)
+		}
+
+		badUsername := user.Username + "zz"
+		gotUser, err = db.LookupUserByUsername(ctx, badUsername)
+		if err != nil || gotUser != nil {
+			t.Errorf("LookupUser(_, %v) = %v, %v, want nil, nil",
+				badUsername, gotUser, err)
+		}
 	}
 }
 

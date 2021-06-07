@@ -168,6 +168,21 @@ func (db *DB) LookupUserByID(ctx context.Context, userID int) (*User, error) {
 	return user, err
 }
 
+func (db *DB) LookupUserByUsername(ctx context.Context, username string) (*User, error) {
+	query := `SELECT id, fullname, admin FROM users WHERE username = ?`
+
+	user := &User{Username: username}
+	err := db.db.QueryRowContext(ctx, query, username).Scan(
+		&user.ID, &user.Fullname, &user.Admin)
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return nil, nil
+	case err != nil:
+		return nil, err
+	}
+	return user, err
+}
+
 func (db *DB) ListUsers(ctx context.Context) ([]*User, error) {
 	query := `SELECT id, username, fullname, admin FROM users`
 
