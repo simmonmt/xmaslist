@@ -18,7 +18,7 @@ type userListCommand struct {
 func (c *userListCommand) Name() string     { return "list" }
 func (c *userListCommand) Synopsis() string { return "List users" }
 func (c *userListCommand) Usage() string {
-	return `user lookup db_path
+	return `user list db_path
 `
 }
 func (c *userListCommand) SetFlags(f *flag.FlagSet) {}
