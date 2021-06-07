@@ -122,7 +122,7 @@ func (db *DB) Close() error {
 	return err
 }
 
-func (db *DB) AddUser(ctx context.Context, user *User, password string) (int, error) {
+func (db *DB) CreateUser(ctx context.Context, user *User, password string) (int, error) {
 	if user.ID != 0 {
 		panic("ID must be 0")
 	}

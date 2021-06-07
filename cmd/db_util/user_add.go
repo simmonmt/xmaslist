@@ -38,7 +38,7 @@ func (c *userAddCommand) Execute(ctx context.Context, f *flag.FlagSet, args ...i
 		return c.failure("failed to open database: %v", err)
 	}
 
-	userID, err := db.AddUser(ctx, user, password)
+	userID, err := db.CreateUser(ctx, user, password)
 	if err != nil {
 		return c.failure("failed to add user: %v", err)
 	}

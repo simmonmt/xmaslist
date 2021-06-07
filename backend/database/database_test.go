@@ -46,9 +46,9 @@ func createTestDatabase() (db *DB, err error) {
 	for _, user := range users {
 		password := passwords[user.Username]
 		var userID int
-		userID, err = db.AddUser(ctx, user, password)
+		userID, err = db.CreateUser(ctx, user, password)
 		if err != nil {
-			panic(fmt.Sprintf("AddUser(_, %v, %v) = _, %v, want _, nil", user, password, err))
+			panic(fmt.Sprintf("CreateUser(_, %v, %v) = _, %v, want _, nil", user, password, err))
 			return
 		}
 
