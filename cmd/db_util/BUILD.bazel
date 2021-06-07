@@ -7,7 +7,7 @@ go_library(
         "db_util.go",
         "list_create.go",
         "list_list.go",
-        "user_add.go",
+        "user_create.go",
         "user_list.go",
         "user_lookup.go",
         "util.go",
