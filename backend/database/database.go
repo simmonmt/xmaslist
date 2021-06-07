@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 	"time"
 
@@ -105,7 +104,7 @@ func open(path string, args *url.Values) (*DB, error) {
 		Path:     path,
 		RawQuery: args.Encode(),
 	}
-	log.Printf("DSN = %s\n", url.String())
+	//log.Printf("DSN = %s\n", url.String())
 
 	db, err := sql.Open("sqlite3", url.String())
 	if err != nil {
