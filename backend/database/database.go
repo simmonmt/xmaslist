@@ -80,8 +80,24 @@ type DB struct {
 	db *sql.DB
 }
 
+func OpenInMemory() (*DB, error) {
+	args := &url.Values{}
+	args.Set("mode", "memory")
+	args.Set("cache", "shared")
+
+	return open("/nonexistent", args)
+}
+
 func Open(path string) (*DB, error) {
-	args := url.Values{}
+	return open(path, nil)
+}
+
+func open(path string, args *url.Values) (*DB, error) {
+	if args == nil {
+		args = &url.Values{}
+	}
+
+	args.Set("_foreign_keys", "true")
 	args.Set("_mutex", "full")
 
 	url := url.URL{

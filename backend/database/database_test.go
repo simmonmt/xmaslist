@@ -34,7 +34,7 @@ var (
 )
 
 func createTestDatabase() (db *DB, err error) {
-	db, err = Open(":memory")
+	db, err = OpenInMemory()
 	if err != nil {
 		return nil, err
 	}
