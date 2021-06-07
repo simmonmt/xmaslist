@@ -34,10 +34,39 @@ function user_add {
           "${dbfile}" "${username}" "${fullname}" "${password}"
 }
 
+function list_create {
+    local dbfile="$1"
+    local owner="$2"
+    local beneficiary="$3"
+    local eventdate="$4"
+    local name="$5"
+
+    local activeflag="--active=true"
+    if [[ "$6" == "inactive" ]] ; then
+        activeflag="--active=false"
+    elif [[ -n "$6" ]] ; then
+        die "bad active value"
+    fi
+
+    [[ -n "${dbfile}" ]] || die "missing dbfile"
+    [[ -n "${owner}" ]] || die "missing owner"
+    [[ -n "${beneficiary}" ]] || die "missing beneficiary"
+    [[ -n "${eventdate}" ]] || die "missing eventdate"
+    [[ -n "${name}" ]] || die "missing name"
+
+    bazel-bin/cmd/db_util/db_util_/db_util list create \
+          --owner="${owner}" \
+          --beneficiary="${beneficiary}" \
+          --event_date="${eventdate}" \
+          --name="${name}" \
+          ${activeflag} \
+          "${dbfile}"
+}
+
 PROGNAME=$(basename "$0")
 
 GETOPT=getopt
-if which -s brew ; then
+if which brew >/dev/null 2>&1 ; then
     prefix=$(brew --prefix gnu-getopt 2>/dev/null)
     if [[ -n "${prefix}" ]] ; then
 	GETOPT="${prefix}/bin/getopt"
@@ -80,6 +109,15 @@ if [[ "${LOADTESTDATA}" -eq 1 ]] ; then
 
     user_add ${DB_TMPFILE} a "User A" aa admin
     user_add ${DB_TMPFILE} b "User B" bb
+
+    bazel-bin/cmd/db_util/db_util_/db_util user list ${DB_TMPFILE}
+
+    list_create ${DB_TMPFILE} a aben1 2021-09-06T00:00:00-04:00 "a list 1"
+    list_create ${DB_TMPFILE} a aben2 2021-09-15T01:00:00-04:00 "a list 2" inactive
+    list_create ${DB_TMPFILE} b bben1 2021-09-17T02:00:00-04:00 "b list 1" inactive
+    list_create ${DB_TMPFILE} b bben2 2021-09-18T03:00:00-04:00 "b list 2"
+
+    bazel-bin/cmd/db_util/db_util_/db_util list list ${DB_TMPFILE}
 fi
 
 docker volume create ${VOL}
