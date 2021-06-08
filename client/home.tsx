@@ -1,11 +1,15 @@
 import Fab from "@material-ui/core/Fab";
+import IconButton from "@material-ui/core/IconButton";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
+import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
 import ListItemText from "@material-ui/core/ListItemText";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import AddIcon from "@material-ui/icons/Add";
+import ArchiveIcon from "@material-ui/icons/Archive";
+import UnarchiveIcon from "@material-ui/icons/Unarchive";
 import { Status, StatusCode } from "grpc-web";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
@@ -92,6 +96,17 @@ class Home extends React.Component<Props, State> {
     );
   }
 
+  private archiveButton(isActive: boolean) {
+    const label = isActive ? "archive" : "unarchive";
+    const icon = isActive ? <ArchiveIcon /> : <UnarchiveIcon />;
+
+    return (
+      <IconButton edge="end" aria-label={label}>
+        {icon}
+      </IconButton>
+    );
+  }
+
   private listElement(list: ListProto) {
     const data = list.getData();
     const meta = list.getMetadata();
@@ -115,6 +130,9 @@ class Home extends React.Component<Props, State> {
     return (
       <ListItem button>
         <ListItemText primary={data.getName()} secondary={secondary} />
+        <ListItemSecondaryAction>
+          {this.archiveButton(meta.getActive())}
+        </ListItemSecondaryAction>
       </ListItem>
     );
   }
