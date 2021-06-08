@@ -10,6 +10,7 @@ import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import AddIcon from "@material-ui/icons/Add";
 import ArchiveIcon from "@material-ui/icons/Archive";
 import UnarchiveIcon from "@material-ui/icons/Unarchive";
+import Alert from "@material-ui/lab/Alert";
 import { Status, StatusCode } from "grpc-web";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
@@ -40,6 +41,8 @@ class Home extends React.Component<Props, State> {
       errorMessage: "",
       lists: [],
     };
+
+    this.handleAlertClose = this.handleAlertClose.bind(this);
   }
 
   componentDidMount() {
@@ -63,6 +66,7 @@ class Home extends React.Component<Props, State> {
         this.setState({
           loading: false,
           lists: gotLists,
+          errorMessage: "no error",
         });
       })
       .catch((status: Status) => {
@@ -83,7 +87,15 @@ class Home extends React.Component<Props, State> {
       <div className={this.props.classes.root}>
         {!this.state.loggedIn && <Redirect to="/logout" />}
         {this.state.loading && <LinearProgress />}
-        {this.state.errorMessage && <div>{this.state.errorMessage}</div>}
+        {this.state.errorMessage && (
+          <Alert
+            severity="error"
+            variant="standard"
+            onClose={this.handleAlertClose}
+          >
+            {this.state.errorMessage}
+          </Alert>
+        )}
         <List>{this.state.lists.map((list) => this.listElement(list))}</List>
         <Fab
           color="primary"
@@ -135,6 +147,10 @@ class Home extends React.Component<Props, State> {
         </ListItemSecondaryAction>
       </ListItem>
     );
+  }
+
+  private handleAlertClose() {
+    this.setState({ errorMessage: "" });
   }
 }
 
