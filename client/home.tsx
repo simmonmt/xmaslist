@@ -163,7 +163,7 @@ class Home extends React.Component<Props, State> {
       `On: ${eventDate}`;
 
     return (
-      <ListItem button>
+      <ListItem key={list.getId()} button>
         <ListItemText primary={data.getName()} secondary={secondary} />
         <ListItemSecondaryAction>
           {this.archiveButton(meta.getActive())}
