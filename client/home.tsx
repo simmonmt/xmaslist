@@ -1,9 +1,11 @@
+import Fab from "@material-ui/core/Fab";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
+import AddIcon from "@material-ui/icons/Add";
 import { Status, StatusCode } from "grpc-web";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
@@ -79,6 +81,13 @@ class Home extends React.Component<Props, State> {
         {this.state.loading && <LinearProgress />}
         {this.state.errorMessage && <div>{this.state.errorMessage}</div>}
         <List>{this.state.lists.map((list) => this.listElement(list))}</List>
+        <Fab
+          color="primary"
+          aria-label="add"
+          className={this.props.classes.fab}
+        >
+          <AddIcon />
+        </Fab>
       </div>
     );
   }
@@ -115,6 +124,11 @@ const homeStyles = (theme: Theme) =>
   createStyles({
     root: {
       width: "100%",
+    },
+    fab: {
+      position: "absolute",
+      bottom: theme.spacing(2),
+      right: theme.spacing(2),
     },
   });
 
