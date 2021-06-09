@@ -45,6 +45,15 @@ export class ListModel {
       });
   }
 
+  changeActiveState(
+    listId: string,
+    version: number,
+    newState: boolean
+  ): Promise<void> {
+    console.log("request to change", listId, "to state", newState);
+    return Promise.resolve();
+  }
+
   private metadata(): Metadata {
     const cookie = this.authModel.getSessionCookie();
     return { authorization: cookie ? cookie : "" };

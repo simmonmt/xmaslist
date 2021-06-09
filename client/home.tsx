@@ -133,12 +133,12 @@ class Home extends React.Component<Props, State> {
     );
   }
 
-  private archiveButton(isActive: boolean) {
+  private archiveButton(isActive: boolean, clickHandler: () => void) {
     const label = isActive ? "archive" : "unarchive";
     const icon = isActive ? <ArchiveIcon /> : <UnarchiveIcon />;
 
     return (
-      <IconButton edge="end" aria-label={label}>
+      <IconButton edge="end" aria-label={label} onClick={clickHandler}>
         {icon}
       </IconButton>
     );
@@ -163,6 +163,11 @@ class Home extends React.Component<Props, State> {
       `Owner: ${owner} ` + //
       `For: ${data.getBeneficiary()} `;
 
+    const handleArchiveClick = () => {
+      this.handleArchiveClick(String(list.getId()), Boolean(meta.getActive()));
+      return false;
+    };
+
     return (
       <div>
         <ListItem key={list.getId()} button>
@@ -180,7 +185,7 @@ class Home extends React.Component<Props, State> {
             </div>
           </ListItemText>
           <ListItemSecondaryAction>
-            {this.archiveButton(meta.getActive())}
+            {this.archiveButton(meta.getActive(), handleArchiveClick)}
           </ListItemSecondaryAction>
         </ListItem>
         <Divider />
@@ -194,6 +199,37 @@ class Home extends React.Component<Props, State> {
 
   private handleShowArchivedChange(evt: React.ChangeEvent<HTMLInputElement>) {
     this.setState({ showArchived: evt.target.checked }, this.loadLists);
+  }
+
+  private handleArchiveClick(id: string, isActive: boolean) {
+    let idx = -1;
+    for (let i = 0; i < this.state.lists.length; ++i) {
+      if (this.state.lists[i].getId() === id) {
+        idx = i;
+        break;
+      }
+    }
+
+    if (idx < 0) {
+      console.log("archive click on unknown list", id);
+      return;
+    }
+
+    const copy = this.state.lists.slice();
+    if (isActive && !this.state.showArchived) {
+      copy.splice(idx, 1);
+    } else {
+      const newList = copy[idx].cloneMessage();
+      newList.getMetadata()!.setActive(!isActive);
+      copy[idx] = newList;
+    }
+    this.setState({ lists: copy });
+
+    this.props.listModel.changeActiveState(
+      id,
+      Number(copy[idx].getVersion()),
+      !isActive
+    );
   }
 }
 
