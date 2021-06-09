@@ -7,7 +7,7 @@ option go_package = "github.com/simmonmt/xmaslist/proto/list_service";
 message ListData {
   string name = 1;
   string beneficiary = 2;
-  int64 event_date = 3;
+  int64 event_date = 3;  // seconds
 }
 
 message ListMetadata {
