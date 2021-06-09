@@ -1,3 +1,8 @@
+import Button from "@material-ui/core/Button";
+import Dialog from "@material-ui/core/Dialog";
+import DialogActions from "@material-ui/core/DialogActions";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogTitle from "@material-ui/core/DialogTitle";
 import Divider from "@material-ui/core/Divider";
 import Fab from "@material-ui/core/Fab";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
@@ -10,6 +15,7 @@ import ListItemText from "@material-ui/core/ListItemText";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import Switch from "@material-ui/core/Switch";
+import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
 import AddIcon from "@material-ui/icons/Add";
 import ArchiveIcon from "@material-ui/icons/Archive";
@@ -35,6 +41,7 @@ interface State {
   errorMessage: string;
   lists: ListProto[];
   showArchived: boolean;
+  addDialogOpen: boolean;
 }
 
 class Home extends React.Component<Props, State> {
@@ -46,10 +53,14 @@ class Home extends React.Component<Props, State> {
       errorMessage: "",
       lists: [],
       showArchived: false,
+      addDialogOpen: false,
     };
 
     this.handleAlertClose = this.handleAlertClose.bind(this);
     this.handleShowArchivedChange = this.handleShowArchivedChange.bind(this);
+    this.handleAddClicked = this.handleAddClicked.bind(this);
+    this.handleAddDialogCancel = this.handleAddDialogCancel.bind(this);
+    this.handleAddDialogOk = this.handleAddDialogOk.bind(this);
   }
 
   componentDidMount() {
@@ -126,9 +137,40 @@ class Home extends React.Component<Props, State> {
           color="primary"
           aria-label="add"
           className={this.props.classes.fab}
+          onClick={this.handleAddClicked}
         >
           <AddIcon />
         </Fab>
+        <Dialog
+          open={this.state.addDialogOpen}
+          onClose={this.handleAddDialogCancel}
+          aria-labelled-by="add-dialog-title"
+        >
+          <DialogTitle id="add-dialog-title">Create List</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label="List name"
+              fullWidth
+            />
+            <TextField
+              margin="dense"
+              id="beneficiary"
+              label="Beneficiary"
+              fullWidth
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.handleAddDialogCancel} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={this.handleAddDialogOk} color="primary">
+              Create List
+            </Button>
+          </DialogActions>
+        </Dialog>
       </div>
     );
   }
@@ -230,6 +272,18 @@ class Home extends React.Component<Props, State> {
       Number(copy[idx].getVersion()),
       !isActive
     );
+  }
+
+  private handleAddClicked() {
+    this.setState({ addDialogOpen: true });
+  }
+
+  private handleAddDialogCancel() {
+    this.setState({ addDialogOpen: false });
+  }
+
+  private handleAddDialogOk() {
+    this.setState({ addDialogOpen: false });
   }
 }
 
