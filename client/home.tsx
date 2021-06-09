@@ -18,6 +18,7 @@ import AddIcon from "@material-ui/icons/Add";
 import ArchiveIcon from "@material-ui/icons/Archive";
 import UnarchiveIcon from "@material-ui/icons/Unarchive";
 import Alert from "@material-ui/lab/Alert";
+import { format, formatDistanceToNow } from "date-fns";
 import { Status, StatusCode } from "grpc-web";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
@@ -171,37 +172,39 @@ class Home extends React.Component<Props, State> {
       return;
     }
 
-    let eventDate = new Date(data.getEventDate() * 1000).toLocaleDateString(
-      undefined,
-      { year: "numeric", month: "long", day: "numeric" }
-    );
-
+    let eventDate = new Date(data.getEventDate() * 1000);
     const ownerUser = this.props.userModel.getUser(meta.getOwner());
     const owner = ownerUser ? ownerUser.username : "unknown";
-
-    let secondary =
-      `Owner: ${owner} ` + //
-      `For: ${data.getBeneficiary()} `;
 
     const handleArchiveClick = () => {
       this.handleArchiveClick(String(list.getId()), Boolean(meta.getActive()));
       return false;
     };
 
+    console.log(formatDistanceToNow);
+
     return (
       <React.Fragment key={list.getId()}>
         <ListItem button>
           <ListItemText>
             <div className={this.props.classes.listItem}>
-              <div className={this.props.classes.listText}>
+              <div>
                 <div>{data.getName()}</div>
                 <div>
                   <Typography variant="body2" color="textSecondary">
-                    {secondary}
+                    Owner: {owner}
+                    For: {data.getBeneficiary()}
                   </Typography>
                 </div>
               </div>
-              <div>{eventDate}</div>
+              <div>
+                <div>{format(eventDate, "MMM do, yyyy")}</div>
+                <div className={this.props.classes.listDuration}>
+                  <Typography variant="body2" color="textSecondary">
+                    {formatDistanceToNow(eventDate)}
+                  </Typography>
+                </div>
+              </div>
             </div>
           </ListItemText>
           <ListItemSecondaryAction>
@@ -303,6 +306,9 @@ const homeStyles = (theme: Theme) =>
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
+    },
+    listDuration: {
+      textAlign: "right",
     },
   });
 
