@@ -21,6 +21,7 @@ import AddIcon from "@material-ui/icons/Add";
 import ArchiveIcon from "@material-ui/icons/Archive";
 import UnarchiveIcon from "@material-ui/icons/Unarchive";
 import Alert from "@material-ui/lab/Alert";
+import { KeyboardDatePicker } from "@material-ui/pickers";
 import { Status, StatusCode } from "grpc-web";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
@@ -42,6 +43,9 @@ interface State {
   lists: ListProto[];
   showArchived: boolean;
   addDialogOpen: boolean;
+  addDialogName: string | null;
+  addDialogBeneficiary: string | null;
+  addDialogEventDate: Date | null;
 }
 
 class Home extends React.Component<Props, State> {
@@ -54,6 +58,9 @@ class Home extends React.Component<Props, State> {
       lists: [],
       showArchived: false,
       addDialogOpen: false,
+      addDialogName: null,
+      addDialogBeneficiary: null,
+      addDialogEventDate: null,
     };
 
     this.handleAlertClose = this.handleAlertClose.bind(this);
@@ -85,7 +92,7 @@ class Home extends React.Component<Props, State> {
         console.log("loading users", needIds);
         return this.props.userModel.loadUsers(Array.from(needIds.values()));
       })
-      .then((unused: boolean) => {
+      .then(() => {
         console.log("loaded users");
         this.setState({
           loading: false,
@@ -106,6 +113,18 @@ class Home extends React.Component<Props, State> {
   }
 
   render() {
+    const handleDateChange = (date: Date | null) => {
+      this.setState({ addDialogEventDate: date });
+    };
+
+    const handleNameChange = (name: string | null) => {
+      this.setState({ addDialogName: name });
+    };
+
+    const handleBeneficiaryChange = (beneficiary: string | null) => {
+      this.setState({ addDialogBeneficiary: beneficiary });
+    };
+
     return (
       <div className={this.props.classes.root}>
         {!this.state.loggedIn && <Redirect to="/logout" />}
@@ -154,12 +173,23 @@ class Home extends React.Component<Props, State> {
               id="name"
               label="List name"
               fullWidth
+              value={this.state.addDialogName}
+              onChange={(event) => handleNameChange(event.target.value)}
             />
             <TextField
               margin="dense"
               id="beneficiary"
-              label="Beneficiary"
+              label="Who's it for?"
               fullWidth
+              value={this.state.addDialogBeneficiary}
+              onChange={(event) => handleBeneficiaryChange(event.target.value)}
+            />
+            <KeyboardDatePicker
+              value={this.state.addDialogEventDate}
+              onChange={handleDateChange}
+              label="Event date"
+              format="MM/dd/yyyy"
+              margin="normal"
             />
           </DialogContent>
           <DialogActions>

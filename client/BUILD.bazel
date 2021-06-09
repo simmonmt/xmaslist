@@ -34,6 +34,8 @@ ts_project(
         "@npm//@material-ui/core",
         "@npm//@material-ui/icons",
         "@npm//@material-ui/lab",
+        "@npm//@material-ui/pickers",
+        "@npm//@date-io/date-fns",
         "@npm//@types",
         "@npm//csstype",
         "@npm//google-protobuf",

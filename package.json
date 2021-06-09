@@ -42,10 +42,13 @@
     },
     "dependencies": {
         "@bazel/labs": "^3.4.1",
+        "@date-io/date-fns": "1.x",
         "@material-ui/core": "^4.11.2",
         "@material-ui/icons": "^4.11.2",
         "@material-ui/lab": "^4.0.0-alpha.58",
+        "@material-ui/pickers": "^3.3.10",
         "csstype": "^3.0.5",
+        "date-fns": "^2.22.1",
         "lorem-ipsum": "^2.0.3",
         "react-router-dom": "^5.2.0",
         "universal-cookie": "^4.0.4"

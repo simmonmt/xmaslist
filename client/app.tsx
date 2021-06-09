@@ -1,18 +1,20 @@
+import DateFnsUtils from "@date-io/date-fns";
+import { MuiPickersUtilsProvider } from "@material-ui/pickers";
 import * as React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import Cookies from "universal-cookie";
+import { AuthServicePromiseClient } from "../proto/auth_service_grpc_web_pb";
 import { ListServicePromiseClient } from "../proto/list_service_grpc_web_pb";
 import { UserServicePromiseClient } from "../proto/user_service_grpc_web_pb";
-import { AuthServicePromiseClient } from "../proto/auth_service_grpc_web_pb";
+import { AuthModel } from "./auth_model";
+import { AuthStorage } from "./auth_storage";
 import { Banner } from "./banner";
 import { Home } from "./home";
 import { ListModel } from "./list_model";
 import { Login } from "./login";
 import { Logout } from "./logout";
 import { ProtectedRoute, ProtectedRouteProps } from "./protected_route";
-import { AuthModel } from "./auth_model";
 import { User } from "./user";
-import { AuthStorage } from "./auth_storage";
 import { UserModel } from "./user_model";
 
 interface Props {}
@@ -55,30 +57,32 @@ class App extends React.Component<Props, State> {
     };
 
     return (
-      <Router>
-        <div>
-          <Banner user={this.state.user} />
+      <MuiPickersUtilsProvider utils={DateFnsUtils}>
+        <Router>
+          <div>
+            <Banner user={this.state.user} />
 
-          <Switch>
-            <Route path="/login">
-              <Login
-                user={this.state.user}
-                authModel={this.authModel}
-                onLogin={(user: User) => this.handleLogin(user)}
-              />
-            </Route>
-            <Route path="/logout">
-              <Logout
-                authModel={this.authModel}
-                onLogout={() => this.handleLogout()}
-              />
-            </Route>
-            <ProtectedRoute {...defaultProtectedRouteProps} path="/">
-              <Home listModel={this.listModel} userModel={this.userModel} />
-            </ProtectedRoute>
-          </Switch>
-        </div>
-      </Router>
+            <Switch>
+              <Route path="/login">
+                <Login
+                  user={this.state.user}
+                  authModel={this.authModel}
+                  onLogin={(user: User) => this.handleLogin(user)}
+                />
+              </Route>
+              <Route path="/logout">
+                <Logout
+                  authModel={this.authModel}
+                  onLogout={() => this.handleLogout()}
+                />
+              </Route>
+              <ProtectedRoute {...defaultProtectedRouteProps} path="/">
+                <Home listModel={this.listModel} userModel={this.userModel} />
+              </ProtectedRoute>
+            </Switch>
+          </div>
+        </Router>
+      </MuiPickersUtilsProvider>
     );
   }
 
