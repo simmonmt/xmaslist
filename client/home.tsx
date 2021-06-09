@@ -22,7 +22,7 @@ import { Status, StatusCode } from "grpc-web";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
 import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
-import { AddListDialog } from "./add_list_dialog";
+import { CreateListDialog } from "./create_list_dialog";
 import { ListModel } from "./list_model";
 import { UserModel } from "./user_model";
 
@@ -39,8 +39,8 @@ interface State {
   errorMessage: string;
   lists: ListProto[];
   showArchived: boolean;
-  addDialogOpen: boolean;
-  addingDialogOpen: boolean;
+  createDialogOpen: boolean;
+  creatingDialogOpen: boolean;
 }
 
 class Home extends React.Component<Props, State> {
@@ -52,14 +52,14 @@ class Home extends React.Component<Props, State> {
       errorMessage: "",
       lists: [],
       showArchived: false,
-      addDialogOpen: false,
-      addingDialogOpen: false,
+      createDialogOpen: false,
+      creatingDialogOpen: false,
     };
 
     this.handleAlertClose = this.handleAlertClose.bind(this);
     this.handleShowArchivedChange = this.handleShowArchivedChange.bind(this);
-    this.handleAddClicked = this.handleAddClicked.bind(this);
-    this.handleAddDialogClose = this.handleAddDialogClose.bind(this);
+    this.handleCreateClicked = this.handleCreateClicked.bind(this);
+    this.handleCreateDialogClose = this.handleCreateDialogClose.bind(this);
   }
 
   componentDidMount() {
@@ -134,17 +134,17 @@ class Home extends React.Component<Props, State> {
         <List>{this.state.lists.map((list) => this.listElement(list))}</List>
         <Fab
           color="primary"
-          aria-label="add"
+          aria-label="create"
           className={this.props.classes.fab}
-          onClick={this.handleAddClicked}
+          onClick={this.handleCreateClicked}
         >
           <AddIcon />
         </Fab>
-        <AddListDialog
-          open={this.state.addDialogOpen}
-          onClose={this.handleAddDialogClose}
+        <CreateListDialog
+          open={this.state.createDialogOpen}
+          onClose={this.handleCreateDialogClose}
         />
-        <Dialog open={this.state.addingDialogOpen}>
+        <Dialog open={this.state.creatingDialogOpen}>
           <DialogContent>
             <DialogContentText>Creating list</DialogContentText>
           </DialogContent>
@@ -252,24 +252,24 @@ class Home extends React.Component<Props, State> {
     );
   }
 
-  private handleAddClicked() {
-    this.setState({ addDialogOpen: true });
+  private handleCreateClicked() {
+    this.setState({ createDialogOpen: true });
   }
 
-  private handleAddDialogClose(listData: ListDataProto | null) {
-    this.setState({ addDialogOpen: false });
+  private handleCreateDialogClose(listData: ListDataProto | null) {
+    this.setState({ createDialogOpen: false });
     if (!listData) {
       return;
     }
 
-    this.setState({ addingDialogOpen: true });
+    this.setState({ creatingDialogOpen: true });
     this.props.listModel
       .createList(listData)
       .then((list: ListProto) => {
         const copy = this.state.lists.slice();
         copy.push(list);
 
-        this.setState({ addingDialogOpen: false, lists: copy });
+        this.setState({ creatingDialogOpen: false, lists: copy });
       })
       .catch((status: Status) => {
         if (status.code === StatusCode.UNAUTHENTICATED) {
@@ -278,7 +278,7 @@ class Home extends React.Component<Props, State> {
         }
 
         this.setState({
-          addingDialogOpen: false,
+          creatingDialogOpen: false,
           errorMessage: status.details,
         });
       });

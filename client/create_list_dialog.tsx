@@ -25,7 +25,7 @@ interface State {
   eventDateErrorMessage: string;
 }
 
-class AddListDialog extends React.Component<Props, State> {
+class CreateListDialog extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -58,9 +58,9 @@ class AddListDialog extends React.Component<Props, State> {
       <Dialog
         open={this.props.open}
         onClose={this.handleCancel}
-        aria-labelledby="add-dialog-title"
+        aria-labelledby="create-dialog-title"
       >
-        <DialogTitle id="add-dialog-title">Create List</DialogTitle>
+        <DialogTitle id="create-dialog-title">Create List</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -151,8 +151,10 @@ class AddListDialog extends React.Component<Props, State> {
   }
 }
 
-const addListDialogStyles = (theme: Theme) => createStyles({});
+const createListDialogStyles = (theme: Theme) => createStyles({});
 
-const StyledAddListDialog: any = withStyles(addListDialogStyles)(AddListDialog);
+const StyledCreateListDialog: any = withStyles(createListDialogStyles)(
+  CreateListDialog
+);
 
-export { StyledAddListDialog as AddListDialog };
+export { StyledCreateListDialog as CreateListDialog };
