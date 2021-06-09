@@ -1,8 +1,3 @@
-import Button from "@material-ui/core/Button";
-import Dialog from "@material-ui/core/Dialog";
-import DialogActions from "@material-ui/core/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogTitle from "@material-ui/core/DialogTitle";
 import Divider from "@material-ui/core/Divider";
 import Fab from "@material-ui/core/Fab";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
@@ -15,17 +10,16 @@ import ListItemText from "@material-ui/core/ListItemText";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import Switch from "@material-ui/core/Switch";
-import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
 import AddIcon from "@material-ui/icons/Add";
 import ArchiveIcon from "@material-ui/icons/Archive";
 import UnarchiveIcon from "@material-ui/icons/Unarchive";
 import Alert from "@material-ui/lab/Alert";
-import { KeyboardDatePicker } from "@material-ui/pickers";
 import { Status, StatusCode } from "grpc-web";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
-import { List as ListProto } from "../proto/list_pb";
+import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
+import { AddListDialog } from "./add_list_dialog";
 import { ListModel } from "./list_model";
 import { UserModel } from "./user_model";
 
@@ -43,9 +37,6 @@ interface State {
   lists: ListProto[];
   showArchived: boolean;
   addDialogOpen: boolean;
-  addDialogName: string | null;
-  addDialogBeneficiary: string | null;
-  addDialogEventDate: Date | null;
 }
 
 class Home extends React.Component<Props, State> {
@@ -58,16 +49,12 @@ class Home extends React.Component<Props, State> {
       lists: [],
       showArchived: false,
       addDialogOpen: false,
-      addDialogName: null,
-      addDialogBeneficiary: null,
-      addDialogEventDate: null,
     };
 
     this.handleAlertClose = this.handleAlertClose.bind(this);
     this.handleShowArchivedChange = this.handleShowArchivedChange.bind(this);
     this.handleAddClicked = this.handleAddClicked.bind(this);
-    this.handleAddDialogCancel = this.handleAddDialogCancel.bind(this);
-    this.handleAddDialogOk = this.handleAddDialogOk.bind(this);
+    this.handleAddDialogClose = this.handleAddDialogClose.bind(this);
   }
 
   componentDidMount() {
@@ -113,18 +100,6 @@ class Home extends React.Component<Props, State> {
   }
 
   render() {
-    const handleDateChange = (date: Date | null) => {
-      this.setState({ addDialogEventDate: date });
-    };
-
-    const handleNameChange = (name: string | null) => {
-      this.setState({ addDialogName: name });
-    };
-
-    const handleBeneficiaryChange = (beneficiary: string | null) => {
-      this.setState({ addDialogBeneficiary: beneficiary });
-    };
-
     return (
       <div className={this.props.classes.root}>
         {!this.state.loggedIn && <Redirect to="/logout" />}
@@ -160,47 +135,10 @@ class Home extends React.Component<Props, State> {
         >
           <AddIcon />
         </Fab>
-        <Dialog
+        <AddListDialog
           open={this.state.addDialogOpen}
-          onClose={this.handleAddDialogCancel}
-          aria-labelled-by="add-dialog-title"
-        >
-          <DialogTitle id="add-dialog-title">Create List</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="name"
-              label="List name"
-              fullWidth
-              value={this.state.addDialogName}
-              onChange={(event) => handleNameChange(event.target.value)}
-            />
-            <TextField
-              margin="dense"
-              id="beneficiary"
-              label="Who's it for?"
-              fullWidth
-              value={this.state.addDialogBeneficiary}
-              onChange={(event) => handleBeneficiaryChange(event.target.value)}
-            />
-            <KeyboardDatePicker
-              value={this.state.addDialogEventDate}
-              onChange={handleDateChange}
-              label="Event date"
-              format="MM/dd/yyyy"
-              margin="normal"
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={this.handleAddDialogCancel} color="primary">
-              Cancel
-            </Button>
-            <Button onClick={this.handleAddDialogOk} color="primary">
-              Create List
-            </Button>
-          </DialogActions>
-        </Dialog>
+          onClose={this.handleAddDialogClose}
+        />
       </div>
     );
   }
@@ -308,12 +246,9 @@ class Home extends React.Component<Props, State> {
     this.setState({ addDialogOpen: true });
   }
 
-  private handleAddDialogCancel() {
+  private handleAddDialogClose(listData: ListDataProto | null) {
     this.setState({ addDialogOpen: false });
-  }
-
-  private handleAddDialogOk() {
-    this.setState({ addDialogOpen: false });
+    console.log("add dialog closed, got listdata", listData);
   }
 }
 
