@@ -1,3 +1,6 @@
+import Dialog from "@material-ui/core/Dialog";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogContentText from "@material-ui/core/DialogContentText";
 import Divider from "@material-ui/core/Divider";
 import Fab from "@material-ui/core/Fab";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
@@ -37,6 +40,7 @@ interface State {
   lists: ListProto[];
   showArchived: boolean;
   addDialogOpen: boolean;
+  addingDialogOpen: boolean;
 }
 
 class Home extends React.Component<Props, State> {
@@ -49,6 +53,7 @@ class Home extends React.Component<Props, State> {
       lists: [],
       showArchived: false,
       addDialogOpen: false,
+      addingDialogOpen: false,
     };
 
     this.handleAlertClose = this.handleAlertClose.bind(this);
@@ -139,6 +144,11 @@ class Home extends React.Component<Props, State> {
           open={this.state.addDialogOpen}
           onClose={this.handleAddDialogClose}
         />
+        <Dialog open={this.state.addingDialogOpen}>
+          <DialogContent>
+            <DialogContentText>Creating list</DialogContentText>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
@@ -248,7 +258,30 @@ class Home extends React.Component<Props, State> {
 
   private handleAddDialogClose(listData: ListDataProto | null) {
     this.setState({ addDialogOpen: false });
-    console.log("add dialog closed, got listdata", listData);
+    if (!listData) {
+      return;
+    }
+
+    this.setState({ addingDialogOpen: true });
+    this.props.listModel
+      .createList(listData)
+      .then((list: ListProto) => {
+        const copy = this.state.lists.slice();
+        copy.push(list);
+
+        this.setState({ addingDialogOpen: false, lists: copy });
+      })
+      .catch((status: Status) => {
+        if (status.code === StatusCode.UNAUTHENTICATED) {
+          this.setState({ loggedIn: false });
+          return;
+        }
+
+        this.setState({
+          addingDialogOpen: false,
+          errorMessage: status.details,
+        });
+      });
   }
 }
 

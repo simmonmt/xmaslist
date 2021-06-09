@@ -1,8 +1,10 @@
 import { Metadata } from "grpc-web";
-import { List } from "../proto/list_pb";
+import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
 import { ListServicePromiseClient } from "../proto/list_service_grpc_web_pb";
 import {
   ChangeActiveStateRequest,
+  CreateListRequest,
+  CreateListResponse,
   GetListRequest,
   GetListResponse,
   ListListsRequest,
@@ -19,7 +21,7 @@ export class ListModel {
     this.authModel = authModel;
   }
 
-  listLists(includeInactive: boolean): Promise<List[]> {
+  listLists(includeInactive: boolean): Promise<ListProto[]> {
     const req = new ListListsRequest();
     req.setIncludeInactive(includeInactive);
 
@@ -30,13 +32,29 @@ export class ListModel {
       });
   }
 
-  getList(listId: string): Promise<List> {
+  getList(listId: string): Promise<ListProto> {
     const req = new GetListRequest();
     req.setListId(listId);
 
     return this.listService
       .getList(req, this.metadata())
       .then((resp: GetListResponse) => {
+        const list = resp.getList();
+        if (!list) {
+          return Promise.reject(new Error("no list in response"));
+        }
+
+        return list;
+      });
+  }
+
+  createList(listData: ListDataProto): Promise<ListProto> {
+    const req = new CreateListRequest();
+    req.setData(listData);
+
+    return this.listService
+      .createList(req, this.metadata())
+      .then((resp: CreateListResponse) => {
         const list = resp.getList();
         if (!list) {
           return Promise.reject(new Error("no list in response"));
