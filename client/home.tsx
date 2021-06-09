@@ -169,8 +169,8 @@ class Home extends React.Component<Props, State> {
     };
 
     return (
-      <div>
-        <ListItem key={list.getId()} button>
+      <React.Fragment key={list.getId()}>
+        <ListItem button>
           <ListItemText>
             <div className={this.props.classes.listItem}>
               <div className={this.props.classes.listText}>
@@ -189,7 +189,7 @@ class Home extends React.Component<Props, State> {
           </ListItemSecondaryAction>
         </ListItem>
         <Divider />
-      </div>
+      </React.Fragment>
     );
   }
 
