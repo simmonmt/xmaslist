@@ -1,3 +1,4 @@
+import Divider from "@material-ui/core/Divider";
 import Fab from "@material-ui/core/Fab";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import IconButton from "@material-ui/core/IconButton";
@@ -9,6 +10,7 @@ import ListItemText from "@material-ui/core/ListItemText";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import Switch from "@material-ui/core/Switch";
+import Typography from "@material-ui/core/Typography";
 import AddIcon from "@material-ui/icons/Add";
 import ArchiveIcon from "@material-ui/icons/Archive";
 import UnarchiveIcon from "@material-ui/icons/Unarchive";
@@ -158,17 +160,31 @@ class Home extends React.Component<Props, State> {
     const owner = ownerUser ? ownerUser.username : "unknown";
 
     let secondary =
-      `Owner: ${owner} ` +
-      `For: ${data.getBeneficiary()} ` +
-      `On: ${eventDate}`;
+      `Owner: ${owner} ` + //
+      `For: ${data.getBeneficiary()} `;
 
     return (
-      <ListItem key={list.getId()} button>
-        <ListItemText primary={data.getName()} secondary={secondary} />
-        <ListItemSecondaryAction>
-          {this.archiveButton(meta.getActive())}
-        </ListItemSecondaryAction>
-      </ListItem>
+      <div>
+        <ListItem key={list.getId()} button>
+          <ListItemText>
+            <div className={this.props.classes.listItem}>
+              <div className={this.props.classes.listText}>
+                <div>{data.getName()}</div>
+                <div>
+                  <Typography variant="body2" color="textSecondary">
+                    {secondary}
+                  </Typography>
+                </div>
+              </div>
+              <div>{eventDate}</div>
+            </div>
+          </ListItemText>
+          <ListItemSecondaryAction>
+            {this.archiveButton(meta.getActive())}
+          </ListItemSecondaryAction>
+        </ListItem>
+        <Divider />
+      </div>
     );
   }
 
@@ -194,6 +210,11 @@ const homeStyles = (theme: Theme) =>
     switchDiv: {
       display: "flex",
       justifyContent: "flex-end",
+    },
+    listItem: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
     },
   });
 
