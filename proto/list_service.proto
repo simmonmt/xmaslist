@@ -31,12 +31,13 @@ message CreateListResponse {
   List list = 1;
 }
 
-message DeactivateListRequest {
+message ChangeActiveStateRequest {
   string list_id = 1;
   int32 list_version = 2;
+  bool new_state = 3;
 }
 
-message DeactivateListResponse {}
+message ChangeActiveStateResponse {}
 
 message UpdateListRequest {
   string list_id = 1;
@@ -90,7 +91,7 @@ service ListService {
   rpc ListLists(ListListsRequest) returns (ListListsResponse);
   rpc GetList(GetListRequest) returns (GetListResponse);
   rpc CreateList(CreateListRequest) returns (CreateListResponse);
-  rpc DeactivateList(DeactivateListRequest) returns (DeactivateListResponse);
+  rpc ChangeActiveState(ChangeActiveStateRequest) returns (ChangeActiveStateResponse);
   rpc UpdateList(UpdateListRequest) returns (UpdateListResponse);
   rpc ListListItems(ListListItemsRequest) returns (ListListItemsResponse);
   rpc CreateListItem(CreateListItemRequest) returns (CreateListItemResponse);

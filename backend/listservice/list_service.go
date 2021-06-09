@@ -130,7 +130,7 @@ func (s *listServer) CreateList(ctx context.Context, req *lspb.CreateListRequest
 	}, nil
 }
 
-func (s *listServer) DeactivateList(ctx context.Context, req *lspb.DeactivateListRequest) (*lspb.DeactivateListResponse, error) {
+func (s *listServer) ChangeActiveState(ctx context.Context, req *lspb.ChangeActiveStateRequest) (*lspb.ChangeActiveStateResponse, error) {
 	session, err := getSession(ctx)
 	if session == nil {
 		return nil, err
@@ -145,14 +145,14 @@ func (s *listServer) DeactivateList(ctx context.Context, req *lspb.DeactivateLis
 	_, err = s.db.UpdateList(ctx, listID, int(req.GetListVersion()),
 		session.User.ID, s.clock.Now(),
 		func(listData *database.ListData) error {
-			listData.Active = false
+			listData.Active = req.GetNewState()
 			return nil
 		})
 	if err != nil {
 		return nil, err
 	}
 
-	return &lspb.DeactivateListResponse{}, nil
+	return &lspb.ChangeActiveStateResponse{}, nil
 }
 
 func (s *listServer) UpdateList(ctx context.Context, req *lspb.UpdateListRequest) (*lspb.UpdateListResponse, error) {
