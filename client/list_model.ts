@@ -2,6 +2,7 @@ import { Metadata } from "grpc-web";
 import { List } from "../proto/list_pb";
 import { ListServicePromiseClient } from "../proto/list_service_grpc_web_pb";
 import {
+  ChangeActiveStateRequest,
   GetListRequest,
   GetListResponse,
   ListListsRequest,
@@ -50,8 +51,14 @@ export class ListModel {
     version: number,
     newState: boolean
   ): Promise<void> {
-    console.log("request to change", listId, "to state", newState);
-    return Promise.resolve();
+    const req = new ChangeActiveStateRequest();
+    req.setListId(listId);
+    req.setListVersion(version);
+    req.setNewState(newState);
+
+    return this.listService.changeActiveState(req, this.metadata()).then(() => {
+      Promise.resolve();
+    });
   }
 
   private metadata(): Metadata {
