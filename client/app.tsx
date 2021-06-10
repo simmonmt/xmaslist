@@ -1,7 +1,12 @@
 import DateFnsUtils from "@date-io/date-fns";
 import { MuiPickersUtilsProvider } from "@material-ui/pickers";
 import * as React from "react";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Redirect,
+  Route,
+  Switch,
+} from "react-router-dom";
 import Cookies from "universal-cookie";
 import { AuthServicePromiseClient } from "../proto/auth_service_grpc_web_pb";
 import { ListServicePromiseClient } from "../proto/list_service_grpc_web_pb";
@@ -86,13 +91,14 @@ class App extends React.Component<Props, State> {
                   currentUser={this.state.user!}
                 />
               </ProtectedRoute>
-              <ProtectedRoute {...defaultProtectedRouteProps} path="/">
+              <ProtectedRoute {...defaultProtectedRouteProps} exact path="/">
                 <Home
                   listModel={this.listModel}
                   userModel={this.userModel}
                   currentUser={this.state.user!}
                 />
               </ProtectedRoute>
+              <Redirect to="/" />
             </Switch>
           </div>
         </Router>
