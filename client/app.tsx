@@ -77,7 +77,11 @@ class App extends React.Component<Props, State> {
                 />
               </Route>
               <ProtectedRoute {...defaultProtectedRouteProps} path="/">
-                <Home listModel={this.listModel} userModel={this.userModel} />
+                <Home
+                  listModel={this.listModel}
+                  userModel={this.userModel}
+                  currentUser={this.state.user!}
+                />
               </ProtectedRoute>
             </Switch>
           </div>

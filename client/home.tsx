@@ -15,8 +15,8 @@ import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import Switch from "@material-ui/core/Switch";
 import Typography from "@material-ui/core/Typography";
 import AddIcon from "@material-ui/icons/Add";
-import ArchiveIcon from "@material-ui/icons/Archive";
-import UnarchiveIcon from "@material-ui/icons/Unarchive";
+import DeleteIcon from "@material-ui/icons/Delete";
+import RestoreFromTrashIcon from "@material-ui/icons/RestoreFromTrash";
 import Alert from "@material-ui/lab/Alert";
 import { format, formatDistanceToNow } from "date-fns";
 import { Status, StatusCode } from "grpc-web";
@@ -25,12 +25,14 @@ import { Redirect } from "react-router-dom";
 import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
 import { CreateListDialog } from "./create_list_dialog";
 import { ListModel } from "./list_model";
+import { User } from "./user";
 import { UserModel } from "./user_model";
 
 interface Props {
   listModel: ListModel;
   userModel: UserModel;
   onShouldLogout: () => void;
+  currentUser: User;
   classes: any;
 }
 
@@ -39,7 +41,7 @@ interface State {
   loggedIn: boolean;
   errorMessage: string;
   lists: ListProto[];
-  showArchived: boolean;
+  showDeleted: boolean;
   createDialogOpen: boolean;
   creatingDialogOpen: boolean;
 }
@@ -52,13 +54,13 @@ class Home extends React.Component<Props, State> {
       loggedIn: true,
       errorMessage: "",
       lists: [],
-      showArchived: false,
+      showDeleted: false,
       createDialogOpen: false,
       creatingDialogOpen: false,
     };
 
     this.handleAlertClose = this.handleAlertClose.bind(this);
-    this.handleShowArchivedChange = this.handleShowArchivedChange.bind(this);
+    this.handleShowDeletedChange = this.handleShowDeletedChange.bind(this);
     this.handleCreateClicked = this.handleCreateClicked.bind(this);
     this.handleCreateDialogClose = this.handleCreateDialogClose.bind(this);
   }
@@ -73,7 +75,7 @@ class Home extends React.Component<Props, State> {
     this.setState({ lists: [], errorMessage: "" });
 
     this.props.listModel
-      .listLists(this.state.showArchived)
+      .listLists(this.state.showDeleted)
       .then((lists: ListProto[]) => {
         console.log("got lists", lists);
         let needIds = new Set<number>();
@@ -119,19 +121,21 @@ class Home extends React.Component<Props, State> {
             {this.state.errorMessage}
           </Alert>
         )}
-        <div className={this.props.classes.switchDiv}>
-          <FormControlLabel
-            label="Show archived lists"
-            control={
-              <Switch
-                checked={this.state.showArchived}
-                onChange={this.handleShowArchivedChange}
-                name="showArchived"
-              />
-            }
-            labelPlacement="start"
-          />
-        </div>
+        {this.props.currentUser.isAdmin && (
+          <div className={this.props.classes.switchDiv}>
+            <FormControlLabel
+              label="Show deleted lists"
+              control={
+                <Switch
+                  checked={this.state.showDeleted}
+                  onChange={this.handleShowDeletedChange}
+                  name="showDeleted"
+                />
+              }
+              labelPlacement="start"
+            />
+          </div>
+        )}
         <List>{this.state.lists.map((list) => this.listElement(list))}</List>
         <Fab
           color="primary"
@@ -154,9 +158,9 @@ class Home extends React.Component<Props, State> {
     );
   }
 
-  private archiveButton(isActive: boolean, clickHandler: () => void) {
-    const label = isActive ? "archive" : "unarchive";
-    const icon = isActive ? <ArchiveIcon /> : <UnarchiveIcon />;
+  private deleteButton(isActive: boolean, clickHandler: () => void) {
+    const label = isActive ? "delete" : "undelete";
+    const icon = isActive ? <DeleteIcon /> : <RestoreFromTrashIcon />;
 
     return (
       <IconButton edge="end" aria-label={label} onClick={clickHandler}>
@@ -176,8 +180,8 @@ class Home extends React.Component<Props, State> {
     const ownerUser = this.props.userModel.getUser(meta.getOwner());
     const owner = ownerUser ? ownerUser.username : "unknown";
 
-    const handleArchiveClick = () => {
-      this.handleArchiveClick(String(list.getId()), Boolean(meta.getActive()));
+    const handleDeleteClick = () => {
+      this.handleDeleteClick(String(list.getId()), Boolean(meta.getActive()));
       return false;
     };
 
@@ -207,9 +211,11 @@ class Home extends React.Component<Props, State> {
               </div>
             </div>
           </ListItemText>
-          <ListItemSecondaryAction>
-            {this.archiveButton(meta.getActive(), handleArchiveClick)}
-          </ListItemSecondaryAction>
+          {this.props.currentUser.isAdmin && (
+            <ListItemSecondaryAction>
+              {this.deleteButton(meta.getActive(), handleDeleteClick)}
+            </ListItemSecondaryAction>
+          )}
         </ListItem>
         <Divider />
       </React.Fragment>
@@ -220,11 +226,11 @@ class Home extends React.Component<Props, State> {
     this.setState({ errorMessage: "" });
   }
 
-  private handleShowArchivedChange(evt: React.ChangeEvent<HTMLInputElement>) {
-    this.setState({ showArchived: evt.target.checked }, this.loadLists);
+  private handleShowDeletedChange(evt: React.ChangeEvent<HTMLInputElement>) {
+    this.setState({ showDeleted: evt.target.checked }, this.loadLists);
   }
 
-  private handleArchiveClick(id: string, isActive: boolean) {
+  private handleDeleteClick(id: string, isActive: boolean) {
     let idx = -1;
     for (let i = 0; i < this.state.lists.length; ++i) {
       if (this.state.lists[i].getId() === id) {
@@ -234,12 +240,12 @@ class Home extends React.Component<Props, State> {
     }
 
     if (idx < 0) {
-      console.log("archive click on unknown list", id);
+      console.log("delete click on unknown list", id);
       return;
     }
 
     const copy = this.state.lists.slice();
-    if (isActive && !this.state.showArchived) {
+    if (isActive && !this.state.showDeleted) {
       copy.splice(idx, 1);
     } else {
       const newList = copy[idx].cloneMessage();
