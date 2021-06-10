@@ -191,8 +191,11 @@ class Home extends React.Component<Props, State> {
                 <div>{data.getName()}</div>
                 <div>
                   <Typography variant="body2" color="textSecondary">
-                    Owner: {owner}
-                    For: {data.getBeneficiary()}
+                    <span>Owner: {owner}</span>
+                    <span>&nbsp;For: {data.getBeneficiary()}</span>
+                    {this.props.currentUser.isAdmin && (
+                      <span>&nbsp;ID: {list.getId()}</span>
+                    )}
                   </Typography>
                 </div>
               </div>
