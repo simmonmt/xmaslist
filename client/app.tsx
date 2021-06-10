@@ -16,6 +16,7 @@ import { Logout } from "./logout";
 import { ProtectedRoute, ProtectedRouteProps } from "./protected_route";
 import { User } from "./user";
 import { UserModel } from "./user_model";
+import { ViewList } from "./view_list";
 
 interface Props {}
 
@@ -76,6 +77,15 @@ class App extends React.Component<Props, State> {
                   onLogout={() => this.handleLogout()}
                 />
               </Route>
+              <ProtectedRoute
+                {...defaultProtectedRouteProps}
+                path="/view/:listId"
+              >
+                <ViewList
+                  listModel={this.listModel}
+                  currentUser={this.state.user!}
+                />
+              </ProtectedRoute>
               <ProtectedRoute {...defaultProtectedRouteProps} path="/">
                 <Home
                   listModel={this.listModel}
