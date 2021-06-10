@@ -77,18 +77,15 @@ class Home extends React.Component<Props, State> {
     this.props.listModel
       .listLists(this.state.showDeleted)
       .then((lists: ListProto[]) => {
-        console.log("got lists", lists);
         let needIds = new Set<number>();
         for (const list of lists) {
           needIds.add(list.getMetadata()!.getOwner());
         }
 
         gotLists = lists;
-        console.log("loading users", needIds);
         return this.props.userModel.loadUsers(Array.from(needIds.values()));
       })
       .then(() => {
-        console.log("loaded users");
         this.setState({
           loading: false,
           lists: gotLists,
@@ -184,8 +181,6 @@ class Home extends React.Component<Props, State> {
       this.handleDeleteClick(String(list.getId()), Boolean(meta.getActive()));
       return false;
     };
-
-    console.log(formatDistanceToNow);
 
     return (
       <React.Fragment key={list.getId()}>

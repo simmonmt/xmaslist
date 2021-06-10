@@ -1,8 +1,8 @@
 import { Metadata } from "grpc-web";
 import { UserServicePromiseClient } from "../proto/user_service_grpc_web_pb";
 import { GetUsersRequest, GetUsersResponse } from "../proto/user_service_pb";
-import { User } from "./user";
 import { AuthModel } from "./auth_model";
+import { User } from "./user";
 
 export class UserModel {
   private readonly userService: UserServicePromiseClient;
@@ -26,7 +26,6 @@ export class UserModel {
         missingIds.add(id);
       }
     }
-    console.log("loadusers missingids", missingIds);
 
     if (!missingIds.size) {
       return Promise.resolve(true);
@@ -34,7 +33,6 @@ export class UserModel {
 
     const req = new GetUsersRequest();
     req.setIdsList(Array.from(missingIds.values()));
-    console.log("fetching", Array.from(missingIds.values()));
 
     return this.userService
       .getUsers(req, this.metadata())
@@ -43,10 +41,8 @@ export class UserModel {
           const user = new User(userInfo);
           this.users.set(user.id, user);
           missingIds.delete(user.id);
-          console.log("got", user.id);
         }
 
-        console.log("still missing", Array.from(missingIds.values()));
         for (const id of Array.from(missingIds.values())) {
           this.badUsers.add(id);
         }
