@@ -1,8 +1,11 @@
+import LinearProgress from "@material-ui/core/LinearProgress";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
+import Typography from "@material-ui/core/Typography";
+import Alert from "@material-ui/lab/Alert";
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
-import { withRouter } from "react-router-dom";
+import { Link, Redirect, withRouter } from "react-router-dom";
 import { ListModel } from "./list_model";
 import { User } from "./user";
 
@@ -16,24 +19,63 @@ interface Props extends RouteComponentProps<PathParams> {
   currentUser: User;
 }
 
-interface State {}
+interface State {
+  loggedIn: boolean;
+  loading: boolean;
+  errorMessage: string;
+}
 
 class ViewList extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = {};
-
-    console.log("viewlist constructor");
+    this.state = {
+      loggedIn: true,
+      loading: false,
+      errorMessage: "",
+    };
   }
 
   render() {
-    console.log("view list render");
-    return <div>{this.props.match.params.listId}</div>;
+    return (
+      <div className={this.props.classes.root}>
+        {!this.state.loggedIn && <Redirect to="/logout" />}
+        {this.state.loading && <LinearProgress />}
+        {this.state.errorMessage && (
+          <Alert
+            severity="error"
+            variant="standard"
+            onClose={this.handleAlertClose}
+          >
+            {this.state.errorMessage}
+          </Alert>
+        )}
+        <div>
+          <Typography variant="body1">
+            <Link to="/">&lt;&lt; All lists</Link>
+          </Typography>
+        </div>
+
+        <div>
+          <Typography variant="body1">
+            View list {this.props.match.params.listId}
+          </Typography>
+        </div>
+      </div>
+    );
+  }
+
+  private handleAlertClose() {
+    this.setState({ errorMessage: "" });
   }
 }
 
-const viewListStyles = (theme: Theme) => createStyles({});
+const viewListStyles = (theme: Theme) =>
+  createStyles({
+    root: {
+      width: "100%",
+    },
+  });
 
-const exportViewList: any = withRouter(withStyles(viewListStyles)(ViewList));
+const exportViewList: any = withStyles(viewListStyles)(withRouter(ViewList));
 
 export { exportViewList as ViewList };
