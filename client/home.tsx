@@ -1,3 +1,4 @@
+import Card from "@material-ui/core/Card";
 import Dialog from "@material-ui/core/Dialog";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
@@ -133,7 +134,11 @@ class Home extends React.Component<Props, State> {
             />
           </div>
         )}
-        <List>{this.state.lists.map((list) => this.listElement(list))}</List>
+
+        <Card raised>
+          <List>{this.makeList(this.state.lists)} </List>
+        </Card>
+
         <Fab
           color="primary"
           aria-label="create"
@@ -164,6 +169,17 @@ class Home extends React.Component<Props, State> {
         {icon}
       </IconButton>
     );
+  }
+
+  private makeList(lists: ListProto[]) {
+    const out = [];
+    for (let i = 0; i < lists.length; i++) {
+      if (i !== 0) {
+        out.push(<Divider />);
+      }
+      out.push(this.listElement(lists[i]));
+    }
+    return out;
   }
 
   private listElement(list: ListProto) {
@@ -215,7 +231,6 @@ class Home extends React.Component<Props, State> {
             </ListItemSecondaryAction>
           )}
         </ListItem>
-        <Divider />
       </React.Fragment>
     );
   }
