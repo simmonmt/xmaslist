@@ -19,7 +19,7 @@ import AddIcon from "@material-ui/icons/Add";
 import DeleteIcon from "@material-ui/icons/Delete";
 import RestoreFromTrashIcon from "@material-ui/icons/RestoreFromTrash";
 import Alert from "@material-ui/lab/Alert";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { Status, StatusCode } from "grpc-web";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
@@ -48,6 +48,8 @@ interface State {
 }
 
 class Home extends React.Component<Props, State> {
+  private readonly curYear: number;
+
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -59,6 +61,8 @@ class Home extends React.Component<Props, State> {
       createDialogOpen: false,
       creatingDialogOpen: false,
     };
+
+    this.curYear = new Date().getFullYear();
 
     this.handleAlertClose = this.handleAlertClose.bind(this);
     this.handleShowDeletedChange = this.handleShowDeletedChange.bind(this);
@@ -190,8 +194,12 @@ class Home extends React.Component<Props, State> {
     }
 
     let eventDate = new Date(data.getEventDate() * 1000);
+    const monthStr = format(eventDate, "MMM");
+    const day = eventDate.getDate();
+    const year = eventDate.getFullYear();
+
     const ownerUser = this.props.userModel.getUser(meta.getOwner());
-    const owner = ownerUser ? ownerUser.username : "unknown";
+    const owner = ownerUser ? ownerUser.fullname : "unknown";
 
     const handleDeleteClick = () => {
       this.handleDeleteClick(String(list.getId()), Boolean(meta.getActive()));
@@ -203,24 +211,46 @@ class Home extends React.Component<Props, State> {
         <ListItem button>
           <ListItemText>
             <div className={this.props.classes.listItem}>
-              <div>
-                <div>{data.getName()}</div>
-                <div>
-                  <Typography variant="body2" color="textSecondary">
-                    <span>Owner: {owner}</span>
-                    <span>&nbsp;For: {data.getBeneficiary()}</span>
-                    {this.props.currentUser.isAdmin && (
-                      <span>&nbsp;ID: {list.getId()}</span>
-                    )}
-                  </Typography>
-                </div>
+              <div className={this.props.classes.listDate}>
+                <Typography variant="body1" color="textSecondary">
+                  {this.curYear == year ? (
+                    <div>
+                      {monthStr} {day}
+                    </div>
+                  ) : (
+                    <div>
+                      {monthStr} {day}
+                      <br />
+                      {year}
+                    </div>
+                  )}
+                </Typography>
               </div>
               <div>
-                <div>{format(eventDate, "MMM do, yyyy")}</div>
-                <div className={this.props.classes.listDuration}>
-                  <Typography variant="body2" color="textSecondary">
-                    {formatDistanceToNow(eventDate)}
-                  </Typography>
+                <div>{data.getName()}</div>
+                <div></div>
+              </div>
+              <div className={this.props.classes.listGrow} />
+              <div className={this.props.classes.listMeta}>
+                <div>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    component="span"
+                  >
+                    For:
+                  </Typography>{" "}
+                  {data.getBeneficiary()}
+                </div>
+                <div>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    component="span"
+                  >
+                    By:
+                  </Typography>{" "}
+                  {owner}
                 </div>
               </div>
             </div>
@@ -321,13 +351,21 @@ const homeStyles = (theme: Theme) =>
       display: "flex",
       justifyContent: "flex-end",
     },
+    listDate: {
+      textAlign: "center",
+      width: "10ch",
+    },
+    listGrow: {
+      flexGrow: 1,
+    },
     listItem: {
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
     },
-    listDuration: {
+    listMeta: {
       textAlign: "right",
+      marginRight: "3ch",
     },
   });
 
