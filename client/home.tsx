@@ -22,7 +22,7 @@ import Alert from "@material-ui/lab/Alert";
 import { format } from "date-fns";
 import { Status, StatusCode } from "grpc-web";
 import * as React from "react";
-import { Redirect } from "react-router-dom";
+import { Link, Redirect } from "react-router-dom";
 import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
 import { CreateListDialog } from "./create_list_dialog";
 import { ListModel } from "./list_model";
@@ -35,7 +35,27 @@ interface ListItemLinkProps {
 }
 
 function ListItemLink(props: ListItemLinkProps) {
-  return <ListItem button>{props.children}</ListItem>;
+  const { to, children } = props;
+
+  // I'm not entirely sure what this does. Source:
+  // https://material-ui.com/guides/composition/#wrapping-components
+  //
+  // useMemo makes CustomLink a static component -- it only gets re-rendered
+  // when 'to' changes. So I guess that means it won't change when just children
+  // change? The ref lets link access the anchor created by ListItem. I think.
+  const CustomLink = React.useMemo(
+    () =>
+      React.forwardRef<HTMLAnchorElement>((linkProps, ref) => (
+        <Link ref={ref} to={to} {...linkProps} />
+      )),
+    [to]
+  );
+
+  return (
+    <ListItem button component={CustomLink}>
+      {children}
+    </ListItem>
+  );
 }
 
 interface ListElementProps {
@@ -68,7 +88,7 @@ class ListElement extends React.Component<ListElementProps, ListElementState> {
 
     const linkVerb =
       this.props.currentUser.id === meta.getOwner() ? "edit" : "view";
-    const linkTarget = "/${linkVerb}/${listId}";
+    const linkTarget = `/${linkVerb}/${listId}`;
 
     return (
       <React.Fragment key={this.props.list.getId()}>
