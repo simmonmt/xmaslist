@@ -29,7 +29,109 @@ import { ListModel } from "./list_model";
 import { User } from "./user";
 import { UserModel } from "./user_model";
 
-interface Props {
+interface ListElementProps {
+  list: ListProto;
+  userModel: UserModel;
+  currentUser: User;
+  curYear: number;
+  onDeleteClicked: (id: string, isActive: boolean) => void;
+  classes: any;
+}
+
+interface ListElementState {}
+
+class ListElement extends React.Component<ListElementProps, ListElementState> {
+  render() {
+    const data = this.props.list.getData();
+    const meta = this.props.list.getMetadata();
+    if (!data || !meta) {
+      return;
+    }
+
+    let eventDate = new Date(data.getEventDate() * 1000);
+    const monthStr = format(eventDate, "MMM");
+    const day = eventDate.getDate();
+    const year = eventDate.getFullYear();
+
+    const ownerUser = this.props.userModel.getUser(meta.getOwner());
+    const owner = ownerUser ? ownerUser.fullname : "unknown";
+
+    return (
+      <React.Fragment key={this.props.list.getId()}>
+        <ListItem button>
+          <ListItemText>
+            <div className={this.props.classes.listItem}>
+              <div className={this.props.classes.listDate}>
+                <Typography variant="body1" color="textSecondary">
+                  {this.props.curYear == year ? (
+                    <div>
+                      {monthStr} {day}
+                    </div>
+                  ) : (
+                    <div>
+                      {monthStr} {day}
+                      <br />
+                      {year}
+                    </div>
+                  )}
+                </Typography>
+              </div>
+              <div>
+                <div>{data.getName()}</div>
+                <div></div>
+              </div>
+              <div className={this.props.classes.listGrow} />
+              <div className={this.props.classes.listMeta}>
+                <div>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    component="span"
+                  >
+                    For:
+                  </Typography>{" "}
+                  {data.getBeneficiary()}
+                </div>
+                <div>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    component="span"
+                  >
+                    By:
+                  </Typography>{" "}
+                  {owner}
+                </div>
+              </div>
+            </div>
+          </ListItemText>
+          {this.props.currentUser.isAdmin && (
+            <ListItemSecondaryAction>
+              {this.deleteButton(this.props.list.getId(), meta.getActive())}
+            </ListItemSecondaryAction>
+          )}
+        </ListItem>
+      </React.Fragment>
+    );
+  }
+
+  private deleteButton(id: string, isActive: boolean) {
+    const label = isActive ? "delete" : "undelete";
+    const icon = isActive ? <DeleteIcon /> : <RestoreFromTrashIcon />;
+
+    return (
+      <IconButton
+        edge="end"
+        aria-label={label}
+        onClick={() => this.props.onDeleteClicked(id, isActive)}
+      >
+        {icon}
+      </IconButton>
+    );
+  }
+}
+
+interface HomeProps {
   listModel: ListModel;
   userModel: UserModel;
   onShouldLogout: () => void;
@@ -37,7 +139,7 @@ interface Props {
   classes: any;
 }
 
-interface State {
+interface HomeState {
   loading: boolean;
   loggedIn: boolean;
   errorMessage: string;
@@ -47,10 +149,10 @@ interface State {
   creatingDialogOpen: boolean;
 }
 
-class Home extends React.Component<Props, State> {
+class Home extends React.Component<HomeProps, HomeState> {
   private readonly curYear: number;
 
-  constructor(props: Props) {
+  constructor(props: HomeProps) {
     super(props);
     this.state = {
       loading: true,
@@ -66,6 +168,7 @@ class Home extends React.Component<Props, State> {
 
     this.handleAlertClose = this.handleAlertClose.bind(this);
     this.handleShowDeletedChange = this.handleShowDeletedChange.bind(this);
+    this.handleDeleteClicked = this.handleDeleteClicked.bind(this);
     this.handleCreateClicked = this.handleCreateClicked.bind(this);
     this.handleCreateDialogClose = this.handleCreateDialogClose.bind(this);
   }
@@ -164,105 +267,25 @@ class Home extends React.Component<Props, State> {
     );
   }
 
-  private deleteButton(isActive: boolean, clickHandler: () => void) {
-    const label = isActive ? "delete" : "undelete";
-    const icon = isActive ? <DeleteIcon /> : <RestoreFromTrashIcon />;
-
-    return (
-      <IconButton edge="end" aria-label={label} onClick={clickHandler}>
-        {icon}
-      </IconButton>
-    );
-  }
-
   private makeList(lists: ListProto[]) {
     const out = [];
     for (let i = 0; i < lists.length; i++) {
       if (i !== 0) {
         out.push(<Divider />);
       }
-      out.push(this.listElement(lists[i]));
+
+      out.push(
+        <ListElement
+          list={lists[i]}
+          userModel={this.props.userModel}
+          currentUser={this.props.currentUser}
+          curYear={this.curYear}
+          onDeleteClicked={this.handleDeleteClicked}
+          classes={this.props.classes}
+        />
+      );
     }
     return out;
-  }
-
-  private listElement(list: ListProto) {
-    const data = list.getData();
-    const meta = list.getMetadata();
-    if (!data || !meta) {
-      return;
-    }
-
-    let eventDate = new Date(data.getEventDate() * 1000);
-    const monthStr = format(eventDate, "MMM");
-    const day = eventDate.getDate();
-    const year = eventDate.getFullYear();
-
-    const ownerUser = this.props.userModel.getUser(meta.getOwner());
-    const owner = ownerUser ? ownerUser.fullname : "unknown";
-
-    const handleDeleteClick = () => {
-      this.handleDeleteClick(String(list.getId()), Boolean(meta.getActive()));
-      return false;
-    };
-
-    return (
-      <React.Fragment key={list.getId()}>
-        <ListItem button>
-          <ListItemText>
-            <div className={this.props.classes.listItem}>
-              <div className={this.props.classes.listDate}>
-                <Typography variant="body1" color="textSecondary">
-                  {this.curYear == year ? (
-                    <div>
-                      {monthStr} {day}
-                    </div>
-                  ) : (
-                    <div>
-                      {monthStr} {day}
-                      <br />
-                      {year}
-                    </div>
-                  )}
-                </Typography>
-              </div>
-              <div>
-                <div>{data.getName()}</div>
-                <div></div>
-              </div>
-              <div className={this.props.classes.listGrow} />
-              <div className={this.props.classes.listMeta}>
-                <div>
-                  <Typography
-                    variant="body2"
-                    color="textSecondary"
-                    component="span"
-                  >
-                    For:
-                  </Typography>{" "}
-                  {data.getBeneficiary()}
-                </div>
-                <div>
-                  <Typography
-                    variant="body2"
-                    color="textSecondary"
-                    component="span"
-                  >
-                    By:
-                  </Typography>{" "}
-                  {owner}
-                </div>
-              </div>
-            </div>
-          </ListItemText>
-          {this.props.currentUser.isAdmin && (
-            <ListItemSecondaryAction>
-              {this.deleteButton(meta.getActive(), handleDeleteClick)}
-            </ListItemSecondaryAction>
-          )}
-        </ListItem>
-      </React.Fragment>
-    );
   }
 
   private handleAlertClose() {
@@ -273,7 +296,7 @@ class Home extends React.Component<Props, State> {
     this.setState({ showDeleted: evt.target.checked }, this.loadLists);
   }
 
-  private handleDeleteClick(id: string, isActive: boolean) {
+  private handleDeleteClicked(id: string, isActive: boolean) {
     let idx = -1;
     for (let i = 0; i < this.state.lists.length; ++i) {
       if (this.state.lists[i].getId() === id) {
