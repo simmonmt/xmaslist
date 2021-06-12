@@ -29,6 +29,15 @@ import { ListModel } from "./list_model";
 import { User } from "./user";
 import { UserModel } from "./user_model";
 
+interface ListItemLinkProps {
+  to: string;
+  children: React.ReactNode;
+}
+
+function ListItemLink(props: ListItemLinkProps) {
+  return <ListItem button>{props.children}</ListItem>;
+}
+
 interface ListElementProps {
   list: ListProto;
   userModel: UserModel;
@@ -42,9 +51,10 @@ interface ListElementState {}
 
 class ListElement extends React.Component<ListElementProps, ListElementState> {
   render() {
+    const listId = this.props.list.getId();
     const data = this.props.list.getData();
     const meta = this.props.list.getMetadata();
-    if (!data || !meta) {
+    if (!listId || !data || !meta) {
       return;
     }
 
@@ -56,9 +66,13 @@ class ListElement extends React.Component<ListElementProps, ListElementState> {
     const ownerUser = this.props.userModel.getUser(meta.getOwner());
     const owner = ownerUser ? ownerUser.fullname : "unknown";
 
+    const linkVerb =
+      this.props.currentUser.id === meta.getOwner() ? "edit" : "view";
+    const linkTarget = "/${linkVerb}/${listId}";
+
     return (
       <React.Fragment key={this.props.list.getId()}>
-        <ListItem button>
+        <ListItemLink to={linkTarget}>
           <ListItemText>
             <div className={this.props.classes.listItem}>
               <div className={this.props.classes.listDate}>
@@ -110,7 +124,7 @@ class ListElement extends React.Component<ListElementProps, ListElementState> {
               {this.deleteButton(this.props.list.getId(), meta.getActive())}
             </ListItemSecondaryAction>
           )}
-        </ListItem>
+        </ListItemLink>
       </React.Fragment>
     );
   }
