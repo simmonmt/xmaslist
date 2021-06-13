@@ -15,8 +15,8 @@ http_archive(
 
 http_archive(
     name = "build_bazel_rules_nodejs",
-    sha256 = "4a5d654a4ccd4a4c24eca5d319d85a88a650edf119601550c95bf400c8cc897e",
-    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/3.5.1/rules_nodejs-3.5.1.tar.gz"],
+    sha256 = "0fa2d443571c9e02fcb7363a74ae591bdcce2dd76af8677a95965edf329d778a",
+    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/3.6.0/rules_nodejs-3.6.0.tar.gz"],
 )
 
 load("@build_bazel_rules_nodejs//:index.bzl", "yarn_install")
@@ -30,9 +30,9 @@ yarn_install(
 
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "36f81e03a0702f8f935fffd5a486dac1c0fc6d4bae1cd02c7a32448ad6e63bcb",
-    strip_prefix = "protobuf-3.17.2",
-    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.17.2.tar.gz"],
+    sha256 = "c6003e1d2e7fefa78a3039f19f383b4f3a61e81be8c19356f85b6461998ad3db",
+    strip_prefix = "protobuf-3.17.3",
+    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.17.3.tar.gz"],
 )
 
 http_archive(

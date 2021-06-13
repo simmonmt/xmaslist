@@ -19,10 +19,10 @@
   resolved "https://registry.yarnpkg.com/@bazel/buildifier/-/buildifier-4.0.1.tgz#52cfbad5cbb86e9183a29dde2370cd465730ea0d"
   integrity sha512-BTmtvJbeeEVrqRApI1gr5hvPgYcHLpdGJ5EXNXEWO692ztMPSj5fB/dH0xUlaW45jn6LimYx8ymqTMhj3538og==
 
-"@bazel/concatjs@^3.4.2":
-  version "3.5.1"
-  resolved "https://registry.yarnpkg.com/@bazel/concatjs/-/concatjs-3.5.1.tgz#0e0ae61051a8e72e364739dc51c3e050d87fb2ab"
-  integrity sha512-Cbj/cSBv2PGBfv5Stov6PX2dNZoYpyOxI/+BWutMevhz1cYQAcJNbS+usbnrVY34bbo+5YRIoAzJg4E4Up4WQw==
+"@bazel/concatjs@^3.6.0":
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/@bazel/concatjs/-/concatjs-3.6.0.tgz#1cd6f8dd3b2a812c86ca3a79f3ea00ca042c342e"
+  integrity sha512-DttRkpCXJnJtibZV0vhRSWZKJpwKCK7eL+uohCyPx7Xjxkzr0cSVQMGCisFv+A/PNA+/O0Wl4PZs9j1/Ml+DoQ==
   dependencies:
     protobufjs "6.8.8"
     source-map-support "0.5.9"
@@ -33,20 +33,20 @@
   resolved "https://registry.yarnpkg.com/@bazel/ibazel/-/ibazel-0.15.10.tgz#cf0cff1aec6d8e7bb23e1fc618d09fbd39b7a13f"
   integrity sha512-0v+OwCQ6fsGFa50r6MXWbUkSGuWOoZ22K4pMSdtWiL5LKFIE4kfmMmtQS+M7/ICNwk2EIYob+NRreyi/DGUz5A==
 
-"@bazel/labs@^3.4.1":
-  version "3.5.1"
-  resolved "https://registry.yarnpkg.com/@bazel/labs/-/labs-3.5.1.tgz#cac033eec3719b42b909026f8a8100275e86eddf"
-  integrity sha512-5r4W5bDwzZMd78OfH/WsGjdY54+Om7WrgN68flXCcWdGP+WTED6qLhnrqDwoXaVrTNTL4OqJLwqbywYP492tbw==
+"@bazel/labs@^3.6.0":
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/@bazel/labs/-/labs-3.6.0.tgz#220886b21491ac898bd779b77b79887a9fcd6df7"
+  integrity sha512-JUOSgVP2A6pEBwQk1IUQ5Kbyx2Y9in80pvUvLsLsNj+U6MJPd99oR1Uryz941eIFs8MqcFSrs/tJdvqKjZdDCA==
 
-"@bazel/rollup@^3.4.1":
-  version "3.5.1"
-  resolved "https://registry.yarnpkg.com/@bazel/rollup/-/rollup-3.5.1.tgz#8a66d2e3d3ac0466fb14f7d2ba1030d3bdced845"
-  integrity sha512-9aZabnuXlH6IQqA1KtaniNJvgRWNb2GRCOnERMah+feocn+14dmMbH8BfCwMR/DY/bdwflUzdcLPkZsu12whtA==
+"@bazel/rollup@^3.6.0":
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/@bazel/rollup/-/rollup-3.6.0.tgz#880fcfa7a7c6031ff6c5da814d35ae48e62df406"
+  integrity sha512-hl8ZjfSH5/KFR/557OGodNtJDUXz8ymXWxr6aKYZFL4o9pIMTzfGtYBTOF5Jebph9WohJ4f94RyJhVJm4AXTsg==
 
-"@bazel/typescript@^3.4.1":
-  version "3.5.1"
-  resolved "https://registry.yarnpkg.com/@bazel/typescript/-/typescript-3.5.1.tgz#c6027d683adeefa2c3cebfa3ed5efa17c405a63b"
-  integrity sha512-dU5sGgaGdFWV1dJ1B+9iFbttgcKtmob+BvlM8mY7Nxq4j7/wVbgPjiVLOBeOD7kpzYep8JHXfhAokHt486IG+Q==
+"@bazel/typescript@^3.6.0":
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/@bazel/typescript/-/typescript-3.6.0.tgz#4dda2e39505cde4a190f51118fbb82ea0e80fde6"
+  integrity sha512-cO58iHmSxM4mRHJLLbb3FfoJJxv0pMiVGFLORoiUy/EhLtyYGZ1e7ntf4GxEovwK/E4h/awjSUlQkzPThcukTg==
   dependencies:
     protobufjs "6.8.8"
     semver "5.6.0"
@@ -842,10 +842,10 @@ glob@^7.1.3, glob@^7.1.6:
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
-google-protobuf@^3.17.0-rc.1:
-  version "3.17.2"
-  resolved "https://registry.yarnpkg.com/google-protobuf/-/google-protobuf-3.17.2.tgz#7708eec9cf4a4dcdb624201f1ba1045994a6c22e"
-  integrity sha512-LlFVMhSkNy6C1MakEjiwbLxq5w+V+Go+mvt2EUoysrp8gXl903ic2W/3BwzM4/WnDMJP+u7UO2efUSl/0CJMzA==
+google-protobuf@^3.17.3:
+  version "3.17.3"
+  resolved "https://registry.yarnpkg.com/google-protobuf/-/google-protobuf-3.17.3.tgz#f87595073545a77946c8f0b67c302c5f7646d700"
+  integrity sha512-OVPzcSWIAJ+d5yiHyeaLrdufQtrvaBrF4JQg+z8ynTkbO3uFcujqXszTumqg1cGsAsjkWnI+M5B1xZ19yR4Wyg==
 
 graceful-fs@^4.1.2, graceful-fs@^4.1.6, graceful-fs@^4.2.0, graceful-fs@^4.2.4:
   version "4.2.6"
