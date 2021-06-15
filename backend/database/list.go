@@ -160,6 +160,7 @@ func (db *DB) ListLists(ctx context.Context, filter ListFilter) ([]*List, error)
 	if filter.where != "" {
 		query += " WHERE " + filter.where
 	}
+	query += " ORDER BY id ASC"
 
 	lists := []*List{}
 	rows, err := db.db.QueryContext(ctx, query)

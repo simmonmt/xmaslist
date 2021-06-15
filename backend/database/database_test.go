@@ -319,32 +319,70 @@ func TestListsByID(t *testing.T) {
 	}
 }
 
-func TestListLists(t *testing.T) {
-	makeStamp := func(userID int) time.Time {
-		return time.Unix(int64(userID*1000), 0)
-	}
+type listSetupRequest struct {
+	Owner     string
+	List      *ListData
+	ListItems []*ListItemData
+}
 
-	listDatas := map[string]*ListData{
-		"a": &ListData{Name: "l1", Beneficiary: "b1",
-			EventDate: time.Unix(1, 0), Active: true},
-		"b": &ListData{Name: "l2", Beneficiary: "b2",
-			EventDate: time.Unix(2, 0), Active: true},
-	}
+type listSetupResponse struct {
+	List      *List
+	ListItems []*ListItem
+}
 
-	lists := []*List{}
+func setupLists(ctx context.Context, reqs []*listSetupRequest) ([]*listSetupResponse, error) {
+	resps := []*listSetupResponse{}
+	stamp := int64(1000)
+	for _, req := range reqs {
+		resp := &listSetupResponse{}
 
-	for owner, listData := range listDatas {
-		ownerID := usersByUsername[owner]
-		stamp := makeStamp(ownerID)
-
-		list, err := db.CreateList(ctx, ownerID, listData, stamp)
+		user, err := db.LookupUserByUsername(ctx, req.Owner)
 		if err != nil {
-			t.Errorf("CreateList(_, %v, %+v, %v) = %v, %v, want _, nil",
-				ownerID, listData, stamp, list, err)
-			return
+			return nil, fmt.Errorf("lookupuser: %v", err)
 		}
 
-		lists = append(lists, list)
+		list, err := db.CreateList(ctx, user.ID, req.List, time.Unix(stamp, 0))
+		if err != nil {
+			return nil, fmt.Errorf("createlist: %v", err)
+		}
+
+		resp.List = list
+
+		for i, listItemData := range req.ListItems {
+			listItem, err := db.CreateListItem(
+				ctx, list.ID, listItemData,
+				time.Unix(stamp+10*int64(i), 0))
+			if err != nil {
+				return nil, fmt.Errorf("createlistitem #%d: %v", i, err)
+			}
+			resp.ListItems = append(resp.ListItems, listItem)
+		}
+
+		stamp += 1000
+		resps = append(resps, resp)
+	}
+
+	return resps, nil
+}
+
+func TestCreateAndListLists(t *testing.T) {
+	listSetupRequests := []*listSetupRequest{
+		&listSetupRequest{
+			Owner: "a",
+			List: &ListData{Name: "l1", Beneficiary: "b1",
+				EventDate: time.Unix(1, 0), Active: true},
+		},
+		&listSetupRequest{
+			Owner: "b",
+			List: &ListData{Name: "l2", Beneficiary: "b2",
+				EventDate: time.Unix(2, 0), Active: true},
+		},
+	}
+
+	listResponses, err := setupLists(ctx, listSetupRequests)
+	if err != nil {
+		t.Errorf("setupLists failed: %v", err)
+		return
 	}
 
 	got, err := db.ListLists(ctx, IncludeInactiveLists(true))
@@ -354,30 +392,24 @@ func TestListLists(t *testing.T) {
 		return
 	}
 
-	sort.Sort(ListsByID(lists))
-	if !reflect.DeepEqual(got, lists) {
+	want := []*List{listResponses[0].List, listResponses[1].List}
+	if !reflect.DeepEqual(got, want) {
 		t.Errorf("ListLists(include_inactive=true) = %v, want %v",
-			got, lists)
+			got, want)
 		return
 	}
 
-	got, err = db.ListLists(ctx, OnlyListWithID(lists[1].ID))
+	got, err = db.ListLists(ctx, OnlyListWithID(listResponses[1].List.ID))
 	if err != nil {
 		t.Errorf("ListLists(only=%d) = _, %v, want _, nil",
-			lists[1].ID, err)
+			listResponses[1].List.ID, err)
 		return
 	}
 
-	if len(got) != 1 {
-		t.Errorf("ListLists(only=%d) returned %d elems, wanted 1",
-			lists[1].ID, len(got))
-		return
-	}
-
-	want := lists[1]
-	if !reflect.DeepEqual(got[0], want) {
+	want = []*List{listResponses[1].List}
+	if !reflect.DeepEqual(got, want) {
 		t.Errorf("ListLists(only=%d) = [%+v], nil, want [%+v], nil",
-			lists[1].ID, got[0], want)
+			listResponses[1].List.ID, got[0], want)
 		return
 	}
 }
