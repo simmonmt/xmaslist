@@ -20,7 +20,13 @@ go_library(
 
 go_test(
     name = "database_test",
-    srcs = ["database_test.go"],
+    srcs = [
+        "database_test.go",
+        "list_item_test.go",
+        "list_test.go",
+        "session_test.go",
+        "user_test.go",
+    ],
     embed = [
         ":database",
     ],
