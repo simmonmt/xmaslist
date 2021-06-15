@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"net/url"
 	"time"
@@ -21,6 +22,33 @@ func (p asSeconds) Scan(src interface{}) error {
 
 	*p.Time = time.Unix(secs, 0)
 	return nil
+}
+
+type nullSeconds struct {
+	Time  time.Time
+	Valid bool
+}
+
+func (p *nullSeconds) Scan(src interface{}) error {
+	if src == nil {
+		p.Valid = false
+		return nil
+	}
+
+	secs, ok := src.(int64)
+	if !ok {
+		return fmt.Errorf("src isn't int64")
+	}
+
+	p.Time, p.Valid = time.Unix(secs, 0), true
+	return nil
+}
+
+func (p nullSeconds) Value() (driver.Value, error) {
+	if !p.Valid {
+		return nil, nil
+	}
+	return p.Time, nil
 }
 
 type DB struct {
