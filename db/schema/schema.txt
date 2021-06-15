@@ -23,8 +23,8 @@ CREATE TABLE lists (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                     active BOOL);
 
 CREATE TABLE items (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                    list INTEGER REFERENCES lists(id),
                     version INTEGER,
+                    list_id INTEGER REFERENCES lists(id),
                     name TEXT,
                     desc TEXT,
                     url TEXT,
