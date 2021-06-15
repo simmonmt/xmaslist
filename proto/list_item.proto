@@ -4,15 +4,10 @@ package xmaslist;
 
 option go_package = "github.com/simmonmt/xmaslist/proto/list_service";
 
-message ListItemLink {
-  string name = 1;
-  string url = 2;
-}
-
 message ListItemData {
   string name = 1;
   string desc = 2;
-  repeated ListItemLink links = 3;
+  string url =3;
 }
 
 message ListItemMetadata {
@@ -29,8 +24,9 @@ message ListItemState {
 message ListItem {
   string id = 1;
   int32 version = 2;
+  string list_id = 3;
 
-  ListItemData data = 3;
-  ListItemState state = 4;
-  ListItemMetadata metadata = 5;
+  ListItemData data = 4;
+  ListItemState state = 5;
+  ListItemMetadata metadata = 6;
 }
