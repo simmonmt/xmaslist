@@ -27,14 +27,8 @@ CREATE TABLE items (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                     version INTEGER,
                     name TEXT,
                     desc TEXT,
+                    url TEXT,
                     created INTEGER,
                     updated INTEGER,
                     claimed_by INTEGER REFERENCES users(id),
                     claimed_when INTEGER);
-
-CREATE TABLE itemlinks (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                        item INTEGER REFERENCES items(id),
-                        name TEXT,
-                        url TEXT);
-
-CREATE INDEX itemlinks_by_item ON itemlinks (item);
