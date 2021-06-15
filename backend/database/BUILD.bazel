@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "database.go",
         "list.go",
+        "list_item.go",
         "session.go",
         "user.go",
     ],
