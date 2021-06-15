@@ -46,11 +46,26 @@ func (c *listCommand) Execute(ctx context.Context, f *flag.FlagSet, args ...inte
 	return cdr.Execute(ctx)
 }
 
+type itemCommand struct{}
+
+func (c *itemCommand) Name() string             { return "item" }
+func (c *itemCommand) Synopsis() string         { return "List item commands" }
+func (c *itemCommand) Usage() string            { return `item subcommand` }
+func (c *itemCommand) SetFlags(f *flag.FlagSet) {}
+
+func (c *itemCommand) Execute(ctx context.Context, f *flag.FlagSet, args ...interface{}) subcommands.ExitStatus {
+	cdr := subcommands.NewCommander(f, subcommanderName("item"))
+	cdr.Register(cdr.HelpCommand(), "")
+	cdr.Register(&itemCreateCommand{}, "")
+	return cdr.Execute(ctx)
+}
+
 func main() {
 	subcommands.Register(subcommands.HelpCommand(), "")
 	subcommands.Register(subcommands.FlagsCommand(), "")
 	subcommands.Register(subcommands.CommandsCommand(), "")
 	subcommands.Register(&listCommand{}, "")
+	subcommands.Register(&itemCommand{}, "")
 	subcommands.Register(&userCommand{}, "")
 
 	flag.Parse()

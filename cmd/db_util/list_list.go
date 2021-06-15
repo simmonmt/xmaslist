@@ -15,15 +15,44 @@ import (
 
 type listListCommand struct {
 	baseCommand
+
+	listID int
 }
 
 func (c *listListCommand) Name() string     { return "list" }
 func (c *listListCommand) Synopsis() string { return "List users" }
 func (c *listListCommand) Usage() string {
-	return `user list db_path
+	return `user list [--list_id=list_id] db_path
 `
 }
-func (c *listListCommand) SetFlags(f *flag.FlagSet) {}
+func (c *listListCommand) SetFlags(f *flag.FlagSet) {
+	f.IntVar(&c.listID, "list_id", -1, "List ID")
+}
+
+func listItems(ctx context.Context, db *database.DB, list *database.List) error {
+	items, err := db.ListListItems(ctx, list.ID)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println()
+	if len(items) == 0 {
+		fmt.Println("no items")
+		return nil
+	}
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+	fmt.Fprintln(w, "ID\tName\tDesc\tURL")
+	fmt.Fprintln(w, "--\t----\t----\t---")
+
+	for _, item := range items {
+		fmt.Fprintf(w, "%v\t%v\t%v\t%v\n",
+			item.ID, item.Name, item.Desc, item.URL)
+	}
+
+	w.Flush()
+	return nil
+}
 
 func (c *listListCommand) Execute(ctx context.Context, f *flag.FlagSet, args ...interface{}) subcommands.ExitStatus {
 	var dbPath string
@@ -36,7 +65,14 @@ func (c *listListCommand) Execute(ctx context.Context, f *flag.FlagSet, args ...
 		return c.failure("failed to open database: %v", err)
 	}
 
-	lists, err := db.ListLists(ctx, database.IncludeInactiveLists(true))
+	filter := database.IncludeInactiveLists(true)
+	oneList := false
+	if c.listID > 0 {
+		filter = database.OnlyListWithID(c.listID)
+		oneList = true
+	}
+
+	lists, err := db.ListLists(ctx, filter)
 	if err != nil {
 		return c.failure("failed to list lists: %v", err)
 	}
@@ -59,6 +95,15 @@ func (c *listListCommand) Execute(ctx context.Context, f *flag.FlagSet, args ...
 	}
 
 	w.Flush()
+
+	if oneList && len(lists) > 0 {
+		list := lists[0]
+		if err := listItems(ctx, db, list); err != nil {
+			return c.failure(
+				"failed to list items for list %d: %v",
+				list.ID, err)
+		}
+	}
 
 	return subcommands.ExitSuccess
 }

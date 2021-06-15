@@ -53,6 +53,27 @@ func listFromDatabaseList(list *database.List) *lspb.List {
 	}
 }
 
+func itemFromDatabaseItem(item *database.ListItem) *lspb.ListItem {
+	return &lspb.ListItem{
+		Id:      strconv.Itoa(item.ID),
+		Version: int32(item.Version),
+		ListId:  strconv.Itoa(item.ListID),
+
+		Data: &lspb.ListItemData{
+			Name: item.Name,
+			Desc: item.Desc,
+			Url:  item.URL,
+		},
+
+		Metadata: &lspb.ListItemMetadata{
+			Created:     item.Created.Unix(),
+			Updated:     item.Updated.Unix(),
+			ClaimedBy:   int32(item.ClaimedBy),
+			ClaimedWhen: item.ClaimedWhen.Unix(),
+		},
+	}
+}
+
 func (s *listServer) ListLists(ctx context.Context, req *lspb.ListListsRequest) (*lspb.ListListsResponse, error) {
 	session, err := getSession(ctx)
 	if session == nil {
@@ -73,6 +94,20 @@ func (s *listServer) ListLists(ctx context.Context, req *lspb.ListListsRequest) 
 	return resp, nil
 }
 
+func (s *listServer) getList(ctx context.Context, listID int) (*database.List, error) {
+	lists, err := s.db.ListLists(ctx, database.OnlyListWithID(listID))
+	if err != nil {
+		return nil, err
+	}
+
+	if len(lists) == 0 {
+		return nil, status.Errorf(codes.NotFound,
+			"no list with id %v", listID)
+	}
+
+	return lists[0], nil
+}
+
 func (s *listServer) GetList(ctx context.Context, req *lspb.GetListRequest) (*lspb.GetListResponse, error) {
 	session, err := getSession(ctx)
 	if session == nil {
@@ -85,18 +120,13 @@ func (s *listServer) GetList(ctx context.Context, req *lspb.GetListRequest) (*ls
 			"invalid list id")
 	}
 
-	lists, err := s.db.ListLists(ctx, database.OnlyListWithID(listID))
+	list, err := s.getList(ctx, listID)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(lists) == 0 {
-		return nil, status.Errorf(codes.NotFound,
-			"no list with id %v", listID)
-	}
-
 	return &lspb.GetListResponse{
-		List: listFromDatabaseList(lists[0]),
+		List: listFromDatabaseList(list),
 	}, nil
 }
 
@@ -203,11 +233,73 @@ func (s *listServer) UpdateList(ctx context.Context, req *lspb.UpdateListRequest
 }
 
 func (s *listServer) ListListItems(ctx context.Context, req *lspb.ListListItemsRequest) (*lspb.ListListItemsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "not implemented")
+	session, err := getSession(ctx)
+	if session == nil {
+		return nil, err
+	}
+
+	listID, err := strconv.Atoi(req.GetListId())
+	if req.GetListId() == "" {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"invalid list id")
+	}
+
+	items, err := s.db.ListListItems(ctx, listID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &lspb.ListListItemsResponse{}
+	for _, item := range items {
+		resp.Items = append(resp.Items, itemFromDatabaseItem(item))
+	}
+
+	return resp, nil
 }
 
 func (s *listServer) CreateListItem(ctx context.Context, req *lspb.CreateListItemRequest) (*lspb.CreateListItemResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "not implemented")
+	session, err := getSession(ctx)
+	if session == nil {
+		return nil, err
+	}
+
+	listID, err := strconv.Atoi(req.GetListId())
+	if req.GetListId() == "" {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"invalid list id")
+	}
+
+	list, err := s.getList(ctx, listID)
+	if err != nil {
+		return nil, err
+	}
+
+	if list.OwnerID != session.User.ID {
+		return nil, status.Errorf(codes.PermissionDenied,
+			"user does not own list")
+	}
+
+	pbData := req.GetData()
+	if pbData.GetName() == "" {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"missing/bad args")
+	}
+
+	listItemData := &database.ListItemData{
+		Name: pbData.GetName(),
+		Desc: pbData.GetDesc(),
+		URL:  pbData.GetUrl(),
+	}
+
+	listItem, err := s.db.CreateListItem(ctx, listID, listItemData,
+		s.clock.Now())
+	if err != nil {
+		return nil, err
+	}
+
+	return &lspb.CreateListItemResponse{
+		Item: itemFromDatabaseItem(listItem),
+	}, nil
 }
 
 func (s *listServer) DeleteListItem(ctx context.Context, req *lspb.DeleteListItemRequest) (*lspb.DeleteListItemResponse, error) {

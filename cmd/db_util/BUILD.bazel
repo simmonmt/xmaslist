@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "command.go",
         "db_util.go",
+        "item_create.go",
         "list_create.go",
         "list_list.go",
         "user_create.go",
