@@ -28,8 +28,7 @@ type ListSpec struct {
 	Data  *database.ListData
 	Items []*database.ListItemData
 
-	Active bool
-	Owner  string
+	Owner string
 }
 
 func readListSpecFromFile(path string) (*ListSpec, error) {
@@ -68,10 +67,10 @@ list create --spec spec db_path
 
 With the spec usage, the input file must look like this:
 
-	active: true
 	owner: "bob"
 	data:
 	  name: "a name"
+	  active: true
 	  beneficiary: "sue"
 	  eventdate: "2021-07-15T00:00:00-04:00"
 	items:

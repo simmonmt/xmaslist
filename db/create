@@ -94,10 +94,10 @@ if [[ "${LOADTESTDATA}" -eq 1 ]] ; then
     bazel-bin/cmd/db_util/db_util_/db_util user list ${DB_TMPFILE}
 
     list_create ${DB_TMPFILE} <<-EOF
-	active: true
 	owner: "a"
 	data:
 	  name: "a list 1"
+	  active: true
 	  beneficiary: "aben1"
 	  eventdate: "2021-09-06T00:00:00-04:00"
 	items:
@@ -110,28 +110,28 @@ if [[ "${LOADTESTDATA}" -eq 1 ]] ; then
 	EOF
 
     list_create ${DB_TMPFILE} <<-EOF
-	active: false
 	owner: "a"
 	data:
 	  name: "a list 2"
+	  active: false
 	  beneficiary: "aben2"
 	  eventdate: "2021-09-15T00:00:00-04:00"
 	EOF
 
     list_create ${DB_TMPFILE} <<-EOF
-	active: false
 	owner: "b"
 	data:
 	  name: "b list 1"
+	  active: false
 	  beneficiary: "bben1"
 	  eventdate: "2021-09-17T02:00:00-04:00"
 	EOF
 
     list_create ${DB_TMPFILE} <<-EOF
-	active: true
 	owner: "b"
 	data:
 	  name: "b list 2"
+	  active: true
 	  beneficiary: "bben2"
 	  eventdate: "2021-09-21T00:00:00-04:00"
 	items:
