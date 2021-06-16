@@ -4,7 +4,7 @@ import { createStyles, withStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import Alert from "@material-ui/lab/Alert";
 import { format as formatDate } from "date-fns";
-import { Status, StatusCode } from "grpc-web";
+import { Error as GrpcError, StatusCode } from "grpc-web";
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
 import { Link, Redirect, withRouter } from "react-router-dom";
@@ -62,7 +62,7 @@ class ViewList extends React.Component<Props, State> {
             variant="standard"
             onClose={this.handleAlertClose}
           >
-            {this.state.errorMessage}
+            Error: {this.state.errorMessage}
           </Alert>
         )}
         <div>
@@ -103,7 +103,6 @@ class ViewList extends React.Component<Props, State> {
     return (
       <div>
         <div>items: {this.state.items.length}</div>
-        <div>{this.state.items}</div>
       </div>
     );
   }
@@ -121,17 +120,17 @@ class ViewList extends React.Component<Props, State> {
           return this.props.listModel.listListItems(this.listId);
         })
         .then((items: ListItemProto[]) => {
-          this.setState({ items: items });
+          this.setState({ loading: false, items: items });
         })
-        .catch((status: Status) => {
-          if (status.code === StatusCode.UNAUTHENTICATED) {
+        .catch((error: GrpcError) => {
+          if (error.code === StatusCode.UNAUTHENTICATED) {
             this.setState({ loggedIn: false });
             return;
           }
 
           this.setState({
             loading: false,
-            errorMessage: status.details,
+            errorMessage: error.message || "Unknown error",
           });
         });
     });

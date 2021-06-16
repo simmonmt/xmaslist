@@ -20,7 +20,7 @@ import DeleteIcon from "@material-ui/icons/Delete";
 import RestoreFromTrashIcon from "@material-ui/icons/RestoreFromTrash";
 import Alert from "@material-ui/lab/Alert";
 import { format } from "date-fns";
-import { Status, StatusCode } from "grpc-web";
+import { Error as GrpcError, StatusCode } from "grpc-web";
 import * as React from "react";
 import { Link, Redirect } from "react-router-dom";
 import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
@@ -233,15 +233,15 @@ class Home extends React.Component<HomeProps, HomeState> {
           lists: gotLists,
         });
       })
-      .catch((status: Status) => {
-        if (status.code === StatusCode.UNAUTHENTICATED) {
+      .catch((error: GrpcError) => {
+        if (error.code === StatusCode.UNAUTHENTICATED) {
           this.setState({ loggedIn: false });
           return;
         }
 
         this.setState({
           loading: false,
-          errorMessage: status.details,
+          errorMessage: error.message || "Unknown error",
         });
       });
   }
@@ -257,7 +257,7 @@ class Home extends React.Component<HomeProps, HomeState> {
             variant="standard"
             onClose={this.handleAlertClose}
           >
-            {this.state.errorMessage}
+            Error: {this.state.errorMessage}
           </Alert>
         )}
         {this.props.currentUser.isAdmin && (
@@ -380,15 +380,15 @@ class Home extends React.Component<HomeProps, HomeState> {
 
         this.setState({ creatingDialogOpen: false, lists: copy });
       })
-      .catch((status: Status) => {
-        if (status.code === StatusCode.UNAUTHENTICATED) {
+      .catch((error: GrpcError) => {
+        if (error.code === StatusCode.UNAUTHENTICATED) {
           this.setState({ loggedIn: false });
           return;
         }
 
         this.setState({
           creatingDialogOpen: false,
-          errorMessage: status.details,
+          errorMessage: error.message || "Unknown error",
         });
       });
   }
