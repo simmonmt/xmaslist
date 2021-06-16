@@ -21,6 +21,12 @@ def go_repositories():
         sum = "h1:GDTuxylfsSbc8CHl6kNC9an/tUoe1EklYP5Uc6qoxCA=",
         version = "v0.0.0-20171007154335-bb87b4ff3253",
     )
+    go_repository(
+        name = "in_gopkg_yaml_v2",
+        importpath = "gopkg.in/yaml.v2",
+        sum = "h1:D8xgwECY7CYvx+Y2n4sBz93Jn9JRvxdiyyo8CTfuKaY=",
+        version = "v2.4.0",
+    )
 
     go_repository(
         name = "org_golang_google_grpc",
