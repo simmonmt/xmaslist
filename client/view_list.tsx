@@ -1,7 +1,11 @@
+import Accordion from "@material-ui/core/Accordion";
+import AccordionDetails from "@material-ui/core/AccordionDetails";
+import AccordionSummary from "@material-ui/core/AccordionSummary";
 import Card from "@material-ui/core/Card";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import Alert from "@material-ui/lab/Alert";
 import { format as formatDate } from "date-fns";
 import { Error as GrpcError, StatusCode } from "grpc-web";
@@ -100,10 +104,38 @@ class ViewList extends React.Component<Props, State> {
   }
 
   private listItems() {
+    if (this.state.items.length == 0) {
+      return <div>The list is empty</div>;
+    }
+
+    return <div>{this.state.items.map((item) => this.oneListItem(item))}</div>;
+  }
+
+  private oneListItem(item: ListItemProto) {
+    const data = item.getData();
+    if (!data) return;
+
     return (
-      <div>
-        <div>items: {this.state.items.length}</div>
-      </div>
+      <Accordion>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          id={"item-" + item.getId()}
+        >
+          <Typography variant="h6">{data.getName()}</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          {data.getDesc() && (
+            <Typography variant="body1">{data.getDesc()}</Typography>
+          )}
+          <ul>
+            <li>
+              <Link to="{data.getUrl()}">
+                <Typography variant="body1">{data.getUrl()}</Typography>
+              </Link>
+            </li>
+          </ul>
+        </AccordionDetails>
+      </Accordion>
     );
   }
 
