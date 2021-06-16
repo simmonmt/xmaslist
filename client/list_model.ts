@@ -1,4 +1,5 @@
 import { Metadata } from "grpc-web";
+import { ListItem as ListItemProto } from "../proto/list_item_pb";
 import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
 import { ListServicePromiseClient } from "../proto/list_service_grpc_web_pb";
 import {
@@ -7,6 +8,8 @@ import {
   CreateListResponse,
   GetListRequest,
   GetListResponse,
+  ListListItemsRequest,
+  ListListItemsResponse,
   ListListsRequest,
   ListListsResponse,
 } from "../proto/list_service_pb";
@@ -45,6 +48,17 @@ export class ListModel {
         }
 
         return list;
+      });
+  }
+
+  listListItems(listId: string): Promise<ListItemProto[]> {
+    const req = new ListListItemsRequest();
+    req.setListId(listId);
+
+    return this.listService
+      .listListItems(req, this.metadata())
+      .then((resp: ListListItemsResponse) => {
+        return resp.getItemsList();
       });
   }
 

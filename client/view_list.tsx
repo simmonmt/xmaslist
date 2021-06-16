@@ -8,6 +8,7 @@ import { Status, StatusCode } from "grpc-web";
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
 import { Link, Redirect, withRouter } from "react-router-dom";
+import { ListItem as ListItemProto } from "../proto/list_item_pb";
 import { List as ListProto } from "../proto/list_pb";
 import { ListModel } from "./list_model";
 import { User } from "./user";
@@ -27,6 +28,7 @@ interface State {
   loading: boolean;
   errorMessage: string;
   list: ListProto | null;
+  items: ListItemProto[];
 }
 
 class ViewList extends React.Component<Props, State> {
@@ -39,6 +41,7 @@ class ViewList extends React.Component<Props, State> {
       loading: false,
       errorMessage: "",
       list: null,
+      items: [],
     };
 
     this.listId = this.props.match.params.listId;
@@ -73,7 +76,7 @@ class ViewList extends React.Component<Props, State> {
         </Card>
 
         <Card className={this.props.classes.card} raised>
-          elements
+          {this.listItems()}
         </Card>
       </div>
     );
@@ -96,6 +99,15 @@ class ViewList extends React.Component<Props, State> {
     );
   }
 
+  private listItems() {
+    return (
+      <div>
+        <div>items: {this.state.items.length}</div>
+        <div>{this.state.items}</div>
+      </div>
+    );
+  }
+
   private handleAlertClose() {
     this.setState({ errorMessage: "" });
   }
@@ -105,7 +117,11 @@ class ViewList extends React.Component<Props, State> {
       this.props.listModel
         .getList(this.listId)
         .then((list: ListProto) => {
-          this.setState({ loading: false, list: list });
+          this.setState({ list: list });
+          return this.props.listModel.listListItems(this.listId);
+        })
+        .then((items: ListItemProto[]) => {
+          this.setState({ items: items });
         })
         .catch((status: Status) => {
           if (status.code === StatusCode.UNAUTHENTICATED) {
