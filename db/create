@@ -12,38 +12,6 @@ function usage {
     exit 2
 }
 
-function user_create {
-    local dbfile="$1"
-    local username="$2"
-    local fullname="$3"
-    local password="$4"
-
-    [[ -n "${dbfile}" ]] || die "missing dbfile"
-    [[ -n "${username}" ]] || die "missing username"
-    [[ -n "${fullname}" ]] || die "missing fullname"
-    [[ -n "${password}" ]] || die "missing password"
-
-    local adminflag=""
-    if [[ "$5" == "admin" ]]; then
-        adminflag="--admin"
-    elif [[ -n "$5" ]] ; then
-        die "bad admin value"
-    fi
-
-    bazel-bin/cmd/db_util/db_util_/db_util user create ${adminflag} \
-          "${dbfile}" "${username}" "${fullname}" "${password}"
-}
-
-function list_create {
-    local dbfile="$1"
-
-    [[ -n "${dbfile}" ]] || die "missing dbfile"
-
-    bazel-bin/cmd/db_util/db_util_/db_util list create \
-	  --spec=- \
-          "${dbfile}"
-}
-
 PROGNAME=$(basename "$0")
 
 GETOPT=getopt
@@ -86,66 +54,61 @@ DB_TMPFILE=/tmp/db.sqlite
 
 sqlite3 ${DB_TMPFILE} <db/schema/schema.txt
 if [[ "${LOADTESTDATA}" -eq 1 ]] ; then
-    bazel build cmd/db_util
+    bazel run cmd/db_util -- load --spec - ${DB_TMPFILE} <<-EOF
+	users:
+	  - username: "a"
+	    fullname: "User A"
+	    password: "aa"
+	    admin: true
+	  - username: "b"
+	    fullname: "User B"
+	    password: "bb"
 
-    user_create ${DB_TMPFILE} a "User A" aa admin
-    user_create ${DB_TMPFILE} b "User B" bb
+	lists:
+	  - owner: "a"
+	    data:
+	      name: "a list 1"
+	      active: true
+	      beneficiary: "aben1"
+	      eventdate: "2021-09-06T00:00:00-04:00"
+	    items:
+	      - name: "item1"
+	        desc: "desc1"
+	        url: "url1"
+	      - name: "item2"
+	        desc: "desc2"
+	        url: "url2"
+	  - owner: "a"
+	    data:
+	      name: "a list 2"
+	      active: false
+	      beneficiary: "aben2"
+	      eventdate: "2021-09-15T00:00:00-04:00"
+	  - owner: "b"
+	    data:
+	      name: "b list 1"
+	      active: false
+	      beneficiary: "bben1"
+	      eventdate: "2021-09-17T02:00:00-04:00"
+	  - owner: "b"
+	    data:
+	      name: "b list 2"
+	      active: true
+	      beneficiary: "bben2"
+	      eventdate: "2021-09-21T00:00:00-04:00"
+	    items:
+	      - name: "item1"
+	        desc: "desc1"
+	        url: "url1"
+	      - name: "item2"
+	        desc: "desc2"
+	        url: "url2"
+	      - name: "item3"
+	        desc: "desc3"
+	        url: "url3"
+	EOF
 
     bazel-bin/cmd/db_util/db_util_/db_util user list ${DB_TMPFILE}
-
-    list_create ${DB_TMPFILE} <<-EOF
-	owner: "a"
-	data:
-	  name: "a list 1"
-	  active: true
-	  beneficiary: "aben1"
-	  eventdate: "2021-09-06T00:00:00-04:00"
-	items:
-	  - name: "item1"
-	    desc: "desc1"
-	    url: "url1"
-	  - name: "item2"
-	    desc: "desc2"
-	    url: "url2"
-	EOF
-
-    list_create ${DB_TMPFILE} <<-EOF
-	owner: "a"
-	data:
-	  name: "a list 2"
-	  active: false
-	  beneficiary: "aben2"
-	  eventdate: "2021-09-15T00:00:00-04:00"
-	EOF
-
-    list_create ${DB_TMPFILE} <<-EOF
-	owner: "b"
-	data:
-	  name: "b list 1"
-	  active: false
-	  beneficiary: "bben1"
-	  eventdate: "2021-09-17T02:00:00-04:00"
-	EOF
-
-    list_create ${DB_TMPFILE} <<-EOF
-	owner: "b"
-	data:
-	  name: "b list 2"
-	  active: true
-	  beneficiary: "bben2"
-	  eventdate: "2021-09-21T00:00:00-04:00"
-	items:
-	  - name: "item1"
-	    desc: "desc1"
-	    url: "url1"
-	  - name: "item2"
-	    desc: "desc2"
-	    url: "url2"
-	  - name: "item3"
-	    desc: "desc3"
-	    url: "url3"
-	EOF
-
     bazel-bin/cmd/db_util/db_util_/db_util list list ${DB_TMPFILE}
 fi
 
