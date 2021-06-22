@@ -64,6 +64,7 @@ func main() {
 	subcommands.Register(subcommands.HelpCommand(), "")
 	subcommands.Register(subcommands.FlagsCommand(), "")
 	subcommands.Register(subcommands.CommandsCommand(), "")
+	subcommands.Register(&loadCommand{}, "")
 	subcommands.Register(&listCommand{}, "")
 	subcommands.Register(&itemCommand{}, "")
 	subcommands.Register(&userCommand{}, "")

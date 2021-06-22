@@ -3,14 +3,11 @@ package main
 import (
 	"context"
 	"flag"
-	"io"
-	"os"
-	"strconv"
+	"fmt"
 	"time"
 
 	"github.com/google/subcommands"
 	"github.com/simmonmt/xmaslist/backend/database"
-	yaml "gopkg.in/yaml.v2"
 )
 
 type listCreateCommand struct {
@@ -18,7 +15,7 @@ type listCreateCommand struct {
 
 	active      bool
 	owner       string
-	spec        string
+	specPath    string
 	name        string
 	beneficiary string
 	eventDate   string
@@ -29,31 +26,6 @@ type ListSpec struct {
 	Items []*database.ListItemData
 
 	Owner string
-}
-
-func readListSpecFromFile(path string) (*ListSpec, error) {
-	if path == "-" {
-		return readListSpec(os.Stdin)
-	}
-
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	return readListSpec(f)
-}
-
-func readListSpec(r io.Reader) (*ListSpec, error) {
-	spec := &ListSpec{}
-
-	d := yaml.NewDecoder(r)
-	if err := d.Decode(&spec); err != nil {
-		return nil, err
-	}
-
-	return spec, nil
 }
 
 func (c *listCreateCommand) Name() string     { return "create" }
@@ -86,24 +58,15 @@ func (c *listCreateCommand) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&c.beneficiary, "beneficiary", "", "Beneficiary")
 	f.StringVar(&c.eventDate, "event_date", "", "Event Date")
 	f.StringVar(&c.name, "name", "", "Event name")
-	f.StringVar(&c.spec, "spec", "", "List spec")
+	f.StringVar(&c.specPath, "spec", "", "List spec")
 }
 
 func (c *listCreateCommand) Execute(ctx context.Context, f *flag.FlagSet, args ...interface{}) subcommands.ExitStatus {
-	var listData *database.ListData
-	listItemDatas := []*database.ListItemData{}
-
-	var ownerStr string
-
-	if c.spec != "" {
-		s, err := readListSpecFromFile(c.spec)
-		if err != nil {
+	var spec ListSpec
+	if c.specPath != "" {
+		if err := readSpecFromFile(c.specPath, &spec); err != nil {
 			return c.failure("failed to parse spec: %v", err)
 		}
-
-		listData = s.Data
-		listItemDatas = s.Items
-		ownerStr = s.Owner
 	} else {
 		if c.owner == "" {
 			return c.usage("--owner is required")
@@ -120,14 +83,15 @@ func (c *listCreateCommand) Execute(ctx context.Context, f *flag.FlagSet, args .
 			return c.usage("invalid event date: %v", err)
 		}
 
-		listData = &database.ListData{
-			Name:        c.name,
-			Beneficiary: c.beneficiary,
-			EventDate:   eventDate,
-			Active:      c.active,
+		spec = ListSpec{
+			Data: &database.ListData{
+				Name:        c.name,
+				Beneficiary: c.beneficiary,
+				EventDate:   eventDate,
+				Active:      c.active,
+			},
+			Owner: c.owner,
 		}
-
-		ownerStr = c.owner
 	}
 
 	var dbPath string
@@ -140,32 +104,41 @@ func (c *listCreateCommand) Execute(ctx context.Context, f *flag.FlagSet, args .
 		return c.failure("failed to open database: %v", err)
 	}
 
-	owner, err := strconv.Atoi(ownerStr)
-	if err != nil {
-		user, err := db.LookupUserByUsername(ctx, ownerStr)
-		if err != nil {
-			return c.failure("failed to lookup user %v: %v",
-				ownerStr, err)
-		}
-		if user == nil {
-			return c.failure("no such user %v", ownerStr)
-		}
-		owner = user.ID
-	}
-
-	list, err := db.CreateList(ctx, owner, listData, time.Now())
+	listID, err := createList(ctx, db, &spec)
 	if err != nil {
 		return c.failure("failed to create list: %v", err)
 	}
 
-	for i, itemData := range listItemDatas {
+	return c.success("Created list %v", listID)
+}
+
+func createList(ctx context.Context, db *database.DB, spec *ListSpec) (int, error) {
+	if spec.Owner == "" {
+		return -1, fmt.Errorf("spec is missing owner")
+	}
+
+	owner, err := parseUserNameOrID(ctx, db, spec.Owner)
+	if err != nil {
+		return -1, err
+	}
+
+	if spec.Data.Name == "" {
+		return -1, fmt.Errorf("spec is missing list name")
+	}
+
+	list, err := db.CreateList(ctx, owner, spec.Data, time.Now())
+	if err != nil {
+		return -1, err
+	}
+
+	for itemIdx, itemData := range spec.Items {
 		_, err := db.CreateListItem(
 			ctx, list.ID, itemData, time.Now())
 		if err != nil {
-			return c.failure("failed to create item %d: %v",
-				i, err)
+			return -1, fmt.Errorf("failed to create item %d: %v",
+				itemIdx+1, err)
 		}
 	}
 
-	return c.success("Created list %v", list.ID)
+	return list.ID, nil
 }

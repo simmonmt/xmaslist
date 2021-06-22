@@ -8,6 +8,8 @@ go_library(
         "item_create.go",
         "list_create.go",
         "list_list.go",
+        "load.go",
+        "spec.go",
         "user_create.go",
         "user_list.go",
         "user_lookup.go",
