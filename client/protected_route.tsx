@@ -10,19 +10,10 @@ export class ProtectedRoute extends Route<ProtectedRouteProps> {
   public render() {
     if (!this.props.isLoggedIn) {
       let search = "";
-      if (this.props.path !== undefined) {
-        let redirectPath: string;
-        if (typeof this.props.path === "string") {
-          redirectPath = this.props.path;
-        } else {
-          redirectPath = this.props.path[0];
-        }
-
-        if (redirectPath !== "/") {
-          const params = new URLSearchParams();
-          params.append("redirect", redirectPath);
-          search = "?" + params.toString();
-        }
+      if (this.props.location && this.props.location.pathname !== "/") {
+        const params = new URLSearchParams();
+        params.append("redirect", this.props.location.pathname);
+        search = "?" + params.toString();
       }
 
       return (
