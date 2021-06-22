@@ -57,20 +57,20 @@ if [[ "${LOADTESTDATA}" -eq 1 ]] ; then
     bazel run cmd/db_util -- load --spec - ${DB_TMPFILE} <<-EOF
 	users:
 	  - username: "a"
-	    fullname: "User A"
+	    fullname: "Elmer McSquicken"
 	    password: "aa"
 	    admin: true
 	  - username: "b"
-	    fullname: "User B"
+	    fullname: "Sue Elaboratelastname"
 	    password: "bb"
 
 	lists:
 	  - owner: "a"
 	    data:
-	      name: "a list 1"
+	      name: "Christmas List 2021"
 	      active: true
-	      beneficiary: "aben1"
-	      eventdate: "2021-09-06T00:00:00-04:00"
+	      beneficiary: "Elmer"
+	      eventdate: "2021-12-25T00:00:00-04:00"
 	    items:
 	      - name: "item1"
 	        desc: "desc1"
@@ -80,22 +80,16 @@ if [[ "${LOADTESTDATA}" -eq 1 ]] ; then
 	        url: "url2"
 	  - owner: "a"
 	    data:
-	      name: "a list 2"
-	      active: false
-	      beneficiary: "aben2"
-	      eventdate: "2021-09-15T00:00:00-04:00"
-	  - owner: "b"
-	    data:
-	      name: "b list 1"
-	      active: false
-	      beneficiary: "bben1"
-	      eventdate: "2021-09-17T02:00:00-04:00"
-	  - owner: "b"
-	    data:
-	      name: "b list 2"
+	      name: "Sue's Secret Birthday List 2021"
 	      active: true
-	      beneficiary: "bben2"
-	      eventdate: "2021-09-21T00:00:00-04:00"
+	      beneficiary: "Sue"
+	      eventdate: "2021-10-15T00:00:00-04:00"
+	  - owner: "b"
+	    data:
+	      name: "Elmer's Secret Christmas List 2021"
+	      active: false
+	      beneficiary: "Elmer"
+	      eventdate: "2021-12-25T02:00:00-04:00"
 	    items:
 	      - name: "item1"
 	        desc: "desc1"
@@ -106,6 +100,12 @@ if [[ "${LOADTESTDATA}" -eq 1 ]] ; then
 	      - name: "item3"
 	        desc: "desc3"
 	        url: "url3"
+	  - owner: "b"
+	    data:
+	      name: "b list 2"
+	      active: false
+	      beneficiary: "bben2"
+	      eventdate: "2021-09-21T00:00:00-04:00"
 	EOF
 
     bazel-bin/cmd/db_util/db_util_/db_util user list ${DB_TMPFILE}
