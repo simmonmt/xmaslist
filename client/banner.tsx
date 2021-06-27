@@ -1,5 +1,6 @@
 import AppBar from "@material-ui/core/AppBar";
 import IconButton from "@material-ui/core/IconButton";
+import Link from "@material-ui/core/Link";
 import Menu from "@material-ui/core/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
 import { createStyles, withStyles } from "@material-ui/core/styles";
@@ -7,7 +8,8 @@ import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import * as React from "react";
-import { Link } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
+import { TreeIcon } from "./tree_icon";
 import { User } from "./user";
 
 interface Props {
@@ -44,7 +46,7 @@ class Banner extends React.Component<Props, State> {
         onClose={() => this.handleProfileMenuClose()}
       >
         <MenuItem
-          component={Link}
+          component={RouterLink}
           to={"/logout"}
           onClick={() => this.handleProfileMenuLogout()}
         >
@@ -79,6 +81,18 @@ class Banner extends React.Component<Props, State> {
       <div className={classes.grow}>
         <AppBar position="static">
           <Toolbar>
+            <span>
+              <TreeIcon />
+              <Link
+                component={RouterLink}
+                color="inherit"
+                variant="h4"
+                underline="none"
+                to="/"
+              >
+                xmaslist
+              </Link>
+            </span>
             <div className={classes.grow} />
             {userButtons}
           </Toolbar>
