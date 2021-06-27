@@ -81,18 +81,16 @@ class Banner extends React.Component<Props, State> {
       <div className={classes.grow}>
         <AppBar position="static">
           <Toolbar>
-            <span>
+            <Link
+              component={RouterLink}
+              color="inherit"
+              variant="h4"
+              underline="none"
+              to="/"
+            >
               <TreeIcon />
-              <Link
-                component={RouterLink}
-                color="inherit"
-                variant="h4"
-                underline="none"
-                to="/"
-              >
-                xmaslist
-              </Link>
-            </span>
+              xmaslist
+            </Link>
             <div className={classes.grow} />
             {userButtons}
           </Toolbar>
