@@ -3,6 +3,7 @@ import AccordionDetails from "@material-ui/core/AccordionDetails";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
 import Card from "@material-ui/core/Card";
 import LinearProgress from "@material-ui/core/LinearProgress";
+import Link from "@material-ui/core/Link";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
@@ -11,7 +12,7 @@ import { format as formatDate } from "date-fns";
 import { Error as GrpcError, StatusCode } from "grpc-web";
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
-import { Link, Redirect, withRouter } from "react-router-dom";
+import { Link as RouterLink, Redirect, withRouter } from "react-router-dom";
 import { ListItem as ListItemProto } from "../proto/list_item_pb";
 import { List as ListProto } from "../proto/list_pb";
 import { ListModel } from "./list_model";
@@ -71,7 +72,7 @@ class ViewList extends React.Component<Props, State> {
         )}
         <div>
           <Typography variant="body1">
-            <Link to="/">&lt;&lt; All lists</Link>
+            <RouterLink to="/">&lt;&lt; All lists</RouterLink>
           </Typography>
         </div>
 
@@ -111,6 +112,16 @@ class ViewList extends React.Component<Props, State> {
     return <div>{this.state.items.map((item) => this.oneListItem(item))}</div>;
   }
 
+  private makeLink(urlStr: string) {
+    const url = new URL(urlStr);
+    const match = url.hostname.match(/^(?:.*\.)?([^.]+)\.[^.]+$/);
+    return (
+      <Link href={urlStr} target="_blank" rel="noreferrer">
+        {match ? match[1] : url.hostname}
+      </Link>
+    );
+  }
+
   private oneListItem(item: ListItemProto) {
     const data = item.getData();
     if (!data) return;
@@ -123,17 +134,18 @@ class ViewList extends React.Component<Props, State> {
         >
           <Typography variant="h6">{data.getName()}</Typography>
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails className={this.props.classes.details}>
           {data.getDesc() && (
-            <Typography variant="body1">{data.getDesc()}</Typography>
+            <div className={this.props.classes.detailSec}>
+              <Typography variant="body1">{data.getDesc()}</Typography>
+            </div>
           )}
-          <ul>
-            <li>
-              <Link to="{data.getUrl()}">
-                <Typography variant="body1">{data.getUrl()}</Typography>
-              </Link>
-            </li>
-          </ul>
+          {data.getDesc() && data.getUrl() && <div />}
+          {data.getUrl() && (
+            <Typography variant="body1">
+              Link: {this.makeLink(data.getUrl())}
+            </Typography>
+          )}
         </AccordionDetails>
       </Accordion>
     );
@@ -179,6 +191,13 @@ const viewListStyles = () =>
     },
     meta: {
       textAlign: "center",
+    },
+    details: {
+      display: "flex",
+      flexDirection: "column",
+    },
+    detailSec: {
+      marginBotton: "1ch",
     },
   });
 
