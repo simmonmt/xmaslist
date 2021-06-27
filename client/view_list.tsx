@@ -1,7 +1,9 @@
 import Accordion from "@material-ui/core/Accordion";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
+import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
+import Chip from "@material-ui/core/Chip";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import Link from "@material-ui/core/Link";
 import { createStyles, withStyles } from "@material-ui/core/styles";
@@ -20,6 +22,53 @@ import { User } from "./user";
 
 interface PathParams {
   listId: string;
+}
+
+function ClaimedChip({
+  currentUserId,
+  item,
+}: {
+  currentUserId: number;
+  item: ListItemProto;
+}) {
+  const metadata = item.getMetadata();
+  let label = "Claimed";
+  if (metadata && Number(metadata.getClaimedBy()) === currentUserId) {
+    label = "Claimed by you";
+  }
+
+  return <Chip label={label} />;
+}
+
+function ClaimButton({
+  currentUserId,
+  item,
+  onClick,
+}: {
+  currentUserId: number;
+  item: ListItemProto;
+  onClick: (newState: boolean) => void;
+}) {
+  const state = item.getState();
+  const claimed = state && state.getClaimed() === true;
+
+  const metadata = item.getMetadata();
+  const currentUserClaimed =
+    metadata && metadata.getClaimedBy() === currentUserId;
+
+  const active = !claimed || currentUserClaimed;
+  const label = claimed ? "Unclaim" : "Claim";
+
+  return (
+    <Button
+      variant="contained"
+      color="primary"
+      disabled={!active}
+      onClick={() => onClick(!claimed)}
+    >
+      {label}
+    </Button>
+  );
 }
 
 interface Props extends RouteComponentProps<PathParams> {
@@ -122,17 +171,25 @@ class ViewList extends React.Component<Props, State> {
     );
   }
 
+  private claimClicked(item: ListItemProto, newState: boolean) {
+    console.log("claim clicked:", item.getId(), "newstate", newState);
+  }
+
   private oneListItem(item: ListItemProto) {
     const data = item.getData();
     if (!data) return;
 
     return (
-      <Accordion>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          id={"item-" + item.getId()}
-        >
+      <Accordion key={"item-" + item.getId()}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography variant="h6">{data.getName()}</Typography>
+          <div className={this.props.classes.grow} />
+          {item.getState() && item.getState()!.getClaimed() && (
+            <ClaimedChip
+              currentUserId={this.props.currentUser.id}
+              item={item}
+            />
+          )}
         </AccordionSummary>
         <AccordionDetails className={this.props.classes.details}>
           {data.getDesc() && (
@@ -146,6 +203,13 @@ class ViewList extends React.Component<Props, State> {
               Link: {this.makeLink(data.getUrl())}
             </Typography>
           )}
+          <div className={this.props.classes.claimButton}>
+            <ClaimButton
+              currentUserId={this.props.currentUser.id}
+              item={item}
+              onClick={(newState: boolean) => this.claimClicked(item, newState)}
+            />
+          </div>
         </AccordionDetails>
       </Accordion>
     );
@@ -198,6 +262,13 @@ const viewListStyles = () =>
     },
     detailSec: {
       marginBotton: "1ch",
+    },
+    grow: {
+      flexGrow: 1,
+    },
+    claimButton: {
+      display: "flex",
+      justifyContent: "flex-end",
     },
   });
 
