@@ -71,6 +71,10 @@ func itemFromDatabaseItem(item *database.ListItem) *lspb.ListItem {
 			ClaimedBy:   int32(item.ClaimedBy),
 			ClaimedWhen: item.ClaimedWhen.Unix(),
 		},
+
+		State: &lspb.ListItemState{
+			Claimed: bool(item.ClaimedBy != 0),
+		},
 	}
 }
 
