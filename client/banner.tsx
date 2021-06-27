@@ -3,8 +3,8 @@ import IconButton from "@material-ui/core/IconButton";
 import Menu from "@material-ui/core/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
 import { createStyles, withStyles } from "@material-ui/core/styles";
-import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import Toolbar from "@material-ui/core/Toolbar";
+import Typography from "@material-ui/core/Typography";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import * as React from "react";
 import { Link } from "react-router-dom";
@@ -56,15 +56,22 @@ class Banner extends React.Component<Props, State> {
     let userButtons = <span />;
     if (this.props.user !== null) {
       userButtons = (
-        <IconButton
-          edge="end"
-          onClick={handleProfileMenuOpen}
-          aria-controls={profileMenuId}
-          aria-haspopup="true"
-          color="inherit"
-        >
-          <AccountCircle />
-        </IconButton>
+        <React.Fragment>
+          <Typography variant="body1" className={this.props.classes.username}>
+            {this.props.user.fullname
+              ? this.props.user.fullname
+              : this.props.user.username}
+          </Typography>
+          <IconButton
+            edge="end"
+            onClick={handleProfileMenuOpen}
+            aria-controls={profileMenuId}
+            aria-haspopup="true"
+            color="inherit"
+          >
+            <AccountCircle />
+          </IconButton>
+        </React.Fragment>
       );
     }
 
