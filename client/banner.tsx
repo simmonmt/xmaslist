@@ -20,8 +20,6 @@ interface State {
 }
 
 class Banner extends React.Component<Props, State> {
-  private userListenerId = 0;
-
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -96,7 +94,7 @@ class Banner extends React.Component<Props, State> {
   }
 }
 
-const bannerStyles = (theme: Theme) =>
+const bannerStyles = () =>
   createStyles({
     grow: {
       flexGrow: 1,
