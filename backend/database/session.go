@@ -86,8 +86,3 @@ func (db *DB) DeleteSession(ctx context.Context, sessionID int) error {
 
 	return nil
 }
-
-func (db *DB) DeleteAllSessions(ctx context.Context) error {
-	_, err := db.db.ExecContext(ctx, `DELETE FROM sessions`)
-	return err
-}

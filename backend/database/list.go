@@ -184,9 +184,3 @@ func (db *DB) ListLists(ctx context.Context, filter ListFilter) ([]*List, error)
 
 	return lists, nil
 }
-
-func (db *DB) DeleteAllLists(ctx context.Context) error {
-	_, err := db.db.ExecContext(ctx,
-		`DELETE FROM items; DELETE FROM lists`)
-	return err
-}

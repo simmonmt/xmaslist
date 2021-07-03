@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -17,10 +16,6 @@ func TestSessions(t *testing.T) {
 	user := users.UserByUsername("a")
 	created := time.Unix(1000, 0)
 	expiry := time.Unix(2000, 0)
-
-	if err := db.DeleteAllSessions(ctx); err != nil {
-		panic(fmt.Sprintf("failed to clean sessions: %v", err))
-	}
 
 	// create session 1
 	gotSess, err := db.CreateSession(ctx, user.ID, created, expiry)
