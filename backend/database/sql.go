@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql/driver"
 	"fmt"
+	"reflect"
 	"time"
 )
 
@@ -33,7 +34,8 @@ func (p *nullSeconds) Scan(src interface{}) error {
 
 	secs, ok := src.(int64)
 	if !ok {
-		return fmt.Errorf("src isn't int64")
+		return fmt.Errorf("src isn't int64, is %v: %v",
+			reflect.TypeOf(src), src)
 	}
 
 	p.Time, p.Valid = time.Unix(secs, 0), true
@@ -44,5 +46,5 @@ func (p nullSeconds) Value() (driver.Value, error) {
 	if !p.Valid {
 		return nil, nil
 	}
-	return p.Time, nil
+	return p.Time.Unix(), nil
 }

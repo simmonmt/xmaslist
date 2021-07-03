@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -31,6 +32,10 @@ func TestNullSeconds(t *testing.T) {
 			ns, nullSeconds{time.Unix(1000, 0), true})
 	}
 
+	if v, err := ns.Value(); err != nil || reflect.TypeOf(v).Kind() != reflect.Int64 || reflect.ValueOf(v).Int() != 1000 {
+		t.Fatalf("Value() = %v (%v), %v, want 1000 (int64), nil", v, reflect.TypeOf(v), err)
+	}
+
 	if err := sql.Scanner(ns).Scan(nil); err != nil {
 		t.Errorf("s.Scan(1000) = %v, want nil", err)
 		return
@@ -39,6 +44,10 @@ func TestNullSeconds(t *testing.T) {
 	if ns.Valid {
 		t.Errorf("s.Scan(1000); %v, want %v",
 			ns, nullSeconds{Valid: false})
+	}
+
+	if v, err := ns.Value(); err != nil || v != nil {
+		t.Fatalf("Value() = %v (%v), %v, want nil, nil", v, reflect.TypeOf(v), err)
 	}
 
 	if err := sql.Scanner(ns).Scan("bob"); err == nil {
