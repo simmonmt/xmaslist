@@ -49,7 +49,7 @@ const (
 	SetupListsUserStamp int64 = 100000
 )
 
-func SetupLists(ctx context.Context, t *testing.T, db *database.DB, reqs []*ListSetupRequest) []*ListSetupResponse {
+func SetupLists(ctx context.Context, t *testing.T, db *database.DB, reqs []*ListSetupRequest) ListSetupResponses {
 	resps := []*ListSetupResponse{}
 	stamp := int64(SetupListsBaseStamp)
 	for _, req := range reqs {
