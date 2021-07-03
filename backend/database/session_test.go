@@ -10,7 +10,11 @@ import (
 )
 
 func TestSessions(t *testing.T) {
-	user := users[0]
+	db := setupTestDatabase(t)
+	defer db.Close()
+	users := createTestUsers(t, db, []string{"a"})
+
+	user := users.UserByUsername("a")
 	created := time.Unix(1000, 0)
 	expiry := time.Unix(2000, 0)
 

@@ -1,12 +1,33 @@
 package database_test
 
 import (
+	"fmt"
 	"reflect"
 	"sort"
 	"testing"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/simmonmt/xmaslist/backend/database"
+	"github.com/simmonmt/xmaslist/backend/database/testutil"
 )
+
+func createTestUsers(t *testing.T, db *database.DB, usernames []string) testutil.UserSetupResponses {
+	reqs := []*testutil.UserSetupRequest{}
+	for _, username := range usernames {
+		r, _ := utf8.DecodeRuneInString(username)
+		isAdmin := unicode.IsUpper(r)
+
+		reqs = append(reqs, &testutil.UserSetupRequest{
+			Username: username,
+			Fullname: fmt.Sprintf("User %v", username),
+			Password: username + username,
+			Admin:    isAdmin,
+		})
+	}
+
+	return testutil.SetupUsers(ctx, t, db, reqs)
+}
 
 func userIDs(users []*database.User) []int {
 	ids := []int{}
@@ -17,8 +38,12 @@ func userIDs(users []*database.User) []int {
 }
 
 func TestAuthenticateUser(t *testing.T) {
-	user := users[0]
-	password := passwords[user.Username]
+	db := setupTestDatabase(t)
+	defer db.Close()
+	users := createTestUsers(t, db, []string{"a"})
+
+	user := users.UserByUsername("a")
+	password := users.PasswordByID(user.ID)
 	invalidPassword := password + "_invalid"
 
 	_, err := db.AuthenticateUser(ctx, user.Username, invalidPassword)
@@ -36,7 +61,12 @@ func TestAuthenticateUser(t *testing.T) {
 }
 
 func TestLookupUser(t *testing.T) {
-	for _, user := range users {
+	db := setupTestDatabase(t)
+	defer db.Close()
+	users := createTestUsers(t, db, []string{"a", "b", "c"})
+
+	for _, resp := range users {
+		user := resp.User
 		gotUser, err := db.LookupUserByID(ctx, user.ID)
 		if err != nil || !reflect.DeepEqual(gotUser, user) {
 			t.Errorf("LookupUser(_, %v) = %+v, %v, want %+v, nil",
@@ -59,19 +89,35 @@ func TestLookupUser(t *testing.T) {
 }
 
 func TestListUsers(t *testing.T) {
+	db := setupTestDatabase(t)
+	defer db.Close()
+	users := createTestUsers(t, db, []string{"a", "b", "c"})
+
+	want := []*database.User{}
+	for _, resp := range users {
+		want = append(want, resp.User)
+	}
+	sort.Sort(database.UsersByID(want))
+
 	got, err := db.ListUsers(ctx)
 	if err != nil {
 		t.Errorf("ListUsers() = %v, want nil", err)
 		return
 	}
-
 	sort.Sort(database.UsersByID(got))
-	if !reflect.DeepEqual(users, got) {
-		t.Errorf("ListUsers() = %+v, want %+v", users, got)
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("ListUsers() = %+v, want %+v", got, want)
 	}
 }
 
 func TestUsersByID(t *testing.T) {
+	users := []*database.User{
+		&database.User{Username: "c", Fullname: "User C"},
+		&database.User{Username: "a", Fullname: "User A"},
+		&database.User{Username: "b", Fullname: "User B"},
+	}
+
 	tmp := make([]*database.User, len(users))
 	copy(tmp, users)
 

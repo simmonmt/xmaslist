@@ -48,10 +48,9 @@ func TestListsByID(t *testing.T) {
 }
 
 func TestCreateAndListLists(t *testing.T) {
-	if err := db.DeleteAllLists(ctx); err != nil {
-		t.Errorf("failed to delete lists: %v", err)
-		return
-	}
+	db := setupTestDatabase(t)
+	defer db.Close()
+	createTestUsers(t, db, []string{"a", "b"})
 
 	listSetupRequests := []*testutil.ListSetupRequest{
 		&testutil.ListSetupRequest{
@@ -104,7 +103,7 @@ func statusCode(err error) (codes.Code, error) {
 	return s.Code(), nil
 }
 
-func readList(ctx context.Context, listID int) (*database.List, error) {
+func readList(ctx context.Context, db *database.DB, listID int) (*database.List, error) {
 	lists, err := db.ListLists(ctx, database.OnlyListWithID(listID))
 	if err != nil {
 		return nil, err
@@ -119,25 +118,24 @@ func readList(ctx context.Context, listID int) (*database.List, error) {
 }
 
 func TestUpdateList(t *testing.T) {
-	if err := db.DeleteAllLists(ctx); err != nil {
-		t.Errorf("failed to delete lists: %v", err)
-		return
-	}
+	db := setupTestDatabase(t)
+	defer db.Close()
+	users := createTestUsers(t, db, []string{"a", "b"})
 
 	listData := &database.ListData{Name: "ul", Beneficiary: "bul",
 		EventDate: time.Unix(3, 0), Active: true}
-	ownerID := usersByUsername["a"]
-	otherUserID := usersByUsername["b"]
+	owner := users.UserByUsername("a")
+	otherUser := users.UserByUsername("b")
 	created := time.Unix(3000, 0)
 	updated := time.Unix(4000, 0)
 
-	list, err := db.CreateList(ctx, ownerID, listData, created)
+	list, err := db.CreateList(ctx, owner.ID, listData, created)
 	if err != nil {
 		t.Errorf("failed to create list: %v", err)
 		return
 	}
 
-	_, err = db.UpdateList(ctx, list.ID, list.Version+1, ownerID,
+	_, err = db.UpdateList(ctx, list.ID, list.Version+1, owner.ID,
 		updated, func(listData *database.ListData) error { panic("unreached") })
 	if err == nil {
 		t.Errorf("UpdateList(bad version %v) = %v, want nil",
@@ -150,25 +148,25 @@ func TestUpdateList(t *testing.T) {
 		return
 	}
 
-	if got, err := readList(ctx, list.ID); err != nil || !reflect.DeepEqual(list, got) {
+	if got, err := readList(ctx, db, list.ID); err != nil || !reflect.DeepEqual(list, got) {
 		t.Errorf("list unexpectedly changed: want %+v, got %+v",
 			list, got)
 		return
 	}
 
-	_, err = db.UpdateList(ctx, list.ID, list.Version, otherUserID,
+	_, err = db.UpdateList(ctx, list.ID, list.Version, otherUser.ID,
 		updated, func(listData *database.ListData) error { panic("unreached") })
 	if err == nil {
 		t.Errorf("UpdateList(bad user %v) = %v, want nil",
-			otherUserID, err)
+			otherUser.ID, err)
 		return
 	}
 	if code, err := statusCode(err); err != nil || code != codes.PermissionDenied {
 		t.Errorf("UpdateList(bad user %v) error want status permission denied, got %v, %v",
-			otherUserID, code, err)
+			otherUser.ID, code, err)
 	}
 
-	if got, err := readList(ctx, list.ID); err != nil || !reflect.DeepEqual(list, got) {
+	if got, err := readList(ctx, db, list.ID); err != nil || !reflect.DeepEqual(list, got) {
 		t.Errorf("list unexpectedly changed: want %+v, got %+v",
 			list, got)
 		return
@@ -180,7 +178,7 @@ func TestUpdateList(t *testing.T) {
 	want.Active = false
 	want.Updated = updated
 
-	got, err := db.UpdateList(ctx, list.ID, list.Version, ownerID, updated,
+	got, err := db.UpdateList(ctx, list.ID, list.Version, owner.ID, updated,
 		func(listData *database.ListData) error {
 			listData.Name = "UL"
 			listData.Active = false
@@ -192,7 +190,7 @@ func TestUpdateList(t *testing.T) {
 		return
 	}
 
-	if got, err := readList(ctx, list.ID); err != nil || !reflect.DeepEqual(&want, got) {
+	if got, err := readList(ctx, db, list.ID); err != nil || !reflect.DeepEqual(&want, got) {
 		t.Errorf("list didn't change: want %+v, got %+v",
 			&want, got)
 		return

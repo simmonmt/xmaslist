@@ -2,7 +2,10 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "testutil",
-    srcs = ["list.go"],
+    srcs = [
+        "list.go",
+        "user.go",
+    ],
     importpath = "github.com/simmonmt/xmaslist/backend/database/testutil",
     visibility = ["//visibility:public"],
     deps = ["//backend/database"],

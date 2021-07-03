@@ -17,6 +17,10 @@ type User struct {
 	Admin              bool
 }
 
+func (u *User) String() string {
+	return fmt.Sprintf("{%v/%v/%v/%v}", u.ID, u.Username, u.Fullname, u.Admin)
+}
+
 type UsersByID []*User
 
 func (a UsersByID) Len() int           { return len(a) }

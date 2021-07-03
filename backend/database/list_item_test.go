@@ -11,10 +11,9 @@ import (
 )
 
 func TestCreateAndListListItems(t *testing.T) {
-	if err := db.DeleteAllLists(ctx); err != nil {
-		t.Errorf("failed to delete lists: %v", err)
-		return
-	}
+	db := setupTestDatabase(t)
+	defer db.Close()
+	createTestUsers(t, db, []string{"a", "b"})
 
 	listSetupRequests := []*testutil.ListSetupRequest{
 		&testutil.ListSetupRequest{
