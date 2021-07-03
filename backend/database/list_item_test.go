@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/simmonmt/xmaslist/backend/database"
 	"github.com/simmonmt/xmaslist/backend/database/dbutil"
 	"github.com/simmonmt/xmaslist/backend/database/testutil"
@@ -106,7 +107,7 @@ func TestUpdateListItems_Claim(t *testing.T) {
 
 	// Item isn't claimed. Verify that that's the case, then claim it.
 	now := time.Unix(testutil.SetupListsUserStamp, 0)
-	_, err := db.UpdateListItem(ctx, list.ID, item.ID, item.Version, now, func(data *database.ListItemData, state *database.ListItemState) error {
+	gotItem, err := db.UpdateListItem(ctx, list.ID, item.ID, item.Version, now, func(data *database.ListItemData, state *database.ListItemState) error {
 		if !reflect.DeepEqual(data, &item.ListItemData) {
 			return fmt.Errorf(
 				"update cb unexpected data; got %v, want %v",
@@ -129,19 +130,27 @@ func TestUpdateListItems_Claim(t *testing.T) {
 	// Double-check that it's claimed.
 
 	wantItem := *item
+	wantItem.Version++
 	wantItem.Updated = now
 	wantItem.ClaimedBy = claimUser.ID
 	wantItem.ClaimedWhen = now
 
-	if got, err := dbutil.GetListItem(ctx, db, list.ID, wantItem.ID); err != nil || !reflect.DeepEqual(got, &wantItem) {
-		t.Errorf(`readListItem(_, %d, %d) = %v, %v, want nil, %v`,
-			list.ID, item.ID, got, err, &wantItem)
-		return
+	if diff := cmp.Diff(&wantItem, gotItem); diff != "" {
+		t.Fatalf(`UpdateListItem = %+v, want %+v, diff:\n%v`, gotItem, wantItem, diff)
+	}
+
+	if gotItem, err := dbutil.GetListItem(ctx, db, list.ID, wantItem.ID); err != nil {
+		t.Fatalf(`readListItem(_, %d, %d) = _, %v, want nil, nil`,
+			list.ID, item.ID, err)
+	} else if diff := cmp.Diff(&wantItem, gotItem); diff != "" {
+		t.Fatalf(`readListItem(_, %d, %d) = %v, %v, want nil, %v, diff:\n%v`,
+			list.ID, item.ID, gotItem, err, &wantItem, diff)
 	}
 
 	// Item is claimed. Verify that that's the case then unclaim it.
 	now = now.Add(time.Duration(1000) * time.Second)
-	_, err = db.UpdateListItem(ctx, list.ID, item.ID, item.Version, now, func(data *database.ListItemData, state *database.ListItemState) error {
+	item.Version++
+	gotItem, err = db.UpdateListItem(ctx, list.ID, item.ID, item.Version, now, func(data *database.ListItemData, state *database.ListItemState) error {
 		// No change from initial update call
 		if !reflect.DeepEqual(data, &wantItem.ListItemData) {
 			return fmt.Errorf(
@@ -168,13 +177,19 @@ func TestUpdateListItems_Claim(t *testing.T) {
 	// Double-check that it's unclaimed
 
 	wantItem.Updated = now
+	wantItem.Version++
 	wantItem.ClaimedBy = 0
 	wantItem.ClaimedWhen = time.Time{}
 
-	if got, err := dbutil.GetListItem(ctx, db, list.ID, wantItem.ID); err != nil || !reflect.DeepEqual(got, &wantItem) {
-		t.Errorf(`readListItem(_, %d, %d) = %+v, %v, want %+v, nil`,
-			list.ID, item.ID, got, err, &wantItem)
-		return
+	if diff := cmp.Diff(&wantItem, gotItem); diff != "" {
+		t.Fatalf(`UpdateListItem = %+v, want %+v, diff:\n%v`, gotItem, wantItem, diff)
 	}
 
+	if gotItem, err := dbutil.GetListItem(ctx, db, list.ID, wantItem.ID); err != nil {
+		t.Fatalf(`readListItem(_, %d, %d) = _, %v, want nil, nil`,
+			list.ID, item.ID, err)
+	} else if diff := cmp.Diff(&wantItem, gotItem); diff != "" {
+		t.Fatalf(`readListItem(_, %d, %d) = %v, %v, want nil, %v, diff:\n%v`,
+			list.ID, item.ID, gotItem, err, &wantItem, diff)
+	}
 }

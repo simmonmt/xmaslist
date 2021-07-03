@@ -34,6 +34,7 @@ go_test(
     deps = [
         "//backend/database/dbutil",
         "//backend/database/testutil",
+        "@com_github_google_go_cmp//cmp",
         "@org_golang_google_grpc//codes",
         "@org_golang_google_grpc//status",
     ],

@@ -140,7 +140,7 @@ func (db *DB) doUpdateListItem(ctx context.Context, txn *sql.Tx, listID int, ite
 	                FROM items
 	               WHERE id = @id AND list_id = @listID`
 
-	item := &ListItem{ID: itemID}
+	item := &ListItem{ID: itemID, ListID: listID}
 	var claimedBy sql.NullInt64
 	var claimedWhen nullSeconds
 	err := txn.QueryRowContext(ctx, readQuery, sql.Named("id", itemID), sql.Named("listID", listID)).Scan(
@@ -179,23 +179,26 @@ func (db *DB) doUpdateListItem(ctx context.Context, txn *sql.Tx, listID int, ite
 	}
 
 	claimedWhen.Valid = isClaimed
-	if isClaimed && !wasClaimed {
+	if !wasClaimed && isClaimed {
 		claimedWhen.Time = now // update time because claim change
+		item.ClaimedWhen = now
 	} else if !isClaimed {
 		claimedWhen.Time = time.Time{}
+		item.ClaimedWhen = time.Time{}
 	}
 
 	item.Version++
 	item.Updated = now
 
 	writeQuery := `UPDATE items
-	                  SET ( name, desc, url, updated,
+	                  SET ( version, name, desc, url, updated,
 	                        claimed_by, claimed_when ) =
-	                      ( @name, @desc, @url, @updated,
+	                      ( @version, @name, @desc, @url, @updated,
 	                        @claimedBy, @claimedWhen )
 	                WHERE id = @id AND list_id = @listID`
 
 	_, err = txn.ExecContext(ctx, writeQuery,
+		sql.Named("version", item.Version),
 		sql.Named("name", item.Name),
 		sql.Named("desc", item.Desc),
 		sql.Named("url", item.URL),
