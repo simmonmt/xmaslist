@@ -7,6 +7,7 @@ go_library(
         "list.go",
         "list_item.go",
         "session.go",
+        "sql.go",
         "user.go",
     ],
     importpath = "github.com/simmonmt/xmaslist/backend/database",
