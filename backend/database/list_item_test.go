@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 	"testing"
@@ -17,10 +16,8 @@ func TestCreateAndListListItems(t *testing.T) {
 		return
 	}
 
-	fmt.Printf("%v\n", testutil.Foo{})
-
-	listSetupRequests := []*listSetupRequest{
-		&listSetupRequest{
+	listSetupRequests := []*testutil.ListSetupRequest{
+		&testutil.ListSetupRequest{
 			Owner: "a",
 			List: &database.ListData{Name: "l1", Beneficiary: "b1",
 				EventDate: time.Unix(1, 0), Active: true},
@@ -35,7 +32,7 @@ func TestCreateAndListListItems(t *testing.T) {
 				},
 			},
 		},
-		&listSetupRequest{
+		&testutil.ListSetupRequest{
 			Owner: "b",
 			List: &database.ListData{Name: "l2", Beneficiary: "b2",
 				EventDate: time.Unix(2, 0), Active: true},
@@ -48,7 +45,7 @@ func TestCreateAndListListItems(t *testing.T) {
 		},
 	}
 
-	listResponses := setupLists(ctx, t, listSetupRequests)
+	listResponses := testutil.SetupLists(ctx, t, db, listSetupRequests)
 	for i, listResponse := range listResponses {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			gotItems, err := db.ListListItems(

@@ -9,55 +9,10 @@ import (
 	"time"
 
 	"github.com/simmonmt/xmaslist/backend/database"
+	"github.com/simmonmt/xmaslist/backend/database/testutil"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-type listSetupRequest struct {
-	Owner     string
-	List      *database.ListData
-	ListItems []*database.ListItemData
-}
-
-type listSetupResponse struct {
-	List      *database.List
-	ListItems []*database.ListItem
-}
-
-func setupLists(ctx context.Context, t *testing.T, reqs []*listSetupRequest) []*listSetupResponse {
-	resps := []*listSetupResponse{}
-	stamp := int64(1000)
-	for _, req := range reqs {
-		resp := &listSetupResponse{}
-
-		user, err := db.LookupUserByUsername(ctx, req.Owner)
-		if err != nil {
-			t.Fatalf("lookupuser: %v", err)
-		}
-
-		list, err := db.CreateList(ctx, user.ID, req.List, time.Unix(stamp, 0))
-		if err != nil {
-			t.Fatalf("createlist: %v", err)
-		}
-
-		resp.List = list
-
-		for i, listItemData := range req.ListItems {
-			listItem, err := db.CreateListItem(
-				ctx, list.ID, listItemData,
-				time.Unix(stamp+10*int64(i), 0))
-			if err != nil {
-				t.Fatalf("createlistitem #%d: %v", i, err)
-			}
-			resp.ListItems = append(resp.ListItems, listItem)
-		}
-
-		stamp += 1000
-		resps = append(resps, resp)
-	}
-
-	return resps
-}
 
 func listIDs(lists []*database.List) []int {
 	ids := []int{}
@@ -98,20 +53,19 @@ func TestCreateAndListLists(t *testing.T) {
 		return
 	}
 
-	listSetupRequests := []*listSetupRequest{
-		&listSetupRequest{
+	listSetupRequests := []*testutil.ListSetupRequest{
+		&testutil.ListSetupRequest{
 			Owner: "a",
 			List: &database.ListData{Name: "l1", Beneficiary: "b1",
 				EventDate: time.Unix(1, 0), Active: true},
 		},
-		&listSetupRequest{
+		&testutil.ListSetupRequest{
 			Owner: "b",
 			List: &database.ListData{Name: "l2", Beneficiary: "b2",
 				EventDate: time.Unix(2, 0), Active: true},
 		},
 	}
-
-	listResponses := setupLists(ctx, t, listSetupRequests)
+	listResponses := testutil.SetupLists(ctx, t, db, listSetupRequests)
 
 	got, err := db.ListLists(ctx, database.IncludeInactiveLists(true))
 	if err != nil {
