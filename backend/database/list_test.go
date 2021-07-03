@@ -48,7 +48,7 @@ func TestListsByID(t *testing.T) {
 }
 
 func TestCreateAndListLists(t *testing.T) {
-	db := setupTestDatabase(t)
+	db := testutil.SetupTestDatabase(ctx, t)
 	defer db.Close()
 	createTestUsers(t, db, []string{"a", "b"})
 
@@ -118,7 +118,7 @@ func readList(ctx context.Context, db *database.DB, listID int) (*database.List,
 }
 
 func TestUpdateList(t *testing.T) {
-	db := setupTestDatabase(t)
+	db := testutil.SetupTestDatabase(ctx, t)
 	defer db.Close()
 	users := createTestUsers(t, db, []string{"a", "b"})
 

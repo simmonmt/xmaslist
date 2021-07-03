@@ -38,7 +38,7 @@ func userIDs(users []*database.User) []int {
 }
 
 func TestAuthenticateUser(t *testing.T) {
-	db := setupTestDatabase(t)
+	db := testutil.SetupTestDatabase(ctx, t)
 	defer db.Close()
 	users := createTestUsers(t, db, []string{"a"})
 
@@ -61,7 +61,7 @@ func TestAuthenticateUser(t *testing.T) {
 }
 
 func TestLookupUser(t *testing.T) {
-	db := setupTestDatabase(t)
+	db := testutil.SetupTestDatabase(ctx, t)
 	defer db.Close()
 	users := createTestUsers(t, db, []string{"a", "b", "c"})
 
@@ -89,7 +89,7 @@ func TestLookupUser(t *testing.T) {
 }
 
 func TestListUsers(t *testing.T) {
-	db := setupTestDatabase(t)
+	db := testutil.SetupTestDatabase(ctx, t)
 	defer db.Close()
 	users := createTestUsers(t, db, []string{"a", "b", "c"})
 

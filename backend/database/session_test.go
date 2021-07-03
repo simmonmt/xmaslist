@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/simmonmt/xmaslist/backend/database"
+	"github.com/simmonmt/xmaslist/backend/database/testutil"
 )
 
 func TestSessions(t *testing.T) {
-	db := setupTestDatabase(t)
+	db := testutil.SetupTestDatabase(ctx, t)
 	defer db.Close()
 	users := createTestUsers(t, db, []string{"a"})
 

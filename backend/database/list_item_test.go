@@ -60,7 +60,7 @@ func readListItem(ctx context.Context, db *database.DB, listID int, itemID int) 
 }
 
 func TestCreateAndListListItems(t *testing.T) {
-	db := setupTestDatabase(t)
+	db := testutil.SetupTestDatabase(ctx, t)
 	defer db.Close()
 	createTestUsers(t, db, []string{"a", "b"})
 	resps := createListItemTestLists(t, db)
@@ -101,7 +101,7 @@ func TestCreateAndListListItems(t *testing.T) {
 }
 
 func TestUpdateListItems_Claim(t *testing.T) {
-	db := setupTestDatabase(t)
+	db := testutil.SetupTestDatabase(ctx, t)
 	defer db.Close()
 	users := createTestUsers(t, db, []string{"a", "b"})
 	resps := createListItemTestLists(t, db)
