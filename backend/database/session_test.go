@@ -12,7 +12,7 @@ import (
 func TestSessions(t *testing.T) {
 	db := testutil.SetupTestDatabase(ctx, t)
 	defer db.Close()
-	users := createTestUsers(t, db, []string{"a"})
+	users := testutil.CreateTestUsers(ctx, t, db, []string{"a"})
 
 	user := users.UserByUsername("a")
 	created := time.Unix(1000, 0)

@@ -1,33 +1,13 @@
 package database_test
 
 import (
-	"fmt"
 	"reflect"
 	"sort"
 	"testing"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/simmonmt/xmaslist/backend/database"
 	"github.com/simmonmt/xmaslist/backend/database/testutil"
 )
-
-func createTestUsers(t *testing.T, db *database.DB, usernames []string) testutil.UserSetupResponses {
-	reqs := []*testutil.UserSetupRequest{}
-	for _, username := range usernames {
-		r, _ := utf8.DecodeRuneInString(username)
-		isAdmin := unicode.IsUpper(r)
-
-		reqs = append(reqs, &testutil.UserSetupRequest{
-			Username: username,
-			Fullname: fmt.Sprintf("User %v", username),
-			Password: username + username,
-			Admin:    isAdmin,
-		})
-	}
-
-	return testutil.SetupUsers(ctx, t, db, reqs)
-}
 
 func userIDs(users []*database.User) []int {
 	ids := []int{}
@@ -40,7 +20,7 @@ func userIDs(users []*database.User) []int {
 func TestAuthenticateUser(t *testing.T) {
 	db := testutil.SetupTestDatabase(ctx, t)
 	defer db.Close()
-	users := createTestUsers(t, db, []string{"a"})
+	users := testutil.CreateTestUsers(ctx, t, db, []string{"a"})
 
 	user := users.UserByUsername("a")
 	password := users.PasswordByID(user.ID)
@@ -63,7 +43,7 @@ func TestAuthenticateUser(t *testing.T) {
 func TestLookupUser(t *testing.T) {
 	db := testutil.SetupTestDatabase(ctx, t)
 	defer db.Close()
-	users := createTestUsers(t, db, []string{"a", "b", "c"})
+	users := testutil.CreateTestUsers(ctx, t, db, []string{"a", "b", "c"})
 
 	for _, resp := range users {
 		user := resp.User
@@ -91,7 +71,7 @@ func TestLookupUser(t *testing.T) {
 func TestListUsers(t *testing.T) {
 	db := testutil.SetupTestDatabase(ctx, t)
 	defer db.Close()
-	users := createTestUsers(t, db, []string{"a", "b", "c"})
+	users := testutil.CreateTestUsers(ctx, t, db, []string{"a", "b", "c"})
 
 	want := []*database.User{}
 	for _, resp := range users {

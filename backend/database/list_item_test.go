@@ -62,7 +62,7 @@ func readListItem(ctx context.Context, db *database.DB, listID int, itemID int) 
 func TestCreateAndListListItems(t *testing.T) {
 	db := testutil.SetupTestDatabase(ctx, t)
 	defer db.Close()
-	createTestUsers(t, db, []string{"a", "b"})
+	testutil.CreateTestUsers(ctx, t, db, []string{"a", "b"})
 	resps := createListItemTestLists(t, db)
 
 	for i, resp := range resps {
@@ -103,7 +103,7 @@ func TestCreateAndListListItems(t *testing.T) {
 func TestUpdateListItems_Claim(t *testing.T) {
 	db := testutil.SetupTestDatabase(ctx, t)
 	defer db.Close()
-	users := createTestUsers(t, db, []string{"a", "b"})
+	users := testutil.CreateTestUsers(ctx, t, db, []string{"a", "b"})
 	resps := createListItemTestLists(t, db)
 
 	// The claim user is intentionally different from the list

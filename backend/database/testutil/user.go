@@ -2,7 +2,10 @@ package testutil
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/simmonmt/xmaslist/backend/database"
 )
@@ -71,4 +74,21 @@ func SetupUsers(ctx context.Context, t *testing.T, db *database.DB, reqs []*User
 	}
 
 	return resps
+}
+
+func CreateTestUsers(ctx context.Context, t *testing.T, db *database.DB, usernames []string) UserSetupResponses {
+	reqs := []*UserSetupRequest{}
+	for _, username := range usernames {
+		r, _ := utf8.DecodeRuneInString(username)
+		isAdmin := unicode.IsUpper(r)
+
+		reqs = append(reqs, &UserSetupRequest{
+			Username: username,
+			Fullname: fmt.Sprintf("User %v", username),
+			Password: username + username,
+			Admin:    isAdmin,
+		})
+	}
+
+	return SetupUsers(ctx, t, db, reqs)
 }
