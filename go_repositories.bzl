@@ -2,6 +2,13 @@ load("@bazel_gazelle//:deps.bzl", "go_repository")
 
 def go_repositories():
     go_repository(
+        name = "com_github_google_go_cmp",
+        importpath = "github.com/google/go-cmp",
+        sum = "h1:BKbKCqvP6I+rmFHt06ZmyQtvB8xAkWdhFyr0ZUNZcxQ=",
+        version = "v0.5.6",
+    )
+
+    go_repository(
         name = "com_github_google_subcommands",
         importpath = "github.com/google/subcommands",
         sum = "h1:vWQspBTo2nEqTUFita5/KeEWlUL8kQObDFbub/EN9oE=",
@@ -13,6 +20,12 @@ def go_repositories():
         importpath = "github.com/mattn/go-sqlite3",
         sum = "h1:fxWBnXkxfM6sRiuH3bqJ4CfzZojMOLVc0UTsTglEghA=",
         version = "v1.14.7",
+    )
+    go_repository(
+        name = "com_github_protocolbuffers_protobuf_go",
+        importpath = "github.com/protocolbuffers/protobuf-go",
+        sum = "h1:87FpR4+tNpkRgqyCUcaRv9Jj+Lc+uWj1jHXRnn6l4ow=",
+        version = "v1.27.1",
     )
 
     go_repository(
