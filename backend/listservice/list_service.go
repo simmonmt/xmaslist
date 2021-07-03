@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/simmonmt/xmaslist/backend/database"
+	"github.com/simmonmt/xmaslist/backend/database/dbutil"
 	"github.com/simmonmt/xmaslist/backend/request"
 	"github.com/simmonmt/xmaslist/backend/sessions"
 	"github.com/simmonmt/xmaslist/backend/util"
@@ -98,20 +99,6 @@ func (s *listServer) ListLists(ctx context.Context, req *lspb.ListListsRequest) 
 	return resp, nil
 }
 
-func (s *listServer) getList(ctx context.Context, listID int) (*database.List, error) {
-	lists, err := s.db.ListLists(ctx, database.OnlyListWithID(listID))
-	if err != nil {
-		return nil, err
-	}
-
-	if len(lists) == 0 {
-		return nil, status.Errorf(codes.NotFound,
-			"no list with id %v", listID)
-	}
-
-	return lists[0], nil
-}
-
 func (s *listServer) GetList(ctx context.Context, req *lspb.GetListRequest) (*lspb.GetListResponse, error) {
 	session, err := getSession(ctx)
 	if session == nil {
@@ -124,7 +111,7 @@ func (s *listServer) GetList(ctx context.Context, req *lspb.GetListRequest) (*ls
 			"invalid list id")
 	}
 
-	list, err := s.getList(ctx, listID)
+	list, err := dbutil.GetList(ctx, s.db, listID)
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +260,7 @@ func (s *listServer) CreateListItem(ctx context.Context, req *lspb.CreateListIte
 			"invalid list id")
 	}
 
-	list, err := s.getList(ctx, listID)
+	list, err := dbutil.GetList(ctx, s.db, listID)
 	if err != nil {
 		return nil, err
 	}

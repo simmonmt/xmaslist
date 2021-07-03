@@ -32,6 +32,7 @@ go_test(
     ],
     embed = [":database"],
     deps = [
+        "//backend/database/dbutil",
         "//backend/database/testutil",
         "@org_golang_google_grpc//codes",
         "@org_golang_google_grpc//status",

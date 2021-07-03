@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -9,6 +8,7 @@ import (
 	"time"
 
 	"github.com/simmonmt/xmaslist/backend/database"
+	"github.com/simmonmt/xmaslist/backend/database/dbutil"
 	"github.com/simmonmt/xmaslist/backend/database/testutil"
 )
 
@@ -43,20 +43,6 @@ func createListItemTestLists(t *testing.T, db *database.DB) testutil.ListSetupRe
 	}
 
 	return testutil.SetupLists(ctx, t, db, reqs)
-}
-
-func readListItem(ctx context.Context, db *database.DB, listID int, itemID int) (*database.ListItem, error) {
-	items, err := db.ListListItems(ctx, listID, database.OnlyItemWithID(itemID))
-	if err != nil {
-		return nil, err
-	}
-
-	if len(items) != 1 {
-		return nil, fmt.Errorf("returned %d elems, wanted 1",
-			len(items))
-	}
-
-	return items[0], nil
 }
 
 func TestCreateAndListListItems(t *testing.T) {
@@ -147,7 +133,7 @@ func TestUpdateListItems_Claim(t *testing.T) {
 	wantItem.ClaimedBy = claimUser.ID
 	wantItem.ClaimedWhen = now
 
-	if got, err := readListItem(ctx, db, list.ID, wantItem.ID); err != nil || !reflect.DeepEqual(got, &wantItem) {
+	if got, err := dbutil.GetListItem(ctx, db, list.ID, wantItem.ID); err != nil || !reflect.DeepEqual(got, &wantItem) {
 		t.Errorf(`readListItem(_, %d, %d) = %v, %v, want nil, %v`,
 			list.ID, item.ID, got, err, &wantItem)
 		return
@@ -185,7 +171,7 @@ func TestUpdateListItems_Claim(t *testing.T) {
 	wantItem.ClaimedBy = 0
 	wantItem.ClaimedWhen = time.Time{}
 
-	if got, err := readListItem(ctx, db, list.ID, wantItem.ID); err != nil || !reflect.DeepEqual(got, &wantItem) {
+	if got, err := dbutil.GetListItem(ctx, db, list.ID, wantItem.ID); err != nil || !reflect.DeepEqual(got, &wantItem) {
 		t.Errorf(`readListItem(_, %d, %d) = %+v, %v, want %+v, nil`,
 			list.ID, item.ID, got, err, &wantItem)
 		return
