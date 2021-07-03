@@ -48,12 +48,7 @@ func TestCreateAndListListItems(t *testing.T) {
 		},
 	}
 
-	listResponses, err := setupLists(ctx, listSetupRequests)
-	if err != nil {
-		t.Errorf("setupLists failed: %v", err)
-		return
-	}
-
+	listResponses := setupLists(ctx, t, listSetupRequests)
 	for i, listResponse := range listResponses {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			gotItems, err := db.ListListItems(

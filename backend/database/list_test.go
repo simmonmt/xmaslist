@@ -24,7 +24,7 @@ type listSetupResponse struct {
 	ListItems []*database.ListItem
 }
 
-func setupLists(ctx context.Context, reqs []*listSetupRequest) ([]*listSetupResponse, error) {
+func setupLists(ctx context.Context, t *testing.T, reqs []*listSetupRequest) []*listSetupResponse {
 	resps := []*listSetupResponse{}
 	stamp := int64(1000)
 	for _, req := range reqs {
@@ -32,12 +32,12 @@ func setupLists(ctx context.Context, reqs []*listSetupRequest) ([]*listSetupResp
 
 		user, err := db.LookupUserByUsername(ctx, req.Owner)
 		if err != nil {
-			return nil, fmt.Errorf("lookupuser: %v", err)
+			t.Fatalf("lookupuser: %v", err)
 		}
 
 		list, err := db.CreateList(ctx, user.ID, req.List, time.Unix(stamp, 0))
 		if err != nil {
-			return nil, fmt.Errorf("createlist: %v", err)
+			t.Fatalf("createlist: %v", err)
 		}
 
 		resp.List = list
@@ -47,7 +47,7 @@ func setupLists(ctx context.Context, reqs []*listSetupRequest) ([]*listSetupResp
 				ctx, list.ID, listItemData,
 				time.Unix(stamp+10*int64(i), 0))
 			if err != nil {
-				return nil, fmt.Errorf("createlistitem #%d: %v", i, err)
+				t.Fatalf("createlistitem #%d: %v", i, err)
 			}
 			resp.ListItems = append(resp.ListItems, listItem)
 		}
@@ -56,7 +56,7 @@ func setupLists(ctx context.Context, reqs []*listSetupRequest) ([]*listSetupResp
 		resps = append(resps, resp)
 	}
 
-	return resps, nil
+	return resps
 }
 
 func listIDs(lists []*database.List) []int {
@@ -111,11 +111,7 @@ func TestCreateAndListLists(t *testing.T) {
 		},
 	}
 
-	listResponses, err := setupLists(ctx, listSetupRequests)
-	if err != nil {
-		t.Errorf("setupLists failed: %v", err)
-		return
-	}
+	listResponses := setupLists(ctx, t, listSetupRequests)
 
 	got, err := db.ListLists(ctx, database.IncludeInactiveLists(true))
 	if err != nil {
