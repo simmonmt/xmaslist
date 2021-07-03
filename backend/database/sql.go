@@ -6,11 +6,11 @@ import (
 	"time"
 )
 
-type AsSeconds struct {
+type asSeconds struct {
 	*time.Time
 }
 
-func (p AsSeconds) Scan(src interface{}) error {
+func (p asSeconds) Scan(src interface{}) error {
 	secs, ok := src.(int64)
 	if !ok {
 		return fmt.Errorf("src isn't int64")
@@ -20,12 +20,12 @@ func (p AsSeconds) Scan(src interface{}) error {
 	return nil
 }
 
-type NullSeconds struct {
+type nullSeconds struct {
 	Time  time.Time
 	Valid bool
 }
 
-func (p *NullSeconds) Scan(src interface{}) error {
+func (p *nullSeconds) Scan(src interface{}) error {
 	if src == nil {
 		p.Valid = false
 		return nil
@@ -40,7 +40,7 @@ func (p *NullSeconds) Scan(src interface{}) error {
 	return nil
 }
 
-func (p NullSeconds) Value() (driver.Value, error) {
+func (p nullSeconds) Value() (driver.Value, error) {
 	if !p.Valid {
 		return nil, nil
 	}

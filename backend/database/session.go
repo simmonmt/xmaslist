@@ -65,8 +65,8 @@ func (db *DB) LookupSession(ctx context.Context, sessionID int) (*Session, error
 		ID: sessionID,
 	}
 	err := db.db.QueryRowContext(ctx, query, sessionID).Scan(
-		&session.UserID, AsSeconds{&session.Created},
-		AsSeconds{&session.Expiry})
+		&session.UserID, asSeconds{&session.Created},
+		asSeconds{&session.Expiry})
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
 		return nil, nil

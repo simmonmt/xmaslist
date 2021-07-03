@@ -91,8 +91,8 @@ func (db *DB) doUpdateList(ctx context.Context, txn *sql.Tx, listID int, listVer
 	list := &List{ID: listID}
 	err := txn.QueryRowContext(ctx, readQuery, sql.Named("id", listID)).Scan(
 		&list.Version, &list.OwnerID, &list.Name,
-		&list.Beneficiary, AsSeconds{&list.EventDate},
-		AsSeconds{&list.Created}, &list.Active)
+		&list.Beneficiary, asSeconds{&list.EventDate},
+		asSeconds{&list.Created}, &list.Active)
 	if err != nil {
 		return nil, err
 	}
@@ -173,8 +173,8 @@ func (db *DB) ListLists(ctx context.Context, filter ListFilter) ([]*List, error)
 		list := &List{}
 		err := rows.Scan(&list.ID, &list.Version, &list.OwnerID,
 			&list.Name, &list.Beneficiary,
-			AsSeconds{&list.EventDate},
-			AsSeconds{&list.Created}, AsSeconds{&list.Updated},
+			asSeconds{&list.EventDate},
+			asSeconds{&list.Created}, asSeconds{&list.Updated},
 			&list.Active)
 		if err != nil {
 			return nil, err

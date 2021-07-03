@@ -1,16 +1,14 @@
-package database_test
+package database
 
 import (
 	"database/sql"
 	"testing"
 	"time"
-
-	"github.com/simmonmt/xmaslist/backend/database"
 )
 
 func TestAsSeconds(t *testing.T) {
 	tm := time.Time{}
-	var s sql.Scanner = database.AsSeconds{&tm}
+	var s sql.Scanner = asSeconds{&tm}
 	if err := s.Scan(int64(1000)); err != nil {
 		t.Errorf("s.Scan(1000) = %v, want nil", err)
 		return
@@ -22,7 +20,7 @@ func TestAsSeconds(t *testing.T) {
 }
 
 func TestNullSeconds(t *testing.T) {
-	ns := &database.NullSeconds{}
+	ns := &nullSeconds{}
 	if err := sql.Scanner(ns).Scan(int64(1000)); err != nil {
 		t.Errorf("s.Scan(1000) = %v, want nil", err)
 		return
@@ -30,7 +28,7 @@ func TestNullSeconds(t *testing.T) {
 
 	if !ns.Valid || ns.Time.Unix() != 1000 {
 		t.Errorf("s.Scan(1000); %v, want %v",
-			ns, database.NullSeconds{time.Unix(1000, 0), true})
+			ns, nullSeconds{time.Unix(1000, 0), true})
 	}
 
 	if err := sql.Scanner(ns).Scan(nil); err != nil {
@@ -40,7 +38,7 @@ func TestNullSeconds(t *testing.T) {
 
 	if ns.Valid {
 		t.Errorf("s.Scan(1000); %v, want %v",
-			ns, database.NullSeconds{Valid: false})
+			ns, nullSeconds{Valid: false})
 	}
 
 	if err := sql.Scanner(ns).Scan("bob"); err == nil {

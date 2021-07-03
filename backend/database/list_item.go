@@ -71,10 +71,10 @@ func (db *DB) ListListItems(ctx context.Context, listID int) ([]*ListItem, error
 	for rows.Next() {
 		item := &ListItem{ListID: listID}
 		var claimedBy sql.NullInt64
-		var claimedWhen NullSeconds
+		var claimedWhen nullSeconds
 		err := rows.Scan(&item.ID, &item.Version,
 			&item.Name, &item.Desc, &item.URL,
-			AsSeconds{&item.Created}, AsSeconds{&item.Updated},
+			asSeconds{&item.Created}, asSeconds{&item.Updated},
 			&claimedBy, &claimedWhen)
 		if err != nil {
 			return nil, err
