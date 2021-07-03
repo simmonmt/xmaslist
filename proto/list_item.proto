@@ -7,7 +7,7 @@ option go_package = "github.com/simmonmt/xmaslist/proto/list_service";
 message ListItemData {
   string name = 1;
   string desc = 2;
-  string url =3;
+  string url = 3;
 }
 
 message ListItemMetadata {
