@@ -100,7 +100,7 @@ func (db *DB) doUpdateList(ctx context.Context, txn *sql.Tx, listID int, listVer
 	if list.Version != listVersion {
 		return nil, status.Errorf(codes.FailedPrecondition,
 			"version ID mismatch; got %v want %v",
-			listVersion, list.Version)
+			list.Version, listVersion)
 	}
 
 	if list.OwnerID != userID {
@@ -119,14 +119,14 @@ func (db *DB) doUpdateList(ctx context.Context, txn *sql.Tx, listID int, listVer
 	writeQuery := `UPDATE lists
                           SET ( name, beneficiary, event_date, active,
                                 version, updated ) =
-                              ( @name, @beneficiary, @event_date, @active,
+                              ( @name, @beneficiary, @eventDate, @active,
                                 @version, @updated )
                         WHERE id = @id`
 
 	_, err = txn.ExecContext(ctx, writeQuery,
 		sql.Named("name", list.Name),
 		sql.Named("beneficiary", list.Beneficiary),
-		sql.Named("event_date", list.EventDate.Unix()),
+		sql.Named("eventDate", list.EventDate.Unix()),
 		sql.Named("active", list.Active),
 		sql.Named("version", list.Version),
 		sql.Named("updated", list.Updated.Unix()),
