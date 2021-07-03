@@ -19,9 +19,39 @@ type ListSetupResponse struct {
 	ListItems []*database.ListItem
 }
 
+type ListSetupResponses []*ListSetupResponse
+
+func (a ListSetupResponses) GetList(listName string) *ListSetupResponse {
+	for _, r := range a {
+		if r.List.Name == listName {
+			return r
+		}
+	}
+	return nil
+}
+
+func (a ListSetupResponses) GetItem(listName, itemName string) (*database.List, *database.ListItem) {
+	r := a.GetList(listName)
+	if r == nil {
+		return nil, nil
+	}
+
+	for _, item := range r.ListItems {
+		if item.Name == itemName {
+			return r.List, item
+		}
+	}
+	return r.List, nil
+}
+
+const (
+	SetupListsBaseStamp int64 = 1000
+	SetupListsUserStamp int64 = 100000
+)
+
 func SetupLists(ctx context.Context, t *testing.T, db *database.DB, reqs []*ListSetupRequest) []*ListSetupResponse {
 	resps := []*ListSetupResponse{}
-	stamp := int64(1000)
+	stamp := int64(SetupListsBaseStamp)
 	for _, req := range reqs {
 		resp := &ListSetupResponse{}
 
