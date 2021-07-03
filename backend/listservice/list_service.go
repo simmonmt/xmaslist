@@ -2,6 +2,7 @@ package listservice
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -55,6 +56,11 @@ func listFromDatabaseList(list *database.List) *lspb.List {
 }
 
 func itemFromDatabaseItem(item *database.ListItem) *lspb.ListItem {
+	claimedWhen := item.ClaimedWhen.Unix()
+	if item.ClaimedWhen.IsZero() {
+		claimedWhen = 0
+	}
+
 	return &lspb.ListItem{
 		Id:      strconv.Itoa(item.ID),
 		Version: int32(item.Version),
@@ -70,7 +76,7 @@ func itemFromDatabaseItem(item *database.ListItem) *lspb.ListItem {
 			Created:     item.Created.Unix(),
 			Updated:     item.Updated.Unix(),
 			ClaimedBy:   int32(item.ClaimedBy),
-			ClaimedWhen: item.ClaimedWhen.Unix(),
+			ClaimedWhen: claimedWhen,
 		},
 
 		State: &lspb.ListItemState{
@@ -299,6 +305,86 @@ func (s *listServer) DeleteListItem(ctx context.Context, req *lspb.DeleteListIte
 
 func (s *listServer) UpdateListItem(ctx context.Context, req *lspb.UpdateListItemRequest) (*lspb.UpdateListItemResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "not implemented")
+}
+
+func (s *listServer) UpdateListItemState(ctx context.Context, req *lspb.UpdateListItemStateRequest) (*lspb.UpdateListItemStateResponse, error) {
+	session, err := getSession(ctx)
+	if session == nil {
+		return nil, err
+	}
+
+	listID, err := strconv.Atoi(req.GetListId())
+	if req.GetListId() == "" {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"invalid list id")
+	}
+
+	list, err := dbutil.GetList(ctx, s.db, listID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !list.Active {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"list is not active")
+	}
+
+	itemID, err := strconv.Atoi(req.GetItemId())
+	if req.GetItemId() == "" || err != nil {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"invalid item id")
+	}
+
+	if req.GetItemVersion() == 0 {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"missing item version")
+	}
+
+	if req.GetState() == nil {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"missing new item state")
+	}
+	newState := req.GetState()
+
+	now := s.clock.Now()
+	fmt.Printf("handler using now %v %v\n", now, now.Unix())
+	item, err := s.db.UpdateListItem(ctx, list.ID, itemID,
+		int(req.GetItemVersion()), now,
+		func(data *database.ListItemData, state *database.ListItemState) error {
+			if state.ClaimedBy != 0 {
+				if newState.GetClaimed() {
+					return status.Errorf(
+						codes.FailedPrecondition,
+						"item is already claimed")
+				}
+				if session.User.ID != state.ClaimedBy {
+					return status.Errorf(
+						codes.PermissionDenied,
+						"can't unclaim item already "+
+							"claimed by another user")
+				}
+			} else {
+				if !newState.GetClaimed() {
+					return status.Errorf(
+						codes.FailedPrecondition,
+						"item isn't claimed")
+				}
+			}
+
+			if newState.GetClaimed() {
+				state.ClaimedBy = session.User.ID
+			} else {
+				state.ClaimedBy = 0
+			}
+			return nil
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return &lspb.UpdateListItemStateResponse{
+		Item: itemFromDatabaseItem(item),
+	}, nil
 }
 
 func RegisterHandlers(server *grpc.Server, clock util.Clock, sessionManager *sessions.Manager, db *database.DB) {

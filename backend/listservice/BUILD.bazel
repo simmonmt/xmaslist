@@ -1,4 +1,4 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "listservice",
@@ -15,5 +15,23 @@ go_library(
         "@org_golang_google_grpc//:go_default_library",
         "@org_golang_google_grpc//codes",
         "@org_golang_google_grpc//status",
+    ],
+)
+
+go_test(
+    name = "listservice_test",
+    srcs = ["list_service_test.go"],
+    embed = [":listservice"],
+    deps = [
+        "//backend/database",
+        "//backend/database/testutil",
+        "//backend/request",
+        "//backend/sessions",
+        "//backend/util",
+        "//proto:list_service_go_proto",
+        "@com_github_google_go_cmp//cmp",
+        "@org_golang_google_grpc//codes",
+        "@org_golang_google_grpc//status",
+        "@org_golang_google_protobuf//testing/protocmp:go_default_library",
     ],
 )
