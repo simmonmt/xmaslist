@@ -248,7 +248,7 @@ func (s *listServer) ListListItems(ctx context.Context, req *lspb.ListListItemsR
 			"invalid list id")
 	}
 
-	items, err := s.db.ListListItems(ctx, listID)
+	items, err := s.db.ListListItems(ctx, listID, database.AllItems())
 	if err != nil {
 		return nil, err
 	}

@@ -30,7 +30,7 @@ func (c *listListCommand) SetFlags(f *flag.FlagSet) {
 }
 
 func listItems(ctx context.Context, db *database.DB, list *database.List) error {
-	items, err := db.ListListItems(ctx, list.ID)
+	items, err := db.ListListItems(ctx, list.ID, database.AllItems())
 	if err != nil {
 		return err
 	}
