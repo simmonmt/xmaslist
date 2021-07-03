@@ -1,12 +1,14 @@
-package database
+package database_test
 
 import (
 	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/simmonmt/xmaslist/backend/database"
 )
 
-func userIDs(users []*User) []int {
+func userIDs(users []*database.User) []int {
 	ids := []int{}
 	for _, user := range users {
 		ids = append(ids, user.ID)
@@ -63,20 +65,20 @@ func TestListUsers(t *testing.T) {
 		return
 	}
 
-	sort.Sort(UsersByID(got))
+	sort.Sort(database.UsersByID(got))
 	if !reflect.DeepEqual(users, got) {
 		t.Errorf("ListUsers() = %+v, want %+v", users, got)
 	}
 }
 
 func TestUsersByID(t *testing.T) {
-	tmp := make([]*User, len(users))
+	tmp := make([]*database.User, len(users))
 	copy(tmp, users)
 
 	wantIDs := userIDs(tmp)
 	sort.Ints(wantIDs)
 
-	sort.Sort(UsersByID(tmp))
+	sort.Sort(database.UsersByID(tmp))
 	gotIDs := userIDs(tmp)
 	if !reflect.DeepEqual(wantIDs, gotIDs) {
 		t.Errorf("sort; want %v, got %v", wantIDs, gotIDs)
@@ -84,7 +86,7 @@ func TestUsersByID(t *testing.T) {
 
 	sort.Sort(sort.Reverse(sort.IntSlice(wantIDs)))
 
-	sort.Sort(sort.Reverse(UsersByID(tmp)))
+	sort.Sort(sort.Reverse(database.UsersByID(tmp)))
 	gotIDs = userIDs(tmp)
 	if !reflect.DeepEqual(wantIDs, gotIDs) {
 		t.Errorf("sort rev; want %v, got %v", wantIDs, gotIDs)

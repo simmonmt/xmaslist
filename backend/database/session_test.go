@@ -1,29 +1,26 @@
-package database
+package database_test
 
 import (
 	"fmt"
 	"reflect"
 	"testing"
 	"time"
-)
 
-func deleteAllSessions() error {
-	_, err := db.db.ExecContext(ctx, `DELETE FROM sessions`)
-	return err
-}
+	"github.com/simmonmt/xmaslist/backend/database"
+)
 
 func TestSessions(t *testing.T) {
 	user := users[0]
 	created := time.Unix(1000, 0)
 	expiry := time.Unix(2000, 0)
 
-	if err := deleteAllSessions(); err != nil {
+	if err := db.DeleteAllSessions(ctx); err != nil {
 		panic(fmt.Sprintf("failed to clean sessions: %v", err))
 	}
 
 	// create session 1
 	gotSess, err := db.CreateSession(ctx, user.ID, created, expiry)
-	wantSess := &Session{
+	wantSess := &database.Session{
 		ID:      gotSess.ID,
 		UserID:  user.ID,
 		Created: created,
@@ -51,7 +48,7 @@ func TestSessions(t *testing.T) {
 	expiry = expiry.Add(time.Hour)
 
 	gotSess, err = db.CreateSession(ctx, user.ID, created, expiry)
-	wantSess = &Session{
+	wantSess = &database.Session{
 		ID:      gotSess.ID,
 		UserID:  user.ID,
 		Created: created,

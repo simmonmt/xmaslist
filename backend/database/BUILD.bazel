@@ -12,6 +12,7 @@ go_library(
     importpath = "github.com/simmonmt/xmaslist/backend/database",
     visibility = ["//visibility:public"],
     deps = [
+        "//db/schema",
         "@com_github_mattn_go_sqlite3//:go-sqlite3",
         "@org_golang_google_grpc//codes",
         "@org_golang_google_grpc//status",
@@ -27,11 +28,9 @@ go_test(
         "session_test.go",
         "user_test.go",
     ],
-    embed = [
-        ":database",
-    ],
     deps = [
-        "//db/schema",
+        ":database",
+        "//backend/database/testutil",
         "@org_golang_google_grpc//codes",
         "@org_golang_google_grpc//status",
     ],

@@ -1,4 +1,4 @@
-package database
+package database_test
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/simmonmt/xmaslist/db/schema"
+	"github.com/simmonmt/xmaslist/backend/database"
 )
 
 var (
 	ctx = context.Background()
 
-	users = []*User{
-		&User{Username: "a", Fullname: "User A", Admin: false},
-		&User{Username: "b", Fullname: "User B", Admin: false},
+	users = []*database.User{
+		&database.User{Username: "a", Fullname: "User A", Admin: false},
+		&database.User{Username: "b", Fullname: "User B", Admin: false},
 	}
 	usersByUsername = map[string]int{}
 
@@ -26,16 +26,12 @@ var (
 		"b": "bb",
 	}
 
-	db *DB
+	db *database.DB
 )
 
-func createTestDatabase() (db *DB, err error) {
-	db, err = OpenInMemory()
+func createTestDatabase() (db *database.DB, err error) {
+	db, err = database.CreateInMemory(ctx)
 	if err != nil {
-		return nil, err
-	}
-
-	if _, err := db.db.ExecContext(ctx, schema.Get()); err != nil {
 		return nil, err
 	}
 
@@ -52,14 +48,14 @@ func createTestDatabase() (db *DB, err error) {
 		usersByUsername[user.Username] = userID
 	}
 
-	sort.Sort(UsersByID(users))
+	sort.Sort(database.UsersByID(users))
 
 	return db, nil
 }
 
 func TestAsSeconds(t *testing.T) {
 	tm := time.Time{}
-	var s sql.Scanner = asSeconds{&tm}
+	var s sql.Scanner = database.AsSeconds{&tm}
 	if err := s.Scan(int64(1000)); err != nil {
 		t.Errorf("s.Scan(1000) = %v, want nil", err)
 		return
@@ -71,7 +67,7 @@ func TestAsSeconds(t *testing.T) {
 }
 
 func TestNullSeconds(t *testing.T) {
-	ns := &nullSeconds{}
+	ns := &database.NullSeconds{}
 	if err := sql.Scanner(ns).Scan(int64(1000)); err != nil {
 		t.Errorf("s.Scan(1000) = %v, want nil", err)
 		return
@@ -79,7 +75,7 @@ func TestNullSeconds(t *testing.T) {
 
 	if !ns.Valid || ns.Time.Unix() != 1000 {
 		t.Errorf("s.Scan(1000); %v, want %v",
-			ns, nullSeconds{time.Unix(1000, 0), true})
+			ns, database.NullSeconds{time.Unix(1000, 0), true})
 	}
 
 	if err := sql.Scanner(ns).Scan(nil); err != nil {
@@ -89,7 +85,7 @@ func TestNullSeconds(t *testing.T) {
 
 	if ns.Valid {
 		t.Errorf("s.Scan(1000); %v, want %v",
-			ns, nullSeconds{Valid: false})
+			ns, database.NullSeconds{Valid: false})
 	}
 
 	if err := sql.Scanner(ns).Scan("bob"); err == nil {

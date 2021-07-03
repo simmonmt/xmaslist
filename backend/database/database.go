@@ -1,20 +1,23 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
 	"net/url"
 	"time"
 
+	"github.com/simmonmt/xmaslist/db/schema"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type asSeconds struct {
+type AsSeconds struct {
 	*time.Time
 }
 
-func (p asSeconds) Scan(src interface{}) error {
+func (p AsSeconds) Scan(src interface{}) error {
 	secs, ok := src.(int64)
 	if !ok {
 		return fmt.Errorf("src isn't int64")
@@ -24,12 +27,12 @@ func (p asSeconds) Scan(src interface{}) error {
 	return nil
 }
 
-type nullSeconds struct {
+type NullSeconds struct {
 	Time  time.Time
 	Valid bool
 }
 
-func (p *nullSeconds) Scan(src interface{}) error {
+func (p *NullSeconds) Scan(src interface{}) error {
 	if src == nil {
 		p.Valid = false
 		return nil
@@ -44,7 +47,7 @@ func (p *nullSeconds) Scan(src interface{}) error {
 	return nil
 }
 
-func (p nullSeconds) Value() (driver.Value, error) {
+func (p NullSeconds) Value() (driver.Value, error) {
 	if !p.Valid {
 		return nil, nil
 	}
@@ -55,12 +58,21 @@ type DB struct {
 	db *sql.DB
 }
 
-func OpenInMemory() (*DB, error) {
+func CreateInMemory(ctx context.Context) (*DB, error) {
 	args := &url.Values{}
 	args.Set("mode", "memory")
 	args.Set("cache", "shared")
 
-	return open("/nonexistent", args)
+	db, err := open("/nonexistent", args)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := db.db.ExecContext(ctx, schema.Get()); err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
 
 func Open(path string) (*DB, error) {

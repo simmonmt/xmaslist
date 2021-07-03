@@ -1,4 +1,4 @@
-package database
+package database_test
 
 import (
 	"context"
@@ -8,19 +8,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/simmonmt/xmaslist/backend/database"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type listSetupRequest struct {
 	Owner     string
-	List      *ListData
-	ListItems []*ListItemData
+	List      *database.ListData
+	ListItems []*database.ListItemData
 }
 
 type listSetupResponse struct {
-	List      *List
-	ListItems []*ListItem
+	List      *database.List
+	ListItems []*database.ListItem
 }
 
 func setupLists(ctx context.Context, reqs []*listSetupRequest) ([]*listSetupResponse, error) {
@@ -58,13 +59,7 @@ func setupLists(ctx context.Context, reqs []*listSetupRequest) ([]*listSetupResp
 	return resps, nil
 }
 
-func deleteAllLists() error {
-	_, err := db.db.ExecContext(ctx,
-		`DELETE FROM items; DELETE FROM lists`)
-	return err
-}
-
-func listIDs(lists []*List) []int {
+func listIDs(lists []*database.List) []int {
 	ids := []int{}
 	for _, list := range lists {
 		ids = append(ids, list.ID)
@@ -73,16 +68,16 @@ func listIDs(lists []*List) []int {
 }
 
 func TestListsByID(t *testing.T) {
-	lists := []*List{
-		&List{ID: 3},
-		&List{ID: 5},
-		&List{ID: 1},
+	lists := []*database.List{
+		&database.List{ID: 3},
+		&database.List{ID: 5},
+		&database.List{ID: 1},
 	}
 
 	wantIDs := listIDs(lists)
 	sort.Ints(wantIDs)
 
-	sort.Sort(ListsByID(lists))
+	sort.Sort(database.ListsByID(lists))
 	gotIDs := listIDs(lists)
 	if !reflect.DeepEqual(wantIDs, gotIDs) {
 		t.Errorf("sort; want %v, got %v", wantIDs, gotIDs)
@@ -90,7 +85,7 @@ func TestListsByID(t *testing.T) {
 
 	sort.Sort(sort.Reverse(sort.IntSlice(wantIDs)))
 
-	sort.Sort(sort.Reverse(ListsByID(lists)))
+	sort.Sort(sort.Reverse(database.ListsByID(lists)))
 	gotIDs = listIDs(lists)
 	if !reflect.DeepEqual(wantIDs, gotIDs) {
 		t.Errorf("sort rev; want %v, got %v", wantIDs, gotIDs)
@@ -98,7 +93,7 @@ func TestListsByID(t *testing.T) {
 }
 
 func TestCreateAndListLists(t *testing.T) {
-	if err := deleteAllLists(); err != nil {
+	if err := db.DeleteAllLists(ctx); err != nil {
 		t.Errorf("failed to delete lists: %v", err)
 		return
 	}
@@ -106,12 +101,12 @@ func TestCreateAndListLists(t *testing.T) {
 	listSetupRequests := []*listSetupRequest{
 		&listSetupRequest{
 			Owner: "a",
-			List: &ListData{Name: "l1", Beneficiary: "b1",
+			List: &database.ListData{Name: "l1", Beneficiary: "b1",
 				EventDate: time.Unix(1, 0), Active: true},
 		},
 		&listSetupRequest{
 			Owner: "b",
-			List: &ListData{Name: "l2", Beneficiary: "b2",
+			List: &database.ListData{Name: "l2", Beneficiary: "b2",
 				EventDate: time.Unix(2, 0), Active: true},
 		},
 	}
@@ -122,28 +117,28 @@ func TestCreateAndListLists(t *testing.T) {
 		return
 	}
 
-	got, err := db.ListLists(ctx, IncludeInactiveLists(true))
+	got, err := db.ListLists(ctx, database.IncludeInactiveLists(true))
 	if err != nil {
 		t.Errorf("ListLists(include_inactive=true) = %v, want nil",
 			err)
 		return
 	}
 
-	want := []*List{listResponses[0].List, listResponses[1].List}
+	want := []*database.List{listResponses[0].List, listResponses[1].List}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("ListLists(include_inactive=true) = %v, want %v",
 			got, want)
 		return
 	}
 
-	got, err = db.ListLists(ctx, OnlyListWithID(listResponses[1].List.ID))
+	got, err = db.ListLists(ctx, database.OnlyListWithID(listResponses[1].List.ID))
 	if err != nil {
 		t.Errorf("ListLists(only=%d) = _, %v, want _, nil",
 			listResponses[1].List.ID, err)
 		return
 	}
 
-	want = []*List{listResponses[1].List}
+	want = []*database.List{listResponses[1].List}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("ListLists(only=%d) = [%+v], nil, want [%+v], nil",
 			listResponses[1].List.ID, got[0], want)
@@ -159,8 +154,8 @@ func statusCode(err error) (codes.Code, error) {
 	return s.Code(), nil
 }
 
-func readList(ctx context.Context, listID int) (*List, error) {
-	lists, err := db.ListLists(ctx, OnlyListWithID(listID))
+func readList(ctx context.Context, listID int) (*database.List, error) {
+	lists, err := db.ListLists(ctx, database.OnlyListWithID(listID))
 	if err != nil {
 		return nil, err
 	}
@@ -174,12 +169,12 @@ func readList(ctx context.Context, listID int) (*List, error) {
 }
 
 func TestUpdateList(t *testing.T) {
-	if err := deleteAllLists(); err != nil {
+	if err := db.DeleteAllLists(ctx); err != nil {
 		t.Errorf("failed to delete lists: %v", err)
 		return
 	}
 
-	listData := &ListData{Name: "ul", Beneficiary: "bul",
+	listData := &database.ListData{Name: "ul", Beneficiary: "bul",
 		EventDate: time.Unix(3, 0), Active: true}
 	ownerID := usersByUsername["a"]
 	otherUserID := usersByUsername["b"]
@@ -193,7 +188,7 @@ func TestUpdateList(t *testing.T) {
 	}
 
 	_, err = db.UpdateList(ctx, list.ID, list.Version+1, ownerID,
-		updated, func(listData *ListData) error { panic("unreached") })
+		updated, func(listData *database.ListData) error { panic("unreached") })
 	if err == nil {
 		t.Errorf("UpdateList(bad version %v) = %v, want nil",
 			list.Version+1, err)
@@ -212,7 +207,7 @@ func TestUpdateList(t *testing.T) {
 	}
 
 	_, err = db.UpdateList(ctx, list.ID, list.Version, otherUserID,
-		updated, func(listData *ListData) error { panic("unreached") })
+		updated, func(listData *database.ListData) error { panic("unreached") })
 	if err == nil {
 		t.Errorf("UpdateList(bad user %v) = %v, want nil",
 			otherUserID, err)
@@ -236,7 +231,7 @@ func TestUpdateList(t *testing.T) {
 	want.Updated = updated
 
 	got, err := db.UpdateList(ctx, list.ID, list.Version, ownerID, updated,
-		func(listData *ListData) error {
+		func(listData *database.ListData) error {
 			listData.Name = "UL"
 			listData.Active = false
 			return nil
