@@ -4,9 +4,10 @@ import AccordionSummary from "@material-ui/core/AccordionSummary";
 import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
 import Chip from "@material-ui/core/Chip";
+import CircularProgress from "@material-ui/core/CircularProgress";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import Link from "@material-ui/core/Link";
-import { createStyles, withStyles } from "@material-ui/core/styles";
+import { createStyles, makeStyles, withStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import Alert from "@material-ui/lab/Alert";
@@ -40,15 +41,33 @@ function ClaimedChip({
   return <Chip label={label} />;
 }
 
+const useClaimButtonStyles = makeStyles(() =>
+  createStyles({
+    wrapper: {
+      position: "relative",
+    },
+    buttonProgress: {
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      marginTop: -12,
+      marginLeft: -12,
+    },
+  })
+);
+
 function ClaimButton({
   currentUserId,
   item,
+  updating,
   onClick,
 }: {
   currentUserId: number;
   item: ListItemProto;
+  updating: boolean;
   onClick: (newState: boolean) => void;
 }) {
+  const classes = useClaimButtonStyles();
   const state = item.getState();
   const claimed = state && state.getClaimed() === true;
 
@@ -56,18 +75,23 @@ function ClaimButton({
   const currentUserClaimed =
     metadata && metadata.getClaimedBy() === currentUserId;
 
-  const active = !claimed || currentUserClaimed;
+  const active = !updating && (!claimed || currentUserClaimed);
   const label = claimed ? "Unclaim" : "Claim";
 
   return (
-    <Button
-      variant="contained"
-      color="primary"
-      disabled={!active}
-      onClick={() => onClick(!claimed)}
-    >
-      {label}
-    </Button>
+    <div className={classes.wrapper}>
+      <Button
+        variant="contained"
+        color="primary"
+        disabled={!active}
+        onClick={() => onClick(!claimed)}
+      >
+        {label}
+      </Button>
+      {updating && (
+        <CircularProgress size={24} className={classes.buttonProgress} />
+      )}
+    </div>
   );
 }
 
@@ -127,6 +151,7 @@ function ViewListItem({
           <ClaimButton
             currentUserId={currentUserId}
             item={item}
+            updating={updating}
             onClick={(newState: boolean) => onClaimClick(item, newState)}
           />
         </div>
