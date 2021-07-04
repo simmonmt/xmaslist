@@ -81,21 +81,21 @@ function makeLink(urlStr: string) {
   );
 }
 
-type ListItemState = {
+type ListItemUiState = {
   item: ListItemProto;
-  claiming: boolean;
+  updating: boolean;
 };
 
 function ViewListItem({
   classes,
   item,
-  claiming,
+  updating,
   currentUserId,
   onClaimClick,
 }: {
   classes: any;
   item: ListItemProto;
-  claiming: boolean;
+  updating: boolean;
   currentUserId: number;
   onClaimClick: (item: ListItemProto, newState: boolean) => void;
 }) {
@@ -146,7 +146,7 @@ interface State {
   loading: boolean;
   errorMessage: string;
   list: ListProto | null;
-  itemStates: ListItemState[];
+  itemUiStates: ListItemUiState[];
 }
 
 class ViewList extends React.Component<Props, State> {
@@ -159,7 +159,7 @@ class ViewList extends React.Component<Props, State> {
       loading: false,
       errorMessage: "",
       list: null,
-      itemStates: [],
+      itemUiStates: [],
     };
 
     this.listId = this.props.match.params.listId;
@@ -219,12 +219,12 @@ class ViewList extends React.Component<Props, State> {
     );
   }
 
-  private makeViewListItem(itemState: ListItemState) {
+  private makeViewListItem(itemState: ListItemUiState) {
     return (
       <ViewListItem
         key={itemState.item.getId()}
         classes={this.props.classes}
-        claiming={itemState.claiming}
+        updating={itemState.updating}
         item={itemState.item}
         currentUserId={this.props.currentUser.id}
         onClaimClick={this.claimClicked}
@@ -233,43 +233,43 @@ class ViewList extends React.Component<Props, State> {
   }
 
   private listItems() {
-    if (this.state.itemStates.length == 0) {
+    if (this.state.itemUiStates.length == 0) {
       return <div>The list is empty</div>;
     }
 
     return (
       <div>
-        {this.state.itemStates.map((itemState) =>
+        {this.state.itemUiStates.map((itemState) =>
           this.makeViewListItem(itemState)
         )}
       </div>
     );
   }
 
-  private makeUpdatedItemStates(
+  private makeUpdatedItemUiStates(
     id: string,
-    updater: (itemState: ListItemState) => void
-  ): ListItemState[] {
-    const nis = this.state.itemStates.slice();
-    for (let i = 0; i < nis.length; ++i) {
-      if (nis[i].item.getId() === id) {
-        updater(nis[i]);
+    updater: (itemUiState: ListItemUiState) => void
+  ): ListItemUiState[] {
+    const tmp = this.state.itemUiStates.slice();
+    for (let i = 0; i < tmp.length; ++i) {
+      if (tmp[i].item.getId() === id) {
+        updater(tmp[i]);
       }
     }
-    return nis;
+    return tmp;
   }
 
   private claimClicked(item: ListItemProto, newClaimState: boolean) {
     if (!this.state.list) return;
 
-    const oldState = item.getState();
-    if (!oldState) return;
-    const newState = oldState.cloneMessage();
-    newState.setClaimed(newClaimState);
+    const oldItemState = item.getState();
+    if (!oldItemState) return;
+    const newItemState = oldItemState.cloneMessage();
+    newItemState.setClaimed(newClaimState);
 
     this.setState({
-      itemStates: this.makeUpdatedItemStates(item.getId(), (itemState) => {
-        itemState.claiming = true;
+      itemUiStates: this.makeUpdatedItemUiStates(item.getId(), (uiState) => {
+        uiState.updating = true;
       }),
     });
 
@@ -278,14 +278,17 @@ class ViewList extends React.Component<Props, State> {
         this.listId,
         item.getId(),
         item.getVersion(),
-        newState
+        newItemState
       )
       .then((item: ListItemProto) => {
         this.setState({
-          itemStates: this.makeUpdatedItemStates(item.getId(), (itemState) => {
-            itemState.item = item;
-            itemState.claiming = false;
-          }),
+          itemUiStates: this.makeUpdatedItemUiStates(
+            item.getId(),
+            (uiState) => {
+              uiState.item = item;
+              uiState.updating = false;
+            }
+          ),
         });
       })
       .catch((error: GrpcError) => {
@@ -296,9 +299,12 @@ class ViewList extends React.Component<Props, State> {
 
         this.setState({
           errorMessage: error.message || "Unknown error",
-          itemStates: this.makeUpdatedItemStates(item.getId(), (itemState) => {
-            itemState.claiming = false;
-          }),
+          itemUiStates: this.makeUpdatedItemUiStates(
+            item.getId(),
+            (uiState) => {
+              uiState.updating = false;
+            }
+          ),
         });
       });
   }
@@ -318,9 +324,9 @@ class ViewList extends React.Component<Props, State> {
         .then((items: ListItemProto[]) => {
           this.setState({
             loading: false,
-            itemStates: items.map((item) => ({
+            itemUiStates: items.map((item) => ({
               item: item,
-              claiming: false,
+              updating: false,
             })),
           });
         })
