@@ -2,7 +2,6 @@ package listservice
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -65,14 +64,20 @@ func makeSessions(t *testing.T, clock util.Clock, db *database.DB, userResps tes
 	return
 }
 
-func TestUpdateListItemState(t *testing.T) {
-	clock := &util.MonoClock{Time: time.Unix(0, 0)}
+type updateListItemTestState struct {
+	Clock            *util.MonoClock
+	DB               *database.DB
+	Users            testutil.UserSetupResponses
+	Lists            testutil.ListSetupResponses
+	SessionsByUserID map[int]*sessions.Session
+	Server           *listServer
+}
 
+func setupListItemTestState(ctx context.Context, t *testing.T) *updateListItemTestState {
+	clock := &util.MonoClock{Time: time.Unix(0, 0)}
 	db := testutil.SetupTestDatabase(ctx, t)
-	defer db.Close()
 	users := testutil.CreateTestUsers(ctx, t, db, []string{"a", "b"})
-	sm, sessionIDsByUserID := makeSessions(t, clock, db, users)
-	s := makeListServer(clock, sm, db)
+	sm, sessionsByUserID := makeSessions(t, clock, db, users)
 
 	reqs := []*testutil.ListSetupRequest{
 		&testutil.ListSetupRequest{
@@ -91,19 +96,31 @@ func TestUpdateListItemState(t *testing.T) {
 			},
 		},
 	}
-	listResps := testutil.SetupLists(ctx, t, db, reqs)
-	list, origItem := listResps.GetItem("l1", "l1i2")
 
-	// TODO(simmonmt): Test claim by a, unclaim by b (should fail)
+	return &updateListItemTestState{
+		Clock:            clock,
+		DB:               db,
+		Users:            users,
+		Lists:            testutil.SetupLists(ctx, t, db, reqs),
+		SessionsByUserID: sessionsByUserID,
+		Server:           makeListServer(clock, sm, db),
+	}
+}
+
+func TestUpdateListItemState(t *testing.T) {
+	state := setupListItemTestState(ctx, t)
+	defer state.DB.Close()
+
+	list, origItem := state.Lists.GetItem("l1", "l1i2")
 
 	// Iterate through both users to verify that both the list owner and the
 	// non-owner can claim and unclaim.
-	for _, userResp := range users {
+	for _, userResp := range state.Users {
 		t.Run(userResp.User.Username, func(t *testing.T) {
 			// Re-read the item because the version will have
 			// changed from the listResp version on the 2nd and
 			// subsequent loop iterations.
-			item, err := dbutil.GetListItem(ctx, db, list.ID,
+			item, err := dbutil.GetListItem(ctx, state.DB, list.ID,
 				origItem.ID)
 			if err != nil {
 				t.Fatalf("failed to read item %v/%v", list.ID,
@@ -111,10 +128,13 @@ func TestUpdateListItemState(t *testing.T) {
 			}
 
 			claimUser := userResp.User
-			claimSessionID := sessionIDsByUserID[claimUser.ID]
+			claimSession := state.SessionsByUserID[claimUser.ID]
 
 			reqCtx := context.WithValue(ctx, request.SessionKey,
-				claimSessionID)
+				claimSession)
+
+			// Try to unclaim an already-unclaimed item. This should
+			// fail.
 
 			req := &lspb.UpdateListItemStateRequest{
 				ListId:      strconv.Itoa(list.ID),
@@ -126,15 +146,16 @@ func TestUpdateListItemState(t *testing.T) {
 				},
 			}
 
-			resp, err := s.UpdateListItemState(reqCtx, req)
+			resp, err := state.Server.UpdateListItemState(reqCtx, req)
 			if err == nil || status.Code(err) != codes.FailedPrecondition || !strings.Contains(err.Error(), "isn't claimed") {
 				t.Fatalf("UpdateListItemState(_, %+v) = %+v, %v, want _, FailedPrecondition",
 					req, resp, err)
 			}
 
+			// Try to claim an unclaimed item. This should succeed.
+
 			req.GetState().Claimed = true
-			claimedWhen := clock.Time
-			fmt.Printf("claimedWhen: %v\n", claimedWhen)
+			claimedWhen := state.Clock.Time
 
 			wantResp := &lspb.UpdateListItemStateResponse{
 				Item: &lspb.ListItem{
@@ -159,7 +180,7 @@ func TestUpdateListItemState(t *testing.T) {
 				},
 			}
 
-			resp, err = s.UpdateListItemState(reqCtx, req)
+			resp, err = state.Server.UpdateListItemState(reqCtx, req)
 			if err != nil {
 				t.Fatalf("UpdateListItemState(_, %+v) = _, %v, want _, nil",
 					req, resp, err, wantResp)
@@ -169,18 +190,29 @@ func TestUpdateListItemState(t *testing.T) {
 				t.Fatalf("UpdateListItemState(_, %+v) = %+v, %v, unexpected difference:\n%v", req, resp, err, diff)
 			}
 
-			resp, err = s.UpdateListItemState(reqCtx, req)
+			// Try the claim again, but without updating the version
+			// token. This should fail because of the token mismatch.
+
+			_, err = state.Server.UpdateListItemState(reqCtx, req)
 			if err == nil || status.Code(err) != codes.FailedPrecondition || !strings.Contains(err.Error(), "version ID mismatch") {
-				t.Fatalf("UpdateListItemState(_, %+v) = %+v, %v, want _, FailedPrecondition",
-					req, resp, err)
+				t.Fatalf("UpdateListItemState(_, %+v) = _, %v, want _, FailedPrecondition",
+					req, err)
 			}
 
-			req.ItemVersion++
-			resp, err = s.UpdateListItemState(reqCtx, req)
+			// Try the claim again, this time using the token we got
+			// back from the successful claim. This should fail
+			// because the item is already claimed.
+
+			req.ItemVersion = resp.GetItem().GetVersion()
+			resp, err = state.Server.UpdateListItemState(reqCtx, req)
 			if err == nil || status.Code(err) != codes.FailedPrecondition || !strings.Contains(err.Error(), "already claimed") {
 				t.Fatalf("UpdateListItemState(_, %+v) = %+v, %v, want _, FailedPrecondition",
 					req, resp, err)
 			}
+
+			// Try to unclaim the item. We continue to use the
+			// version token from the successful claim. This should
+			// succeed.
 
 			req.GetState().Claimed = false
 			wantResp.GetItem().Version++
@@ -188,9 +220,9 @@ func TestUpdateListItemState(t *testing.T) {
 			wantResp.GetItem().GetMetadata().ClaimedBy = 0
 			wantResp.GetItem().GetMetadata().ClaimedWhen = 0
 			wantResp.GetItem().GetMetadata().Updated =
-				clock.Time.Unix()
+				state.Clock.Time.Unix()
 
-			resp, err = s.UpdateListItemState(reqCtx, req)
+			resp, err = state.Server.UpdateListItemState(reqCtx, req)
 			if err != nil {
 				t.Fatalf("UpdateListItemState(_, %+v) = _, %v, want _, nil",
 					req, resp, err, wantResp)
@@ -201,4 +233,43 @@ func TestUpdateListItemState(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Verify that only the claimed-by user can unclaim
+func TestUpdateListItemState_CrossOwnership(t *testing.T) {
+	state := setupListItemTestState(ctx, t)
+	defer state.DB.Close()
+
+	list, item := state.Lists.GetItem("l1", "l1i2")
+
+	makeRequestContext := func(ctx context.Context, username string) context.Context {
+		user := state.Users.UserByUsername(username)
+		session := state.SessionsByUserID[user.ID]
+		return context.WithValue(ctx, request.SessionKey, session)
+	}
+
+	reqCtxA := makeRequestContext(ctx, "a")
+	reqCtxB := makeRequestContext(ctx, "b")
+
+	req := &lspb.UpdateListItemStateRequest{
+		ListId:      strconv.Itoa(list.ID),
+		ItemId:      strconv.Itoa(item.ID),
+		ItemVersion: int32(item.Version),
+		State:       &lspb.ListItemState{Claimed: true},
+	}
+
+	resp, err := state.Server.UpdateListItemState(reqCtxA, req)
+	if err != nil {
+		t.Fatalf("failed to claim")
+	}
+
+	req.ItemVersion = resp.GetItem().GetVersion()
+	req.GetState().Claimed = false
+
+	_, err = state.Server.UpdateListItemState(reqCtxB, req)
+	if err == nil || status.Code(err) != codes.PermissionDenied {
+		t.Fatalf("UpdateListItemState(_, %+v) = _, %v, want _, PermissionDenied",
+			req, err)
+	}
+
 }
