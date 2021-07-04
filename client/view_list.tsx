@@ -81,16 +81,21 @@ function makeLink(urlStr: string) {
   );
 }
 
+type ListItemState = {
+  item: ListItemProto;
+  claiming: boolean;
+};
+
 function ViewListItem({
   classes,
   item,
-  loading,
+  claiming,
   currentUserId,
   onClaimClick,
 }: {
   classes: any;
   item: ListItemProto;
-  loading: boolean;
+  claiming: boolean;
   currentUserId: number;
   onClaimClick: (item: ListItemProto, newState: boolean) => void;
 }) {
@@ -141,7 +146,7 @@ interface State {
   loading: boolean;
   errorMessage: string;
   list: ListProto | null;
-  items: ListItemProto[];
+  itemStates: ListItemState[];
 }
 
 class ViewList extends React.Component<Props, State> {
@@ -154,7 +159,7 @@ class ViewList extends React.Component<Props, State> {
       loading: false,
       errorMessage: "",
       list: null,
-      items: [],
+      itemStates: [],
     };
 
     this.listId = this.props.match.params.listId;
@@ -214,13 +219,13 @@ class ViewList extends React.Component<Props, State> {
     );
   }
 
-  private makeViewListItem(item: ListItemProto) {
+  private makeViewListItem(itemState: ListItemState) {
     return (
       <ViewListItem
-        key={item.getId()}
+        key={itemState.item.getId()}
         classes={this.props.classes}
-        loading={false}
-        item={item}
+        claiming={itemState.claiming}
+        item={itemState.item}
         currentUserId={this.props.currentUser.id}
         onClaimClick={this.claimClicked}
       />
@@ -228,12 +233,16 @@ class ViewList extends React.Component<Props, State> {
   }
 
   private listItems() {
-    if (this.state.items.length == 0) {
+    if (this.state.itemStates.length == 0) {
       return <div>The list is empty</div>;
     }
 
     return (
-      <div>{this.state.items.map((item) => this.makeViewListItem(item))}</div>
+      <div>
+        {this.state.itemStates.map((itemState) =>
+          this.makeViewListItem(itemState)
+        )}
+      </div>
     );
   }
 
@@ -253,14 +262,19 @@ class ViewList extends React.Component<Props, State> {
         newState
       )
       .then((item: ListItemProto) => {
-        const newItems = this.state.items.slice();
-        for (let i = 0; i < newItems.length; ++i) {
-          if (newItems[i].getId() === item.getId()) {
-            newItems[i] = item;
+        const newItemStates = this.state.itemStates.slice();
+        for (let i = 0; i < newItemStates.length; ++i) {
+          if (newItemStates[i].item.getId() === item.getId()) {
+            const newItemState: ListItemState = {
+              item: item,
+              claiming: newItemStates[i].claiming,
+            };
+
+            newItemStates[i] = newItemState;
             break;
           }
         }
-        this.setState({ items: newItems });
+        this.setState({ itemStates: newItemStates });
       })
       .catch((error: GrpcError) => {
         if (error.code === StatusCode.UNAUTHENTICATED) {
@@ -287,7 +301,13 @@ class ViewList extends React.Component<Props, State> {
           return this.props.listModel.listListItems(this.listId);
         })
         .then((items: ListItemProto[]) => {
-          this.setState({ loading: false, items: items });
+          this.setState({
+            loading: false,
+            itemStates: items.map((item) => ({
+              item: item,
+              claiming: false,
+            })),
+          });
         })
         .catch((error: GrpcError) => {
           if (error.code === StatusCode.UNAUTHENTICATED) {
