@@ -31,6 +31,10 @@ var (
 		"user_session_length", 24*time.Hour, "length of user sessions")
 	sessionSecretPath = flag.String(
 		"session_secret", "", "path to session secret file")
+	slowResponses = flag.String("slow_responses", "",
+		"if a duration, sleep before each response. if a comma-separated "+
+			"list of k=v pairs (method=duration), sleep the specific "+
+			"methods by the specified amounts")
 
 	grpcLog grpclog.LoggerV2
 )
@@ -74,6 +78,55 @@ func errorRewriteInterceptor(ctx context.Context, req interface{}, info *grpc.Un
 	return res, err
 }
 
+type SlowResponseInterceptor struct {
+	allDelay time.Duration
+	delays   map[string]time.Duration
+}
+
+func (i *SlowResponseInterceptor) Intercept(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	res, err := handler(ctx, req)
+
+	if i.allDelay != 0 {
+		time.Sleep(i.allDelay)
+	} else if delay, found := i.delays[info.FullMethod]; found {
+		log.Printf("delaying %v by %v\n", info.FullMethod, delay)
+		time.Sleep(delay)
+	}
+
+	return res, err
+}
+
+func makeSlowResponseInterceptor(specStr string) (*SlowResponseInterceptor, error) {
+	d, err := time.ParseDuration(specStr)
+	if err == nil {
+		return &SlowResponseInterceptor{allDelay: d}, nil
+	}
+
+	delays := map[string]time.Duration{}
+	parts := strings.Split(specStr, ",")
+	for _, part := range parts {
+		kv := strings.SplitN(part, "=", 2)
+		if len(kv) != 2 {
+			return nil, fmt.Errorf("failed to parse %v", part)
+		}
+
+		method := kv[0]
+		d, err := time.ParseDuration(kv[1])
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse duration in %v",
+				part)
+		}
+
+		delays[method] = d
+	}
+
+	if len(delays) == 0 {
+		return nil, fmt.Errorf("no delays found in spec")
+	}
+
+	return &SlowResponseInterceptor{delays: delays}, nil
+}
+
 func main() {
 	flag.Parse()
 
@@ -111,12 +164,25 @@ func main() {
 		sessionManager: sessionManager,
 	}
 
-	opts := []grpc.ServerOption{
-		grpc.ChainUnaryInterceptor(
-			loggingInterceptor,
-			errorRewriteInterceptor,
-			authInterceptor.intercept),
+	interceptors := []grpc.UnaryServerInterceptor{
+		loggingInterceptor,
+		errorRewriteInterceptor,
+		authInterceptor.intercept,
 	}
+
+	if *slowResponses != "" {
+		interceptor, err := makeSlowResponseInterceptor(*slowResponses)
+		if err != nil {
+			log.Fatalf("failed to build slow response interceptor: %v", err)
+		}
+
+		interceptors = append(interceptors, interceptor.Intercept)
+	}
+
+	opts := []grpc.ServerOption{
+		grpc.ChainUnaryInterceptor(interceptors...),
+	}
+
 	server := grpc.NewServer(opts...)
 	authservice.RegisterHandlers(server, clock, sessionManager, db)
 	listservice.RegisterHandlers(server, clock, sessionManager, db)
