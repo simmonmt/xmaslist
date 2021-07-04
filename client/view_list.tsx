@@ -84,11 +84,13 @@ function makeLink(urlStr: string) {
 function ViewListItem({
   classes,
   item,
+  loading,
   currentUserId,
   onClaimClick,
 }: {
   classes: any;
   item: ListItemProto;
+  loading: boolean;
   currentUserId: number;
   onClaimClick: (item: ListItemProto, newState: boolean) => void;
 }) {
@@ -212,22 +214,26 @@ class ViewList extends React.Component<Props, State> {
     );
   }
 
+  private makeViewListItem(item: ListItemProto) {
+    return (
+      <ViewListItem
+        key={item.getId()}
+        classes={this.props.classes}
+        loading={false}
+        item={item}
+        currentUserId={this.props.currentUser.id}
+        onClaimClick={this.claimClicked}
+      />
+    );
+  }
+
   private listItems() {
     if (this.state.items.length == 0) {
       return <div>The list is empty</div>;
     }
 
     return (
-      <div>
-        {this.state.items.map((item) => (
-          <ViewListItem
-            classes={this.props.classes}
-            item={item}
-            currentUserId={this.props.currentUser.id}
-            onClaimClick={this.claimClicked}
-          />
-        ))}
-      </div>
+      <div>{this.state.items.map((item) => this.makeViewListItem(item))}</div>
     );
   }
 
