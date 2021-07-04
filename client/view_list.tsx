@@ -246,6 +246,19 @@ class ViewList extends React.Component<Props, State> {
     );
   }
 
+  private makeUpdatedItemStates(
+    id: string,
+    updater: (itemState: ListItemState) => void
+  ): ListItemState[] {
+    const nis = this.state.itemStates.slice();
+    for (let i = 0; i < nis.length; ++i) {
+      if (nis[i].item.getId() === id) {
+        updater(nis[i]);
+      }
+    }
+    return nis;
+  }
+
   private claimClicked(item: ListItemProto, newClaimState: boolean) {
     if (!this.state.list) return;
 
@@ -253,6 +266,12 @@ class ViewList extends React.Component<Props, State> {
     if (!oldState) return;
     const newState = oldState.cloneMessage();
     newState.setClaimed(newClaimState);
+
+    this.setState({
+      itemStates: this.makeUpdatedItemStates(item.getId(), (itemState) => {
+        itemState.claiming = true;
+      }),
+    });
 
     this.props.listModel
       .updateListItemState(
@@ -262,19 +281,12 @@ class ViewList extends React.Component<Props, State> {
         newState
       )
       .then((item: ListItemProto) => {
-        const newItemStates = this.state.itemStates.slice();
-        for (let i = 0; i < newItemStates.length; ++i) {
-          if (newItemStates[i].item.getId() === item.getId()) {
-            const newItemState: ListItemState = {
-              item: item,
-              claiming: newItemStates[i].claiming,
-            };
-
-            newItemStates[i] = newItemState;
-            break;
-          }
-        }
-        this.setState({ itemStates: newItemStates });
+        this.setState({
+          itemStates: this.makeUpdatedItemStates(item.getId(), (itemState) => {
+            itemState.item = item;
+            itemState.claiming = false;
+          }),
+        });
       })
       .catch((error: GrpcError) => {
         if (error.code === StatusCode.UNAUTHENTICATED) {
@@ -284,6 +296,9 @@ class ViewList extends React.Component<Props, State> {
 
         this.setState({
           errorMessage: error.message || "Unknown error",
+          itemStates: this.makeUpdatedItemStates(item.getId(), (itemState) => {
+            itemState.claiming = false;
+          }),
         });
       });
   }
