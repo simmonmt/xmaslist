@@ -163,8 +163,8 @@ func (db *DB) doUpdateListItem(ctx context.Context, txn *sql.Tx, listID int, ite
 
 	if item.Version != itemVersion {
 		return nil, status.Errorf(codes.FailedPrecondition,
-			"item version ID mismatch; got %v want %v",
-			item.Version, itemVersion)
+			"item version ID mismatch; requested %v, need %v",
+			itemVersion, item.Version)
 	}
 
 	if err := update(&item.ListItemData, &item.ListItemState); err != nil {
