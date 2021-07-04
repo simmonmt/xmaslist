@@ -1,5 +1,8 @@
 import { Metadata } from "grpc-web";
-import { ListItem as ListItemProto } from "../proto/list_item_pb";
+import {
+  ListItem as ListItemProto,
+  ListItemState as ListItemStateProto,
+} from "../proto/list_item_pb";
 import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
 import { ListServicePromiseClient } from "../proto/list_service_grpc_web_pb";
 import {
@@ -12,6 +15,8 @@ import {
   ListListItemsResponse,
   ListListsRequest,
   ListListsResponse,
+  UpdateListItemStateRequest,
+  UpdateListItemStateResponse,
 } from "../proto/list_service_pb";
 import { AuthModel } from "./auth_model";
 
@@ -91,6 +96,30 @@ export class ListModel {
     return this.listService.changeActiveState(req, this.metadata()).then(() => {
       Promise.resolve();
     });
+  }
+
+  updateListItemState(
+    listId: string,
+    itemId: string,
+    itemVersion: number,
+    newState: ListItemStateProto
+  ): Promise<ListItemProto> {
+    const req = new UpdateListItemStateRequest();
+    req.setListId(listId);
+    req.setItemId(itemId);
+    req.setItemVersion(itemVersion);
+    req.setState(newState);
+
+    return this.listService
+      .updateListItemState(req, this.metadata())
+      .then((resp: UpdateListItemStateResponse) => {
+        const item = resp.getItem();
+        if (!item) {
+          return Promise.reject(new Error("no item in response"));
+        }
+
+        return item;
+      });
   }
 
   private metadata(): Metadata {

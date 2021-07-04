@@ -171,8 +171,41 @@ class ViewList extends React.Component<Props, State> {
     );
   }
 
-  private claimClicked(item: ListItemProto, newState: boolean) {
-    console.log("claim clicked:", item.getId(), "newstate", newState);
+  private claimClicked(item: ListItemProto, newClaimState: boolean) {
+    if (!this.state.list) return;
+
+    const oldState = item.getState();
+    if (!oldState) return;
+    const newState = oldState.cloneMessage();
+    newState.setClaimed(newClaimState);
+
+    this.props.listModel
+      .updateListItemState(
+        this.listId,
+        item.getId(),
+        item.getVersion(),
+        newState
+      )
+      .then((item: ListItemProto) => {
+        const newItems = this.state.items.slice();
+        for (let i = 0; i < newItems.length; ++i) {
+          if (newItems[i].getId() === item.getId()) {
+            newItems[i] = item;
+            break;
+          }
+        }
+        this.setState({ items: newItems });
+      })
+      .catch((error: GrpcError) => {
+        if (error.code === StatusCode.UNAUTHENTICATED) {
+          this.setState({ loggedIn: false });
+          return;
+        }
+
+        this.setState({
+          errorMessage: error.message || "Unknown error",
+        });
+      });
   }
 
   private oneListItem(item: ListItemProto) {
