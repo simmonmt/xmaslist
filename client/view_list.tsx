@@ -71,6 +71,63 @@ function ClaimButton({
   );
 }
 
+function makeLink(urlStr: string) {
+  const url = new URL(urlStr);
+  const match = url.hostname.match(/^(?:.*\.)?([^.]+)\.[^.]+$/);
+  return (
+    <Link href={urlStr} target="_blank" rel="noreferrer">
+      {match ? match[1] : url.hostname}
+    </Link>
+  );
+}
+
+function ViewListItem({
+  classes,
+  item,
+  currentUserId,
+  onClaimClick,
+}: {
+  classes: any;
+  item: ListItemProto;
+  currentUserId: number;
+  onClaimClick: (item: ListItemProto, newState: boolean) => void;
+}) {
+  const data = item.getData();
+  if (!data) return <div />;
+
+  return (
+    <Accordion key={"item-" + item.getId()}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Typography variant="h6">{data.getName()}</Typography>
+        <div className={classes.grow} />
+        {item.getState() && item.getState()!.getClaimed() && (
+          <ClaimedChip currentUserId={currentUserId} item={item} />
+        )}
+      </AccordionSummary>
+      <AccordionDetails className={classes.details}>
+        {data.getDesc() && (
+          <div className={classes.detailSec}>
+            <Typography variant="body1">{data.getDesc()}</Typography>
+          </div>
+        )}
+        {data.getDesc() && data.getUrl() && <div />}
+        {data.getUrl() && (
+          <Typography variant="body1">
+            Link: {makeLink(data.getUrl())}
+          </Typography>
+        )}
+        <div className={classes.claimButton}>
+          <ClaimButton
+            currentUserId={currentUserId}
+            item={item}
+            onClick={(newState: boolean) => onClaimClick(item, newState)}
+          />
+        </div>
+      </AccordionDetails>
+    </Accordion>
+  );
+}
+
 interface Props extends RouteComponentProps<PathParams> {
   classes: any;
   listModel: ListModel;
@@ -99,6 +156,8 @@ class ViewList extends React.Component<Props, State> {
     };
 
     this.listId = this.props.match.params.listId;
+
+    this.claimClicked = this.claimClicked.bind(this);
   }
 
   componentDidMount() {
@@ -158,16 +217,17 @@ class ViewList extends React.Component<Props, State> {
       return <div>The list is empty</div>;
     }
 
-    return <div>{this.state.items.map((item) => this.oneListItem(item))}</div>;
-  }
-
-  private makeLink(urlStr: string) {
-    const url = new URL(urlStr);
-    const match = url.hostname.match(/^(?:.*\.)?([^.]+)\.[^.]+$/);
     return (
-      <Link href={urlStr} target="_blank" rel="noreferrer">
-        {match ? match[1] : url.hostname}
-      </Link>
+      <div>
+        {this.state.items.map((item) => (
+          <ViewListItem
+            classes={this.props.classes}
+            item={item}
+            currentUserId={this.props.currentUser.id}
+            onClaimClick={this.claimClicked}
+          />
+        ))}
+      </div>
     );
   }
 
@@ -206,46 +266,6 @@ class ViewList extends React.Component<Props, State> {
           errorMessage: error.message || "Unknown error",
         });
       });
-  }
-
-  private oneListItem(item: ListItemProto) {
-    const data = item.getData();
-    if (!data) return;
-
-    return (
-      <Accordion key={"item-" + item.getId()}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">{data.getName()}</Typography>
-          <div className={this.props.classes.grow} />
-          {item.getState() && item.getState()!.getClaimed() && (
-            <ClaimedChip
-              currentUserId={this.props.currentUser.id}
-              item={item}
-            />
-          )}
-        </AccordionSummary>
-        <AccordionDetails className={this.props.classes.details}>
-          {data.getDesc() && (
-            <div className={this.props.classes.detailSec}>
-              <Typography variant="body1">{data.getDesc()}</Typography>
-            </div>
-          )}
-          {data.getDesc() && data.getUrl() && <div />}
-          {data.getUrl() && (
-            <Typography variant="body1">
-              Link: {this.makeLink(data.getUrl())}
-            </Typography>
-          )}
-          <div className={this.props.classes.claimButton}>
-            <ClaimButton
-              currentUserId={this.props.currentUser.id}
-              item={item}
-              onClick={(newState: boolean) => this.claimClicked(item, newState)}
-            />
-          </div>
-        </AccordionDetails>
-      </Accordion>
-    );
   }
 
   private handleAlertClose() {
