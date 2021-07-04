@@ -20,7 +20,7 @@ type listListCommand struct {
 }
 
 func (c *listListCommand) Name() string     { return "list" }
-func (c *listListCommand) Synopsis() string { return "List users" }
+func (c *listListCommand) Synopsis() string { return "List lists" }
 func (c *listListCommand) Usage() string {
 	return `user list [--list_id=list_id] db_path
 `
@@ -42,12 +42,12 @@ func listItems(ctx context.Context, db *database.DB, list *database.List) error 
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-	fmt.Fprintln(w, "ID\tName\tDesc\tURL")
-	fmt.Fprintln(w, "--\t----\t----\t---")
+	fmt.Fprintln(w, "ID\tVr\tName\tDesc\tURL")
+	fmt.Fprintln(w, "--\t--\t----\t----\t---")
 
 	for _, item := range items {
-		fmt.Fprintf(w, "%v\t%v\t%v\t%v\n",
-			item.ID, item.Name, item.Desc, item.URL)
+		fmt.Fprintf(w, "%v\t%v\t%v\t%v\t%v\n",
+			item.ID, item.Version, item.Name, item.Desc, item.URL)
 	}
 
 	w.Flush()
