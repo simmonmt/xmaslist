@@ -105,10 +105,29 @@ function makeLink(urlStr: string) {
   );
 }
 
-type ListItemUiState = {
+class ListItemUiState {
+  readonly item: ListItemProto;
+  readonly updating: boolean;
+
+  constructor(item: ListItemProto, updating: boolean) {
+    this.item = item;
+    this.updating = updating;
+  }
+}
+
+class ListItemUiStateBuilder {
   item: ListItemProto;
   updating: boolean;
-};
+
+  constructor(base: ListItemUiState) {
+    this.item = base.item;
+    this.updating = base.updating;
+  }
+
+  build(): ListItemUiState {
+    return new ListItemUiState(this.item, this.updating);
+  }
+}
 
 function ViewListItem({
   classes,
@@ -273,12 +292,14 @@ class ViewList extends React.Component<Props, State> {
 
   private makeUpdatedItemUiStates(
     id: string,
-    updater: (itemUiState: ListItemUiState) => void
+    updater: (builder: ListItemUiStateBuilder) => void
   ): ListItemUiState[] {
     const tmp = this.state.itemUiStates.slice();
     for (let i = 0; i < tmp.length; ++i) {
       if (tmp[i].item.getId() === id) {
-        updater(tmp[i]);
+        const b = new ListItemUiStateBuilder(tmp[i]);
+        updater(b);
+        tmp[i] = b.build();
       }
     }
     return tmp;
@@ -293,8 +314,8 @@ class ViewList extends React.Component<Props, State> {
     newItemState.setClaimed(newClaimState);
 
     this.setState({
-      itemUiStates: this.makeUpdatedItemUiStates(item.getId(), (uiState) => {
-        uiState.updating = true;
+      itemUiStates: this.makeUpdatedItemUiStates(item.getId(), (builder) => {
+        builder.updating = true;
       }),
     });
 
@@ -309,9 +330,9 @@ class ViewList extends React.Component<Props, State> {
         this.setState({
           itemUiStates: this.makeUpdatedItemUiStates(
             item.getId(),
-            (uiState) => {
-              uiState.item = item;
-              uiState.updating = false;
+            (builder) => {
+              builder.item = item;
+              builder.updating = false;
             }
           ),
         });
@@ -326,8 +347,8 @@ class ViewList extends React.Component<Props, State> {
           errorMessage: error.message || "Unknown error",
           itemUiStates: this.makeUpdatedItemUiStates(
             item.getId(),
-            (uiState) => {
-              uiState.updating = false;
+            (builder) => {
+              builder.updating = false;
             }
           ),
         });
