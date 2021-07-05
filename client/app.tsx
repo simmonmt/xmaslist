@@ -14,6 +14,7 @@ import { UserServicePromiseClient } from "../proto/user_service_grpc_web_pb";
 import { AuthModel } from "./auth_model";
 import { AuthStorage } from "./auth_storage";
 import { Banner } from "./banner";
+import { EditList } from "./edit_list";
 import { Home } from "./home";
 import { ListModel } from "./list_model";
 import { Login } from "./login";
@@ -87,6 +88,15 @@ class App extends React.Component<Props, State> {
                 path="/view/:listId"
               >
                 <ViewList
+                  listModel={this.listModel}
+                  currentUser={this.state.user!}
+                />
+              </ProtectedRoute>
+              <ProtectedRoute
+                {...defaultProtectedRouteProps}
+                path="/edit/:listId"
+              >
+                <EditList
                   listModel={this.listModel}
                   currentUser={this.state.user!}
                 />
