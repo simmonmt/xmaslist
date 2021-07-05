@@ -344,19 +344,21 @@ class Home extends React.Component<HomeProps, HomeState> {
       return;
     }
 
-    const copy = this.state.lists.slice();
+    const toDelete = this.state.lists[idx];
+
+    const tmpLists = this.state.lists.slice();
     if (isActive && !this.state.showDeleted) {
-      copy.splice(idx, 1);
+      tmpLists.splice(idx, 1);
     } else {
-      const newList = copy[idx].cloneMessage();
+      const newList = toDelete.cloneMessage();
       newList.getMetadata()!.setActive(!isActive);
-      copy[idx] = newList;
+      tmpLists[idx] = newList;
     }
-    this.setState({ lists: copy });
+    this.setState({ lists: tmpLists });
 
     this.props.listModel.changeActiveState(
       id,
-      Number(copy[idx].getVersion()),
+      Number(toDelete.getVersion()),
       !isActive
     );
   }
