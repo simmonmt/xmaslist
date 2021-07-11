@@ -1,11 +1,10 @@
-import { Status, StatusCode } from "grpc-web";
 import Button from "@material-ui/core/Button";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { createStyles, styled, withStyles } from "@material-ui/core/styles";
-import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
 import Alert from "@material-ui/lab/Alert";
+import { Status, StatusCode } from "grpc-web";
 import * as React from "react";
 import { Redirect, useLocation } from "react-router-dom";
 import { AuthModel } from "./auth_model";
@@ -137,7 +136,7 @@ class Login extends React.Component<Props, State> {
   }
 }
 
-const loginStyles = (theme: Theme) =>
+const loginStyles = () =>
   createStyles({
     root: {
       width: "100%",

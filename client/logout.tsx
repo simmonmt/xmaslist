@@ -1,5 +1,4 @@
 import { createStyles, withStyles } from "@material-ui/core/styles";
-import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import Typography from "@material-ui/core/Typography";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
@@ -43,7 +42,7 @@ class Logout extends React.Component<Props, State> {
   }
 }
 
-const logoutStyles = (theme: Theme) =>
+const logoutStyles = () =>
   createStyles({
     root: {
       width: "100%",

@@ -12,7 +12,7 @@ import ListItem from "@material-ui/core/ListItem";
 import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
 import ListItemText from "@material-ui/core/ListItemText";
 import { createStyles, withStyles } from "@material-ui/core/styles";
-import { Theme } from "@material-ui/core/styles/createMuiTheme";
+import { Theme } from "@material-ui/core/styles/createTheme";
 import Switch from "@material-ui/core/Switch";
 import Typography from "@material-ui/core/Typography";
 import AddIcon from "@material-ui/icons/Add";

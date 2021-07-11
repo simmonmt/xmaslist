@@ -4,7 +4,6 @@ import DialogActions from "@material-ui/core/DialogActions";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import { createStyles, withStyles } from "@material-ui/core/styles";
-import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import TextField from "@material-ui/core/TextField";
 import { KeyboardDatePicker } from "@material-ui/pickers";
 import * as React from "react";
@@ -151,7 +150,7 @@ class CreateListDialog extends React.Component<Props, State> {
   }
 }
 
-const createListDialogStyles = (theme: Theme) => createStyles({});
+const createListDialogStyles = () => createStyles({});
 
 const StyledCreateListDialog: any = withStyles(createListDialogStyles)(
   CreateListDialog
