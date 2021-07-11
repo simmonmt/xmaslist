@@ -87,18 +87,6 @@ message UpdateListItemResponse {
   ListItem item = 1;
 }
 
-message UpdateListItemStateRequest {
-  string list_id = 1;
-  string item_id = 2;
-  int32 item_version = 3;
-
-  ListItemState state = 4;
-}
-
-message UpdateListItemStateResponse {
-  ListItem item = 1;
-}
-
 service ListService {
   rpc ListLists(ListListsRequest) returns (ListListsResponse);
   rpc GetList(GetListRequest) returns (GetListResponse);
@@ -109,5 +97,4 @@ service ListService {
   rpc CreateListItem(CreateListItemRequest) returns (CreateListItemResponse);
   rpc DeleteListItem(DeleteListItemRequest) returns (DeleteListItemResponse);
   rpc UpdateListItem(UpdateListItemRequest) returns (UpdateListItemResponse);
-  rpc UpdateListItemState(UpdateListItemStateRequest) returns (UpdateListItemStateResponse);
 }
