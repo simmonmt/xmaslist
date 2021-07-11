@@ -98,15 +98,15 @@ class ListElement extends React.Component<ListElementProps, ListElementState> {
               <div className={this.props.classes.listDate}>
                 <Typography variant="body1" color="textSecondary">
                   {this.props.curYear == year ? (
-                    <div>
+                    <span>
                       {monthStr} {day}
-                    </div>
+                    </span>
                   ) : (
-                    <div>
+                    <span>
                       {monthStr} {day}
                       <br />
                       {year}
-                    </div>
+                    </span>
                   )}
                 </Typography>
               </div>
