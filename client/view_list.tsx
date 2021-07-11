@@ -8,7 +8,11 @@ import { Error as GrpcError, StatusCode } from "grpc-web";
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
 import { Link as RouterLink, Redirect, withRouter } from "react-router-dom";
-import { ListItem as ListItemProto } from "../proto/list_item_pb";
+import {
+  ListItem as ListItemProto,
+  ListItemData as ListItemDataProto,
+  ListItemState as ListItemStateProto,
+} from "../proto/list_item_pb";
 import { List as ListProto } from "../proto/list_pb";
 import { ListModel } from "./list_model";
 import { User } from "./user";
@@ -47,7 +51,7 @@ class ViewList extends React.Component<Props, State> {
 
     this.listId = this.props.match.params.listId;
 
-    this.claimClicked = this.claimClicked.bind(this);
+    this.updateListItem = this.updateListItem.bind(this);
   }
 
   componentDidMount() {
@@ -109,7 +113,7 @@ class ViewList extends React.Component<Props, State> {
         classes={this.props.classes}
         item={item}
         currentUserId={this.props.currentUser.id}
-        onClaimClick={this.claimClicked}
+        updateListItem={this.updateListItem}
       />
     );
   }
@@ -137,25 +141,14 @@ class ViewList extends React.Component<Props, State> {
     return tmp;
   }
 
-  private claimClicked(
-    item: ListItemProto,
-    newClaimState: boolean
+  private updateListItem(
+    itemId: string,
+    itemVersion: number,
+    data: ListItemDataProto | null,
+    state: ListItemStateProto | null
   ): Promise<void> {
-    if (!this.state.list) return Promise.resolve(); // shouldn't happen
-
-    const oldItemState = item.getState();
-    if (!oldItemState) return Promise.resolve(); // shouldn't happen
-    const newItemState = oldItemState.cloneMessage();
-    newItemState.setClaimed(newClaimState);
-
     return this.props.listModel
-      .updateListItem(
-        this.listId,
-        item.getId(),
-        item.getVersion(),
-        null,
-        newItemState
-      )
+      .updateListItem(this.listId, itemId, itemVersion, data, state)
       .then((item: ListItemProto) => {
         this.setState({
           items: this.makeUpdatedItems(item.getId(), () => {

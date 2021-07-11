@@ -9,7 +9,11 @@ import { createStyles, makeStyles, withStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import * as React from "react";
-import { ListItem as ListItemProto } from "../proto/list_item_pb";
+import {
+  ListItem as ListItemProto,
+  ListItemData as ListItemDataProto,
+  ListItemState as ListItemStateProto,
+} from "../proto/list_item_pb";
 
 function ClaimedChip({
   currentUserId,
@@ -96,23 +100,39 @@ function ViewListItem({
   item,
   currentUserId,
   onClaimClick,
+  updateListItem,
 }: {
   classes: any;
   item: ListItemProto;
   currentUserId: number;
   onClaimClick: (item: ListItemProto, newState: boolean) => Promise<void>;
+  updateListItem: (
+    itemId: string,
+    itemVersion: number,
+    data: ListItemDataProto | null,
+    state: ListItemStateProto
+  ) => Promise<void>;
 }) {
   const [updating, setUpdating] = React.useState(false);
 
-  const data = item.getData();
-  if (!data) return <div />;
+  const claimClickHandler = (newClaimState: boolean) => {
+    const oldItemState = item.getState();
+    if (!oldItemState) return; // shouldn't happen
+    const newItemState = oldItemState.cloneMessage();
+    newItemState.setClaimed(newClaimState);
 
-  const claimClickHandler = (newState: boolean) => {
     setUpdating(true);
-    return onClaimClick(item, newState).finally(() => {
+    return updateListItem(
+      item.getId(),
+      item.getVersion(),
+      null,
+      newItemState
+    ).finally(() => {
       setUpdating(false);
     });
   };
+
+  const data = item.getData() || new ListItemDataProto();
 
   return (
     <Accordion key={"item-" + item.getId()}>
