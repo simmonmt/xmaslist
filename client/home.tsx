@@ -71,11 +71,12 @@ interface ListElementState {}
 
 class ListElement extends React.Component<ListElementProps, ListElementState> {
   render() {
-    const listId = this.props.list.getId();
-    const data = this.props.list.getData();
-    const meta = this.props.list.getMetadata();
+    const list = this.props.list;
+    const listId = list.getId();
+    const data = list.getData();
+    const meta = list.getMetadata();
     if (!listId || !data || !meta) {
-      return;
+      return <div />;
     }
 
     let eventDate = new Date(data.getEventDate() * 1000);
@@ -91,61 +92,59 @@ class ListElement extends React.Component<ListElementProps, ListElementState> {
     const linkTarget = `/${linkVerb}/${listId}`;
 
     return (
-      <React.Fragment key={this.props.list.getId()}>
-        <ListItemLink to={linkTarget}>
-          <ListItemText>
-            <div className={this.props.classes.listItem}>
-              <div className={this.props.classes.listDate}>
-                <Typography variant="body1" color="textSecondary">
-                  {this.props.curYear == year ? (
-                    <span>
-                      {monthStr} {day}
-                    </span>
-                  ) : (
-                    <span>
-                      {monthStr} {day}
-                      <br />
-                      {year}
-                    </span>
-                  )}
-                </Typography>
+      <ListItemLink to={linkTarget}>
+        <ListItemText>
+          <div className={this.props.classes.listItem}>
+            <div className={this.props.classes.listDate}>
+              <Typography variant="body1" color="textSecondary">
+                {this.props.curYear == year ? (
+                  <span>
+                    {monthStr} {day}
+                  </span>
+                ) : (
+                  <span>
+                    {monthStr} {day}
+                    <br />
+                    {year}
+                  </span>
+                )}
+              </Typography>
+            </div>
+            <div>
+              <div>{data.getName()}</div>
+              <div></div>
+            </div>
+            <div className={this.props.classes.listGrow} />
+            <div className={this.props.classes.listMeta}>
+              <div>
+                <Typography
+                  variant="body2"
+                  color="textSecondary"
+                  component="span"
+                >
+                  For:
+                </Typography>{" "}
+                {data.getBeneficiary()}
               </div>
               <div>
-                <div>{data.getName()}</div>
-                <div></div>
-              </div>
-              <div className={this.props.classes.listGrow} />
-              <div className={this.props.classes.listMeta}>
-                <div>
-                  <Typography
-                    variant="body2"
-                    color="textSecondary"
-                    component="span"
-                  >
-                    For:
-                  </Typography>{" "}
-                  {data.getBeneficiary()}
-                </div>
-                <div>
-                  <Typography
-                    variant="body2"
-                    color="textSecondary"
-                    component="span"
-                  >
-                    By:
-                  </Typography>{" "}
-                  {owner}
-                </div>
+                <Typography
+                  variant="body2"
+                  color="textSecondary"
+                  component="span"
+                >
+                  By:
+                </Typography>{" "}
+                {owner}
               </div>
             </div>
-          </ListItemText>
-          {this.props.currentUser.isAdmin && (
-            <ListItemSecondaryAction>
-              {this.deleteButton(this.props.list.getId(), meta.getActive())}
-            </ListItemSecondaryAction>
-          )}
-        </ListItemLink>
-      </React.Fragment>
+          </div>
+        </ListItemText>
+        {this.props.currentUser.isAdmin && (
+          <ListItemSecondaryAction>
+            {this.deleteButton(list.getId(), meta.getActive())}
+          </ListItemSecondaryAction>
+        )}
+      </ListItemLink>
     );
   }
 
