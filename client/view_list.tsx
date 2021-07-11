@@ -149,10 +149,11 @@ class ViewList extends React.Component<Props, State> {
     newItemState.setClaimed(newClaimState);
 
     return this.props.listModel
-      .updateListItemState(
+      .updateListItem(
         this.listId,
         item.getId(),
         item.getVersion(),
+        null,
         newItemState
       )
       .then((item: ListItemProto) => {

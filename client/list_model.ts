@@ -1,6 +1,7 @@
 import { Metadata } from "grpc-web";
 import {
   ListItem as ListItemProto,
+  ListItemData as ListItemDataProto,
   ListItemState as ListItemStateProto,
 } from "../proto/list_item_pb";
 import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
@@ -15,8 +16,8 @@ import {
   ListListItemsResponse,
   ListListsRequest,
   ListListsResponse,
-  UpdateListItemStateRequest,
-  UpdateListItemStateResponse,
+  UpdateListItemRequest,
+  UpdateListItemResponse,
 } from "../proto/list_service_pb";
 import { AuthModel } from "./auth_model";
 
@@ -98,21 +99,28 @@ export class ListModel {
     });
   }
 
-  updateListItemState(
+  updateListItem(
     listId: string,
     itemId: string,
     itemVersion: number,
-    newState: ListItemStateProto
+    newData: ListItemDataProto | null,
+    newState: ListItemStateProto | null
   ): Promise<ListItemProto> {
-    const req = new UpdateListItemStateRequest();
+    const req = new UpdateListItemRequest();
     req.setListId(listId);
     req.setItemId(itemId);
     req.setItemVersion(itemVersion);
-    req.setState(newState);
+
+    if (newData) {
+      req.setData(newData);
+    }
+    if (newState) {
+      req.setState(newState);
+    }
 
     return this.listService
-      .updateListItemState(req, this.metadata())
-      .then((resp: UpdateListItemStateResponse) => {
+      .updateListItem(req, this.metadata())
+      .then((resp: UpdateListItemResponse) => {
         const item = resp.getItem();
         if (!item) {
           return Promise.reject(new Error("no item in response"));
