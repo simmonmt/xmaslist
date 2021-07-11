@@ -95,17 +95,32 @@ function makeLink(urlStr: string) {
   );
 }
 
+const useViewListItemStyles = makeStyles(() =>
+  createStyles({
+    claimButton: {
+      display: "flex",
+      justifyContent: "flex-end",
+    },
+    details: {
+      display: "flex",
+      flexDirection: "column",
+    },
+    detailSec: {
+      marginBotton: "1ch",
+    },
+    grow: {
+      flexGrow: 1,
+    },
+  })
+);
+
 function ViewListItem({
-  classes,
   item,
   currentUserId,
-  onClaimClick,
   updateListItem,
 }: {
-  classes: any;
   item: ListItemProto;
   currentUserId: number;
-  onClaimClick: (item: ListItemProto, newState: boolean) => Promise<void>;
   updateListItem: (
     itemId: string,
     itemVersion: number,
@@ -113,6 +128,7 @@ function ViewListItem({
     state: ListItemStateProto
   ) => Promise<void>;
 }) {
+  const classes = useViewListItemStyles();
   const [updating, setUpdating] = React.useState(false);
 
   const claimClickHandler = (newClaimState: boolean) => {
@@ -168,7 +184,13 @@ function ViewListItem({
   );
 }
 
-const viewListItemStyles = () => createStyles({});
+const viewListItemStyles = () =>
+  createStyles({
+    claimButton: {
+      display: "flex",
+      justifyContent: "flex-end",
+    },
+  });
 
 const exportViewListItem: any = withStyles(viewListItemStyles)(ViewListItem);
 

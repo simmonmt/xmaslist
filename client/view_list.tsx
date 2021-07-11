@@ -110,7 +110,6 @@ class ViewList extends React.Component<Props, State> {
     return (
       <ViewListItem
         key={item.getId()}
-        classes={this.props.classes}
         item={item}
         currentUserId={this.props.currentUser.id}
         updateListItem={this.updateListItem}
@@ -213,20 +212,6 @@ const viewListStyles = () =>
     },
     meta: {
       textAlign: "center",
-    },
-    details: {
-      display: "flex",
-      flexDirection: "column",
-    },
-    detailSec: {
-      marginBotton: "1ch",
-    },
-    grow: {
-      flexGrow: 1,
-    },
-    claimButton: {
-      display: "flex",
-      justifyContent: "flex-end",
     },
   });
 
