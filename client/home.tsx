@@ -305,12 +305,14 @@ class Home extends React.Component<HomeProps, HomeState> {
     const out = [];
     for (let i = 0; i < lists.length; i++) {
       if (i !== 0) {
-        out.push(<Divider />);
+        out.push(<Divider key={"div" + i} />);
       }
 
+      const list = lists[i];
       out.push(
         <ListElement
-          list={lists[i]}
+          key={list.getId()}
+          list={list}
           userModel={this.props.userModel}
           currentUser={this.props.currentUser}
           curYear={this.curYear}
