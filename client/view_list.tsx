@@ -107,43 +107,46 @@ function makeLink(urlStr: string) {
 
 class ListItemUiState {
   readonly item: ListItemProto;
-  readonly updating: boolean;
 
-  constructor(item: ListItemProto, updating: boolean) {
+  constructor(item: ListItemProto) {
     this.item = item;
-    this.updating = updating;
   }
 }
 
 class ListItemUiStateBuilder {
   item: ListItemProto;
-  updating: boolean;
 
   constructor(base: ListItemUiState) {
     this.item = base.item;
-    this.updating = base.updating;
   }
 
   build(): ListItemUiState {
-    return new ListItemUiState(this.item, this.updating);
+    return new ListItemUiState(this.item);
   }
 }
 
 function ViewListItem({
   classes,
   item,
-  updating,
   currentUserId,
   onClaimClick,
 }: {
   classes: any;
   item: ListItemProto;
-  updating: boolean;
   currentUserId: number;
-  onClaimClick: (item: ListItemProto, newState: boolean) => void;
+  onClaimClick: (item: ListItemProto, newState: boolean) => Promise<void>;
 }) {
+  const [updating, setUpdating] = React.useState(false);
+
   const data = item.getData();
   if (!data) return <div />;
+
+  const claimClickHandler = (newState: boolean) => {
+    setUpdating(true);
+    return onClaimClick(item, newState).finally(() => {
+      setUpdating(false);
+    });
+  };
 
   return (
     <Accordion key={"item-" + item.getId()}>
@@ -171,7 +174,7 @@ function ViewListItem({
             currentUserId={currentUserId}
             item={item}
             updating={updating}
-            onClick={(newState: boolean) => onClaimClick(item, newState)}
+            onClick={claimClickHandler}
           />
         </div>
       </AccordionDetails>
@@ -268,7 +271,6 @@ class ViewList extends React.Component<Props, State> {
       <ViewListItem
         key={itemState.item.getId()}
         classes={this.props.classes}
-        updating={itemState.updating}
         item={itemState.item}
         currentUserId={this.props.currentUser.id}
         onClaimClick={this.claimClicked}
@@ -305,21 +307,18 @@ class ViewList extends React.Component<Props, State> {
     return tmp;
   }
 
-  private claimClicked(item: ListItemProto, newClaimState: boolean) {
-    if (!this.state.list) return;
+  private claimClicked(
+    item: ListItemProto,
+    newClaimState: boolean
+  ): Promise<void> {
+    if (!this.state.list) return Promise.resolve(); // shouldn't happen
 
     const oldItemState = item.getState();
-    if (!oldItemState) return;
+    if (!oldItemState) return Promise.resolve(); // shouldn't happen
     const newItemState = oldItemState.cloneMessage();
     newItemState.setClaimed(newClaimState);
 
-    this.setState({
-      itemUiStates: this.makeUpdatedItemUiStates(item.getId(), (builder) => {
-        builder.updating = true;
-      }),
-    });
-
-    this.props.listModel
+    return this.props.listModel
       .updateListItemState(
         this.listId,
         item.getId(),
@@ -332,10 +331,10 @@ class ViewList extends React.Component<Props, State> {
             item.getId(),
             (builder) => {
               builder.item = item;
-              builder.updating = false;
             }
           ),
         });
+        return Promise.resolve();
       })
       .catch((error: GrpcError) => {
         if (error.code === StatusCode.UNAUTHENTICATED) {
@@ -345,13 +344,8 @@ class ViewList extends React.Component<Props, State> {
 
         this.setState({
           errorMessage: error.message || "Unknown error",
-          itemUiStates: this.makeUpdatedItemUiStates(
-            item.getId(),
-            (builder) => {
-              builder.updating = false;
-            }
-          ),
         });
+        return Promise.resolve();
       });
   }
 
@@ -372,7 +366,6 @@ class ViewList extends React.Component<Props, State> {
             loading: false,
             itemUiStates: items.map((item) => ({
               item: item,
-              updating: false,
             })),
           });
         })
