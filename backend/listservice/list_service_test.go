@@ -107,7 +107,139 @@ func setupListItemTestState(ctx context.Context, t *testing.T) *updateListItemTe
 	}
 }
 
-func TestUpdateListItemState(t *testing.T) {
+func TestUpdateListItem_NonOwnerDataUpdate(t *testing.T) {
+	state := setupListItemTestState(ctx, t)
+	defer state.DB.Close()
+
+	list, item := state.Lists.GetItem("l1", "l1i2")
+
+	var nonOwner *database.User
+	for _, userResp := range state.Users {
+		if userResp.User.ID != list.OwnerID {
+			nonOwner = userResp.User
+			break
+		}
+	}
+	if nonOwner == nil {
+		t.Fatalf("bad test state -- no non-owner")
+	}
+	nonOwnerSession := state.SessionsByUserID[nonOwner.ID]
+	reqCtx := context.WithValue(ctx, request.SessionKey, nonOwnerSession)
+
+	req := &lspb.UpdateListItemRequest{
+		ListId:      strconv.Itoa(list.ID),
+		ItemId:      strconv.Itoa(item.ID),
+		ItemVersion: int32(item.Version),
+
+		Data: &lspb.ListItemData{Name: "name"},
+	}
+
+	resp, err := state.Server.UpdateListItem(reqCtx, req)
+	if err == nil || status.Code(err) != codes.PermissionDenied {
+		t.Fatalf("UpdateListItem(_, %+v) = %+v, %v, want _, PermissionDenied",
+			req, resp, err)
+	}
+}
+
+func TestUpdateListItem(t *testing.T) {
+	state := setupListItemTestState(ctx, t)
+	defer state.DB.Close()
+
+	list, item := state.Lists.GetItem("l1", "l1i2")
+
+	user := state.Users.UserByID(list.OwnerID)
+	session := state.SessionsByUserID[user.ID]
+	reqCtx := context.WithValue(ctx, request.SessionKey, session)
+
+	// Try to update data without an item name. This should fail, as name is
+	// required.
+
+	req := &lspb.UpdateListItemRequest{
+		ListId:      strconv.Itoa(list.ID),
+		ItemId:      strconv.Itoa(item.ID),
+		ItemVersion: int32(item.Version),
+
+		Data: &lspb.ListItemData{},
+	}
+
+	resp, err := state.Server.UpdateListItem(reqCtx, req)
+	if err == nil || status.Code(err) != codes.InvalidArgument {
+		t.Fatalf("UpdateListItem(_, %+v) = %+v, %v, want _, InvalidArgument",
+			req, resp, err)
+	}
+
+	// Try to update data with a name but no desc or url. This should
+	// succeed, as only name is required.
+
+	req.Data = &lspb.ListItemData{
+		Name: "name",
+	}
+
+	wantResp := &lspb.UpdateListItemResponse{
+		Item: &lspb.ListItem{
+			Id:      req.GetItemId(),
+			Version: req.GetItemVersion() + 1,
+			ListId:  req.GetListId(),
+
+			Data: &lspb.ListItemData{
+				Name: "name",
+				Desc: "",
+				Url:  "",
+			},
+
+			State: &lspb.ListItemState{},
+
+			Metadata: &lspb.ListItemMetadata{
+				Created: item.Created.Unix(),
+				Updated: state.Clock.Time.Unix(),
+			},
+		},
+	}
+
+	resp, err = state.Server.UpdateListItem(reqCtx, req)
+	if err != nil {
+		t.Fatalf("UpdateListItem(_, %+v) = %v, %v, want %v, nil",
+			req, resp, err, wantResp)
+	}
+
+	if diff := cmp.Diff(resp, wantResp, protocmp.Transform()); diff != "" {
+		t.Fatalf("UpdateListItem(_, %+v) = %+v, %v, unexpected difference:\n%v", req, resp, err, diff)
+	}
+
+	// Try it again with full data as well as state. This should succeed.
+
+	req.ItemVersion = resp.GetItem().GetVersion()
+	req.Data = &lspb.ListItemData{
+		Name: "name",
+		Desc: "desc",
+		Url:  "url",
+	}
+	req.State = &lspb.ListItemState{
+		Claimed: true,
+	}
+
+	wantResp.Item.Version = req.ItemVersion + 1
+	wantResp.Item.Data = req.Data
+	wantResp.Item.State.Claimed = true
+	wantResp.Item.Metadata = &lspb.ListItemMetadata{
+		Created:     wantResp.Item.Metadata.Created,
+		Updated:     state.Clock.Time.Unix(),
+		ClaimedBy:   int32(user.ID),
+		ClaimedWhen: state.Clock.Time.Unix(),
+	}
+
+	resp, err = state.Server.UpdateListItem(reqCtx, req)
+	if err != nil {
+		t.Fatalf("UpdateListItem(_, %+v) = %v, %v, want %v, nil",
+			req, resp, err, wantResp)
+	}
+
+	if diff := cmp.Diff(resp, wantResp, protocmp.Transform()); diff != "" {
+		t.Fatalf("UpdateListItem(_, %+v) = %+v, %v, unexpected difference:\n%v", req, resp, err, diff)
+	}
+}
+
+func TestUpdateListItem_Claim(t *testing.T) {
 	state := setupListItemTestState(ctx, t)
 	defer state.DB.Close()
 
@@ -136,7 +268,7 @@ func TestUpdateListItemState(t *testing.T) {
 			// Try to unclaim an already-unclaimed item. This should
 			// fail.
 
-			req := &lspb.UpdateListItemStateRequest{
+			req := &lspb.UpdateListItemRequest{
 				ListId:      strconv.Itoa(list.ID),
 				ItemId:      strconv.Itoa(item.ID),
 				ItemVersion: int32(item.Version),
@@ -146,9 +278,9 @@ func TestUpdateListItemState(t *testing.T) {
 				},
 			}
 
-			resp, err := state.Server.UpdateListItemState(reqCtx, req)
+			resp, err := state.Server.UpdateListItem(reqCtx, req)
 			if err == nil || status.Code(err) != codes.FailedPrecondition || !strings.Contains(err.Error(), "isn't claimed") {
-				t.Fatalf("UpdateListItemState(_, %+v) = %+v, %v, want _, FailedPrecondition",
+				t.Fatalf("UpdateListItem(_, %+v) = %+v, %v, want _, FailedPrecondition",
 					req, resp, err)
 			}
 
@@ -157,7 +289,7 @@ func TestUpdateListItemState(t *testing.T) {
 			req.GetState().Claimed = true
 			claimedWhen := state.Clock.Time
 
-			wantResp := &lspb.UpdateListItemStateResponse{
+			wantResp := &lspb.UpdateListItemResponse{
 				Item: &lspb.ListItem{
 					Id:      req.GetItemId(),
 					Version: req.GetItemVersion() + 1,
@@ -180,22 +312,22 @@ func TestUpdateListItemState(t *testing.T) {
 				},
 			}
 
-			resp, err = state.Server.UpdateListItemState(reqCtx, req)
+			resp, err = state.Server.UpdateListItem(reqCtx, req)
 			if err != nil {
-				t.Fatalf("UpdateListItemState(_, %+v) = _, %v, want _, nil",
+				t.Fatalf("UpdateListItem(_, %+v) = %v, %v, want %v, nil",
 					req, resp, err, wantResp)
 			}
 
 			if diff := cmp.Diff(resp, wantResp, protocmp.Transform()); diff != "" {
-				t.Fatalf("UpdateListItemState(_, %+v) = %+v, %v, unexpected difference:\n%v", req, resp, err, diff)
+				t.Fatalf("UpdateListItem(_, %+v) = %+v, %v, unexpected difference:\n%v", req, resp, err, diff)
 			}
 
 			// Try the claim again, but without updating the version
 			// token. This should fail because of the token mismatch.
 
-			_, err = state.Server.UpdateListItemState(reqCtx, req)
+			_, err = state.Server.UpdateListItem(reqCtx, req)
 			if err == nil || status.Code(err) != codes.FailedPrecondition || !strings.Contains(err.Error(), "version ID mismatch") {
-				t.Fatalf("UpdateListItemState(_, %+v) = _, %v, want _, FailedPrecondition",
+				t.Fatalf("UpdateListItem(_, %+v) = _, %v, want _, FailedPrecondition",
 					req, err)
 			}
 
@@ -204,9 +336,9 @@ func TestUpdateListItemState(t *testing.T) {
 			// because the item is already claimed.
 
 			req.ItemVersion = resp.GetItem().GetVersion()
-			resp, err = state.Server.UpdateListItemState(reqCtx, req)
+			resp, err = state.Server.UpdateListItem(reqCtx, req)
 			if err == nil || status.Code(err) != codes.FailedPrecondition || !strings.Contains(err.Error(), "already claimed") {
-				t.Fatalf("UpdateListItemState(_, %+v) = %+v, %v, want _, FailedPrecondition",
+				t.Fatalf("UpdateListItem(_, %+v) = %+v, %v, want _, FailedPrecondition",
 					req, resp, err)
 			}
 
@@ -222,21 +354,21 @@ func TestUpdateListItemState(t *testing.T) {
 			wantResp.GetItem().GetMetadata().Updated =
 				state.Clock.Time.Unix()
 
-			resp, err = state.Server.UpdateListItemState(reqCtx, req)
+			resp, err = state.Server.UpdateListItem(reqCtx, req)
 			if err != nil {
-				t.Fatalf("UpdateListItemState(_, %+v) = _, %v, want _, nil",
+				t.Fatalf("UpdateListItem(_, %+v) = _, %v, want _, nil",
 					req, resp, err, wantResp)
 			}
 
 			if diff := cmp.Diff(resp, wantResp, protocmp.Transform()); diff != "" {
-				t.Fatalf("UpdateListItemState(_, %+v) = %+v, %v, unexpected difference:\n%v", req, resp, err, diff)
+				t.Fatalf("UpdateListItem(_, %+v) = %+v, %v, unexpected difference:\n%v", req, resp, err, diff)
 			}
 		})
 	}
 }
 
 // Verify that only the claimed-by user can unclaim
-func TestUpdateListItemState_CrossOwnership(t *testing.T) {
+func TestUpdateListItem_UnclaimWithCrossOwnership(t *testing.T) {
 	state := setupListItemTestState(ctx, t)
 	defer state.DB.Close()
 
@@ -251,14 +383,14 @@ func TestUpdateListItemState_CrossOwnership(t *testing.T) {
 	reqCtxA := makeRequestContext(ctx, "a")
 	reqCtxB := makeRequestContext(ctx, "b")
 
-	req := &lspb.UpdateListItemStateRequest{
+	req := &lspb.UpdateListItemRequest{
 		ListId:      strconv.Itoa(list.ID),
 		ItemId:      strconv.Itoa(item.ID),
 		ItemVersion: int32(item.Version),
 		State:       &lspb.ListItemState{Claimed: true},
 	}
 
-	resp, err := state.Server.UpdateListItemState(reqCtxA, req)
+	resp, err := state.Server.UpdateListItem(reqCtxA, req)
 	if err != nil {
 		t.Fatalf("failed to claim")
 	}
@@ -266,9 +398,9 @@ func TestUpdateListItemState_CrossOwnership(t *testing.T) {
 	req.ItemVersion = resp.GetItem().GetVersion()
 	req.GetState().Claimed = false
 
-	_, err = state.Server.UpdateListItemState(reqCtxB, req)
+	_, err = state.Server.UpdateListItem(reqCtxB, req)
 	if err == nil || status.Code(err) != codes.PermissionDenied {
-		t.Fatalf("UpdateListItemState(_, %+v) = _, %v, want _, PermissionDenied",
+		t.Fatalf("UpdateListItem(_, %+v) = _, %v, want _, PermissionDenied",
 			req, err)
 	}
 

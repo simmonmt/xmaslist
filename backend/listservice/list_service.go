@@ -304,7 +304,98 @@ func (s *listServer) DeleteListItem(ctx context.Context, req *lspb.DeleteListIte
 }
 
 func (s *listServer) UpdateListItem(ctx context.Context, req *lspb.UpdateListItemRequest) (*lspb.UpdateListItemResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "not implemented")
+	session, err := getSession(ctx)
+	if session == nil {
+		return nil, err
+	}
+
+	listID, err := strconv.Atoi(req.GetListId())
+	if req.GetListId() == "" {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"invalid list id")
+	}
+
+	list, err := dbutil.GetList(ctx, s.db, listID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !list.Active {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"list is not active")
+	}
+
+	itemID, err := strconv.Atoi(req.GetItemId())
+	if req.GetItemId() == "" || err != nil {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"invalid item id")
+	}
+
+	if req.GetItemVersion() == 0 {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"missing item version")
+	}
+
+	if req.Data != nil {
+		if list.OwnerID != session.User.ID {
+			return nil, status.Errorf(codes.PermissionDenied,
+				"only owner can update list data")
+		}
+
+		if req.Data.GetName() == "" {
+			return nil, status.Errorf(codes.InvalidArgument,
+				"invalid item name")
+		}
+	}
+
+	now := s.clock.Now()
+	fmt.Printf("handler using now %v %v\n", now, now.Unix())
+	item, err := s.db.UpdateListItem(ctx, list.ID, itemID,
+		int(req.GetItemVersion()), now,
+		func(data *database.ListItemData, state *database.ListItemState) error {
+			if req.Data != nil {
+				data.Name = req.Data.GetName()
+				data.Desc = req.Data.GetDesc()
+				data.URL = req.Data.GetUrl()
+			}
+
+			if req.State != nil {
+				if state.ClaimedBy != 0 {
+					if req.State.GetClaimed() {
+						return status.Errorf(
+							codes.FailedPrecondition,
+							"item is already claimed")
+					}
+					if session.User.ID != state.ClaimedBy {
+						return status.Errorf(
+							codes.PermissionDenied,
+							"can't unclaim item already "+
+								"claimed by another user")
+					}
+				} else {
+					if !req.State.GetClaimed() {
+						return status.Errorf(
+							codes.FailedPrecondition,
+							"item isn't claimed")
+					}
+				}
+
+				if req.State.GetClaimed() {
+					state.ClaimedBy = session.User.ID
+				} else {
+					state.ClaimedBy = 0
+				}
+			}
+
+			return nil
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return &lspb.UpdateListItemResponse{
+		Item: itemFromDatabaseItem(item),
+	}, nil
 }
 
 func (s *listServer) UpdateListItemState(ctx context.Context, req *lspb.UpdateListItemStateRequest) (*lspb.UpdateListItemStateResponse, error) {

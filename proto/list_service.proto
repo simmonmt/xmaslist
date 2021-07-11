@@ -80,6 +80,7 @@ message UpdateListItemRequest {
   int32 item_version = 3;
 
   ListItemData data = 4;
+  ListItemState state = 5;
 }
 
 message UpdateListItemResponse {
