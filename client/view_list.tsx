@@ -105,26 +105,6 @@ function makeLink(urlStr: string) {
   );
 }
 
-class ListItemUiState {
-  readonly item: ListItemProto;
-
-  constructor(item: ListItemProto) {
-    this.item = item;
-  }
-}
-
-class ListItemUiStateBuilder {
-  item: ListItemProto;
-
-  constructor(base: ListItemUiState) {
-    this.item = base.item;
-  }
-
-  build(): ListItemUiState {
-    return new ListItemUiState(this.item);
-  }
-}
-
 function ViewListItem({
   classes,
   item,
@@ -193,7 +173,7 @@ interface State {
   loading: boolean;
   errorMessage: string;
   list: ListProto | null;
-  itemUiStates: ListItemUiState[];
+  items: ListItemProto[];
 }
 
 class ViewList extends React.Component<Props, State> {
@@ -206,7 +186,7 @@ class ViewList extends React.Component<Props, State> {
       loading: false,
       errorMessage: "",
       list: null,
-      itemUiStates: [],
+      items: [],
     };
 
     this.listId = this.props.match.params.listId;
@@ -266,12 +246,12 @@ class ViewList extends React.Component<Props, State> {
     );
   }
 
-  private makeViewListItem(itemState: ListItemUiState) {
+  private makeViewListItem(item: ListItemProto) {
     return (
       <ViewListItem
-        key={itemState.item.getId()}
+        key={item.getId()}
         classes={this.props.classes}
-        item={itemState.item}
+        item={item}
         currentUserId={this.props.currentUser.id}
         onClaimClick={this.claimClicked}
       />
@@ -279,29 +259,23 @@ class ViewList extends React.Component<Props, State> {
   }
 
   private listItems() {
-    if (this.state.itemUiStates.length == 0) {
+    if (this.state.items.length == 0) {
       return <div>The list is empty</div>;
     }
 
     return (
-      <div>
-        {this.state.itemUiStates.map((itemState) =>
-          this.makeViewListItem(itemState)
-        )}
-      </div>
+      <div>{this.state.items.map((item) => this.makeViewListItem(item))}</div>
     );
   }
 
-  private makeUpdatedItemUiStates(
+  private makeUpdatedItems(
     id: string,
-    updater: (builder: ListItemUiStateBuilder) => void
-  ): ListItemUiState[] {
-    const tmp = this.state.itemUiStates.slice();
+    updater: (item: ListItemProto) => ListItemProto
+  ): ListItemProto[] {
+    const tmp = this.state.items.slice();
     for (let i = 0; i < tmp.length; ++i) {
-      if (tmp[i].item.getId() === id) {
-        const b = new ListItemUiStateBuilder(tmp[i]);
-        updater(b);
-        tmp[i] = b.build();
+      if (tmp[i].getId() === id) {
+        tmp[i] = updater(tmp[i]);
       }
     }
     return tmp;
@@ -327,12 +301,9 @@ class ViewList extends React.Component<Props, State> {
       )
       .then((item: ListItemProto) => {
         this.setState({
-          itemUiStates: this.makeUpdatedItemUiStates(
-            item.getId(),
-            (builder) => {
-              builder.item = item;
-            }
-          ),
+          items: this.makeUpdatedItems(item.getId(), () => {
+            return item;
+          }),
         });
         return Promise.resolve();
       })
@@ -364,9 +335,7 @@ class ViewList extends React.Component<Props, State> {
         .then((items: ListItemProto[]) => {
           this.setState({
             loading: false,
-            itemUiStates: items.map((item) => ({
-              item: item,
-            })),
+            items: items,
           });
         })
         .catch((error: GrpcError) => {
