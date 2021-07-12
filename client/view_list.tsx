@@ -22,6 +22,20 @@ interface PathParams {
   listId: string;
 }
 
+export interface ListItemUpdater {
+  updateData: (
+    itemId: string,
+    itemVersion: number,
+    data: ListItemDataProto
+  ) => Promise<void>;
+
+  updateState: (
+    itemId: string,
+    itemVersion: number,
+    state: ListItemStateProto
+  ) => Promise<void>;
+}
+
 interface Props extends RouteComponentProps<PathParams> {
   classes: any;
   listModel: ListModel;
@@ -38,6 +52,7 @@ interface State {
 
 class ViewList extends React.Component<Props, State> {
   private readonly listId: string;
+  private readonly itemUpdater: ListItemUpdater;
 
   constructor(props: Props) {
     super(props);
@@ -50,8 +65,10 @@ class ViewList extends React.Component<Props, State> {
     };
 
     this.listId = this.props.match.params.listId;
-
-    this.updateListItem = this.updateListItem.bind(this);
+    this.itemUpdater = {
+      updateData: this.updateListItemData.bind(this),
+      updateState: this.updateListItemState.bind(this),
+    };
   }
 
   componentDidMount() {
@@ -112,7 +129,7 @@ class ViewList extends React.Component<Props, State> {
         key={item.getId()}
         item={item}
         currentUserId={this.props.currentUser.id}
-        updateListItem={this.updateListItem}
+        itemUpdater={this.itemUpdater}
       />
     );
   }
@@ -138,6 +155,22 @@ class ViewList extends React.Component<Props, State> {
       }
     }
     return tmp;
+  }
+
+  private updateListItemData(
+    itemId: string,
+    itemVersion: number,
+    data: ListItemDataProto
+  ): Promise<void> {
+    return this.updateListItem(itemId, itemVersion, data, null);
+  }
+
+  private updateListItemState(
+    itemId: string,
+    itemVersion: number,
+    state: ListItemStateProto
+  ): Promise<void> {
+    return this.updateListItem(itemId, itemVersion, null, state);
   }
 
   private updateListItem(

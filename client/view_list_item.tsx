@@ -12,8 +12,8 @@ import * as React from "react";
 import {
   ListItem as ListItemProto,
   ListItemData as ListItemDataProto,
-  ListItemState as ListItemStateProto,
 } from "../proto/list_item_pb";
+import { ListItemUpdater } from "./view_list";
 
 function ClaimedChip({
   currentUserId,
@@ -117,16 +117,11 @@ const useViewListItemStyles = makeStyles(() =>
 function ViewListItem({
   item,
   currentUserId,
-  updateListItem,
+  itemUpdater,
 }: {
   item: ListItemProto;
   currentUserId: number;
-  updateListItem: (
-    itemId: string,
-    itemVersion: number,
-    data: ListItemDataProto | null,
-    state: ListItemStateProto
-  ) => Promise<void>;
+  itemUpdater: ListItemUpdater;
 }) {
   const classes = useViewListItemStyles();
   const [updating, setUpdating] = React.useState(false);
@@ -138,14 +133,11 @@ function ViewListItem({
     newItemState.setClaimed(newClaimState);
 
     setUpdating(true);
-    return updateListItem(
-      item.getId(),
-      item.getVersion(),
-      null,
-      newItemState
-    ).finally(() => {
-      setUpdating(false);
-    });
+    return itemUpdater
+      .updateState(item.getId(), item.getVersion(), newItemState)
+      .finally(() => {
+        setUpdating(false);
+      });
   };
 
   const data = item.getData() || new ListItemDataProto();
