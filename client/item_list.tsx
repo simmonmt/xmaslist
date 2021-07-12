@@ -50,7 +50,7 @@ interface State {
   items: ListItemProto[];
 }
 
-class ViewList extends React.Component<Props, State> {
+class ItemList extends React.Component<Props, State> {
   private readonly listId: string;
   private readonly itemUpdater: ListItemUpdater;
 
@@ -123,7 +123,7 @@ class ViewList extends React.Component<Props, State> {
     );
   }
 
-  private makeViewListItem(item: ListItemProto) {
+  private makeItemListItem(item: ListItemProto) {
     return (
       <ViewListItem
         key={item.getId()}
@@ -140,7 +140,7 @@ class ViewList extends React.Component<Props, State> {
     }
 
     return (
-      <div>{this.state.items.map((item) => this.makeViewListItem(item))}</div>
+      <div>{this.state.items.map((item) => this.makeItemListItem(item))}</div>
     );
   }
 
@@ -248,6 +248,6 @@ const viewListStyles = () =>
     },
   });
 
-const exportViewList: any = withStyles(viewListStyles)(withRouter(ViewList));
+const exportItemList: any = withStyles(viewListStyles)(withRouter(ItemList));
 
-export { exportViewList as ViewList };
+export { exportItemList as ItemList };
