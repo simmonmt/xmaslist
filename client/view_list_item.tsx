@@ -13,7 +13,7 @@ import {
   ListItem as ListItemProto,
   ListItemData as ListItemDataProto,
 } from "../proto/list_item_pb";
-import { ListItemUpdater } from "./view_list";
+import { ListItemUpdater } from "./item_list";
 
 function ClaimedChip({
   currentUserId,

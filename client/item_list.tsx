@@ -36,7 +36,7 @@ export interface ListItemUpdater {
   ) => Promise<void>;
 }
 
-interface Props extends RouteComponentProps<PathParams> {
+export interface Props extends RouteComponentProps<PathParams> {
   classes: any;
   listModel: ListModel;
   currentUser: User;
