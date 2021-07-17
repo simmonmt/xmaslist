@@ -16,7 +16,6 @@ import {
 import { List as ListProto } from "../proto/list_pb";
 import { ListModel } from "./list_model";
 import { User } from "./user";
-import { ViewListItem } from "./view_list_item";
 
 interface PathParams {
   listId: string;
@@ -36,10 +35,18 @@ export interface ListItemUpdater {
   ) => Promise<void>;
 }
 
+export interface ItemListApiArgs {
+  key: string;
+  item: ListItemProto;
+  currentUserId: number;
+  itemUpdater: ListItemUpdater;
+}
+
 export interface Props extends RouteComponentProps<PathParams> {
   classes: any;
   listModel: ListModel;
   currentUser: User;
+  children: (api: ItemListApiArgs) => React.ReactNode;
 }
 
 interface State {
@@ -124,14 +131,12 @@ class ItemList extends React.Component<Props, State> {
   }
 
   private makeItemListItem(item: ListItemProto) {
-    return (
-      <ViewListItem
-        key={item.getId()}
-        item={item}
-        currentUserId={this.props.currentUser.id}
-        itemUpdater={this.itemUpdater}
-      />
-    );
+    return this.props.children({
+      key: item.getId(),
+      item: item,
+      currentUserId: this.props.currentUser.id,
+      itemUpdater: this.itemUpdater,
+    });
   }
 
   private listItems() {
