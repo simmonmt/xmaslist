@@ -24,6 +24,7 @@ go_test(
     embed = [":listservice"],
     deps = [
         "//backend/database",
+        "//backend/database/dbutil",
         "//backend/database/testutil",
         "//backend/request",
         "//backend/sessions",
