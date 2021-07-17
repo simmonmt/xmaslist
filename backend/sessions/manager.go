@@ -77,6 +77,15 @@ func (sm *Manager) CreateSession(ctx context.Context, user *database.User) (cook
 	return cookie, expiry, nil
 }
 
+// LookupActiveSession attempts to find an active session corresponding to the
+// given Session ID.
+//
+// Returns:
+//   non-nil session,   nil error       An active session was found
+//     nil   session,   nil error       No active session was found
+//                    non-nil error     An error occurred while looking for
+//                                      a session; no determination could be
+//                                      mode.
 func (sm *Manager) LookupActiveSession(ctx context.Context, sessionID int) (*Session, error) {
 	session, err := sm.db.LookupSession(ctx, sessionID)
 	if err != nil {
