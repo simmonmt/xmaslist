@@ -21,3 +21,7 @@ func (c *MonoClock) Now() time.Time {
 	c.Time = c.Time.Add(time.Duration(1) * time.Second)
 	return now
 }
+
+func (c *MonoClock) Advance(d time.Duration) {
+	c.Time = c.Time.Add(d)
+}
