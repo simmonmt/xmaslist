@@ -5,7 +5,7 @@ import Button from "@material-ui/core/Button";
 import Chip from "@material-ui/core/Chip";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Link from "@material-ui/core/Link";
-import { createStyles, makeStyles, withStyles } from "@material-ui/core/styles";
+import { createStyles, makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import * as React from "react";
@@ -175,15 +175,4 @@ function ViewListItem({
     </Accordion>
   );
 }
-
-const viewListItemStyles = () =>
-  createStyles({
-    claimButton: {
-      display: "flex",
-      justifyContent: "flex-end",
-    },
-  });
-
-const exportViewListItem: any = withStyles(viewListItemStyles)(ViewListItem);
-
-export { exportViewListItem as ViewListItem };
+export { ViewListItem };
