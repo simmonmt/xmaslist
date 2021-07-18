@@ -2,12 +2,16 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "sessions",
-    srcs = ["manager.go"],
+    srcs = [
+        "manager.go",
+        "sessions.go",
+    ],
     importpath = "github.com/simmonmt/xmaslist/backend/sessions",
     visibility = ["//visibility:public"],
     deps = [
         "//backend/database",
         "//backend/util",
+        "@org_golang_google_grpc//grpclog",
     ],
 )
 
