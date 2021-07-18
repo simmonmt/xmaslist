@@ -55,6 +55,25 @@ func open(path string, args *url.Values) (*DB, error) {
 		return nil, err
 	}
 
+	// The go-sqlite3 FAQ says there are problems when you have
+	// multiple simultaneous
+	// writers.
+	// https://github.com/mattn/go-sqlite3#faq
+	//
+	// From reading the linked issues it sounds like the
+	// multiple-write failure modes are hard to reproduce and
+	// debug. Much easier to just not allow multiple simultaneous
+	// writers by not allowing multiple simultaneous anything.
+	//
+	// Possible fixes to this:
+	//  1. Use a proper non-embedded database, like MySQL/MariaDB
+	//  2. Add an rwlock to the database layer.
+	//
+	// Much much easier to just limit the number of
+	// connections. That'll also let me ignore failed transaction
+	// commits (I think).
+	db.SetMaxOpenConns(1)
+
 	return &DB{
 		db: db,
 	}, nil
