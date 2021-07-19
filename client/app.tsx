@@ -90,6 +90,7 @@ class App extends React.Component<Props, State> {
                 <ViewList
                   listModel={this.listModel}
                   currentUser={this.state.user!}
+                  mutable={false}
                 />
               </ProtectedRoute>
               <ProtectedRoute
@@ -99,6 +100,7 @@ class App extends React.Component<Props, State> {
                 <EditList
                   listModel={this.listModel}
                   currentUser={this.state.user!}
+                  mutable={true}
                 />
               </ProtectedRoute>
               <ProtectedRoute {...defaultProtectedRouteProps} exact path="/">

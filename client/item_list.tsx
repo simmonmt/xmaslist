@@ -1,7 +1,13 @@
 import Card from "@material-ui/core/Card";
+import Dialog from "@material-ui/core/Dialog";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogContentText from "@material-ui/core/DialogContentText";
+import Fab from "@material-ui/core/Fab";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import { createStyles, withStyles } from "@material-ui/core/styles";
+import { Theme } from "@material-ui/core/styles/createTheme";
 import Typography from "@material-ui/core/Typography";
+import AddIcon from "@material-ui/icons/Add";
 import Alert from "@material-ui/lab/Alert";
 import { format as formatDate } from "date-fns";
 import { Error as GrpcError, StatusCode } from "grpc-web";
@@ -14,6 +20,7 @@ import {
   ListItemState as ListItemStateProto,
 } from "../proto/list_item_pb";
 import { List as ListProto } from "../proto/list_pb";
+import { CreateListItemDialog } from "./create_list_item_dialog";
 import { ListModel } from "./list_model";
 import { User } from "./user";
 
@@ -46,6 +53,7 @@ export interface Props extends RouteComponentProps<PathParams> {
   classes: any;
   listModel: ListModel;
   currentUser: User;
+  mutable: boolean;
   children: (api: ItemListApiArgs) => React.ReactNode;
 }
 
@@ -55,6 +63,8 @@ interface State {
   errorMessage: string;
   list: ListProto | null;
   items: ListItemProto[];
+  createItemDialogOpen: boolean;
+  creatingItemDialogOpen: boolean;
 }
 
 class ItemList extends React.Component<Props, State> {
@@ -69,6 +79,8 @@ class ItemList extends React.Component<Props, State> {
       errorMessage: "",
       list: null,
       items: [],
+      createItemDialogOpen: false,
+      creatingItemDialogOpen: false,
     };
 
     this.listId = this.props.match.params.listId;
@@ -76,6 +88,9 @@ class ItemList extends React.Component<Props, State> {
       updateData: this.updateListItemData.bind(this),
       updateState: this.updateListItemState.bind(this),
     };
+
+    this.onCreateClicked = this.onCreateClicked.bind(this);
+    this.onCreateItemDialogClose = this.onCreateItemDialogClose.bind(this);
   }
 
   componentDidMount() {
@@ -91,7 +106,7 @@ class ItemList extends React.Component<Props, State> {
           <Alert
             severity="error"
             variant="standard"
-            onClose={this.handleAlertClose}
+            onClose={this.onAlertClose}
           >
             Error: {this.state.errorMessage}
           </Alert>
@@ -109,8 +124,40 @@ class ItemList extends React.Component<Props, State> {
         <Card className={this.props.classes.card} raised>
           {this.listItems()}
         </Card>
+        {this.props.mutable && (
+          <div>
+            <Fab
+              color="primary"
+              aria-label="create"
+              className={this.props.classes.fab}
+              onClick={this.onCreateClicked}
+            >
+              <AddIcon />
+            </Fab>
+            <CreateListItemDialog
+              open={this.state.createItemDialogOpen}
+              onClose={this.onCreateItemDialogClose}
+            />
+            <Dialog open={this.state.creatingItemDialogOpen}>
+              <DialogContent>
+                <DialogContentText>Creating Item</DialogContentText>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
       </div>
     );
+  }
+
+  private onCreateClicked() {
+    this.setState({ createItemDialogOpen: true });
+  }
+
+  private onCreateItemDialogClose(itemData: ListItemDataProto | null) {
+    this.setState({ createItemDialogOpen: false });
+    if (!itemData) {
+      return;
+    }
   }
 
   private listMeta() {
@@ -207,7 +254,7 @@ class ItemList extends React.Component<Props, State> {
       });
   }
 
-  private handleAlertClose() {
+  private onAlertClose() {
     this.setState({ errorMessage: "" });
   }
 
@@ -240,7 +287,7 @@ class ItemList extends React.Component<Props, State> {
   }
 }
 
-const itemListStyles = () =>
+const itemListStyles = (theme: Theme) =>
   createStyles({
     root: {
       width: "100%",
@@ -250,6 +297,11 @@ const itemListStyles = () =>
     },
     meta: {
       textAlign: "center",
+    },
+    fab: {
+      position: "absolute",
+      bottom: theme.spacing(2),
+      right: theme.spacing(2),
     },
   });
 
