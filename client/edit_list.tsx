@@ -1,7 +1,7 @@
 import * as React from "react";
 import { withRouter } from "react-router-dom";
-import { EditListItem } from "./edit_list_item";
 import { ItemList, ItemListApiArgs, Props as ItemListProps } from "./item_list";
+import { ItemListElement } from "./item_list_element";
 
 interface Props extends ItemListProps {}
 
@@ -11,12 +11,14 @@ class EditList extends React.Component<Props, State> {
   render() {
     return (
       <ItemList {...this.props}>
-        {({ key, item, currentUserId, itemUpdater }: ItemListApiArgs) => (
-          <EditListItem
+        {({ key, item, currentUser, itemUpdater }: ItemListApiArgs) => (
+          <ItemListElement
             key={key}
+            showClaim={false}
+            mutable={true}
             item={item}
-            currentUserId={currentUserId}
             itemUpdater={itemUpdater}
+            currentUser={currentUser}
           />
         )}
       </ItemList>

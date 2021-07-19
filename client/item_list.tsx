@@ -38,7 +38,7 @@ export interface ListItemUpdater {
 export interface ItemListApiArgs {
   key: string;
   item: ListItemProto;
-  currentUserId: number;
+  currentUser: User;
   itemUpdater: ListItemUpdater;
 }
 
@@ -134,7 +134,7 @@ class ItemList extends React.Component<Props, State> {
     return this.props.children({
       key: item.getId(),
       item: item,
-      currentUserId: this.props.currentUser.id,
+      currentUser: this.props.currentUser,
       itemUpdater: this.itemUpdater,
     });
   }
