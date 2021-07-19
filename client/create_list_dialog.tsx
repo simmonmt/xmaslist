@@ -58,6 +58,11 @@ class CreateListDialog extends React.Component<Props, State> {
         open={this.props.open}
         onClose={this.handleCancel}
         aria-labelledby="create-dialog-title"
+        onKeyUp={(e) => {
+          if (e.key === "Enter") {
+            this.handleOk();
+          }
+        }}
       >
         <DialogTitle id="create-dialog-title">Create List</DialogTitle>
         <DialogContent>

@@ -67,6 +67,11 @@ class CreateListItemDialog extends React.Component<Props, State> {
         keepMounted={false}
         onClose={this.onCancelClicked}
         aria-labelledby="create-item-dialog-title"
+        onKeyUp={(e) => {
+          if (e.key === "Enter") {
+            this.onOkClicked();
+          }
+        }}
       >
         <DialogTitle id="create-item-dialog-title">
           Create List Item
