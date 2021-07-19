@@ -63,6 +63,7 @@ class CreateListDialog extends React.Component<Props, State> {
         <DialogContent>
           <TextField
             autoFocus
+            required
             margin="dense"
             id="name"
             label="List name"
@@ -73,6 +74,7 @@ class CreateListDialog extends React.Component<Props, State> {
             helperText={this.state.nameErrorMessage}
           />
           <TextField
+            required
             margin="dense"
             id="beneficiary"
             label="Who's it for?"
@@ -83,6 +85,7 @@ class CreateListDialog extends React.Component<Props, State> {
             helperText={this.state.beneficiaryErrorMessage}
           />
           <KeyboardDatePicker
+            required
             value={this.state.eventDate}
             onChange={handleDateChange}
             label="Event date"
