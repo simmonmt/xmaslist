@@ -1,4 +1,4 @@
-import Button from "@material-ui/core/Button";
+import Button, { ButtonProps } from "@material-ui/core/Button";
 import Chip from "@material-ui/core/Chip";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { createStyles, makeStyles } from "@material-ui/core/styles";
@@ -36,17 +36,20 @@ const useClaimButtonStyles = makeStyles(() =>
   })
 );
 
+interface ClaimButtonProps extends ButtonProps {
+  currentUserId: number;
+  item: ListItemProto;
+  updating: boolean;
+  onClaimClick: (newState: boolean) => void;
+}
+
 export function ClaimButton({
   currentUserId,
   item,
   updating,
-  onClick,
-}: {
-  currentUserId: number;
-  item: ListItemProto;
-  updating: boolean;
-  onClick: (newState: boolean) => void;
-}) {
+  onClaimClick,
+  ...rest
+}: ClaimButtonProps) {
   const classes = useClaimButtonStyles();
   const state = item.getState();
   const claimed = state && state.getClaimed() === true;
@@ -62,9 +65,9 @@ export function ClaimButton({
     <div className={classes.wrapper}>
       <Button
         variant="contained"
-        color="primary"
         disabled={!active}
-        onClick={() => onClick(!claimed)}
+        onClick={() => onClaimClick(!claimed)}
+        {...rest}
       >
         {label}
       </Button>

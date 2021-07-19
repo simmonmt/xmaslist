@@ -79,7 +79,8 @@ class ItemListElement extends React.Component<Props, State> {
                 currentUserId={this.props.currentUser.id}
                 item={this.props.item}
                 updating={this.state.updating}
-                onClick={this.onClaimClick}
+                onClaimClick={this.onClaimClick}
+                color={this.props.mutable ? "default" : "primary"}
               />
             )}
           </div>
