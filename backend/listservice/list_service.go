@@ -2,7 +2,6 @@ package listservice
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -349,7 +348,6 @@ func (s *listServer) UpdateListItem(ctx context.Context, req *lspb.UpdateListIte
 	}
 
 	now := s.clock.Now()
-	fmt.Printf("handler using now %v %v\n", now, now.Unix())
 	item, err := s.db.UpdateListItem(ctx, list.ID, itemID,
 		int(req.GetItemVersion()), now,
 		func(data *database.ListItemData, state *database.ListItemState) error {
