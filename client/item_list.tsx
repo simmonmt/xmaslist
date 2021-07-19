@@ -240,7 +240,7 @@ class ItemList extends React.Component<Props, State> {
   }
 }
 
-const viewListStyles = () =>
+const itemListStyles = () =>
   createStyles({
     root: {
       width: "100%",
@@ -253,6 +253,6 @@ const viewListStyles = () =>
     },
   });
 
-const exportItemList: any = withStyles(viewListStyles)(withRouter(ItemList));
+const exportItemList: any = withStyles(itemListStyles)(withRouter(ItemList));
 
 export { exportItemList as ItemList };
