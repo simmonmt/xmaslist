@@ -1,8 +1,10 @@
 import Accordion from "@material-ui/core/Accordion";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
+import Button from "@material-ui/core/Button";
 import Link from "@material-ui/core/Link";
 import { createStyles, withStyles } from "@material-ui/core/styles";
+import { Theme } from "@material-ui/core/styles/createTheme";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import * as React from "react";
@@ -68,6 +70,10 @@ class ItemListElement extends React.Component<Props, State> {
             </Typography>
           )}
           <div className={this.props.classes.buttons}>
+            {this.props.mutable && [
+              <Button variant="contained">Modify</Button>,
+              <Button variant="contained">Delete</Button>,
+            ]}
             {this.props.showClaim && (
               <ClaimButton
                 currentUserId={this.props.currentUser.id}
@@ -111,11 +117,13 @@ class ItemListElement extends React.Component<Props, State> {
   }
 }
 
-const itemListElementStyles = () =>
+const itemListElementStyles = (theme: Theme) =>
   createStyles({
     buttons: {
       display: "flex",
       justifyContent: "flex-end",
+
+      "& > *": { marginLeft: theme.spacing(1) },
     },
     details: {
       display: "flex",
