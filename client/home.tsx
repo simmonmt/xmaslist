@@ -287,16 +287,10 @@ class Home extends React.Component<HomeProps, HomeState> {
         >
           <AddIcon />
         </Fab>
-        {this.state.createDialogOpen && (
-          // Wrapped in the conditional to ensured the dialog gets unmounted
-          // (thus resetting its contents) between uses. The MUI demos don't do
-          // this, which suggests that something else is wrong, but I haven't
-          // yet figured out what it is.
-          <CreateListDialog
-            open={this.state.createDialogOpen}
-            onClose={this.handleCreateDialogClose}
-          />
-        )}
+        <CreateListDialog
+          open={this.state.createDialogOpen}
+          onClose={this.handleCreateDialogClose}
+        />
         <Dialog open={this.state.creatingDialogOpen}>
           <DialogContent>
             <DialogContentText>Creating list</DialogContentText>

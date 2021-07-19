@@ -134,16 +134,11 @@ class ItemList extends React.Component<Props, State> {
             >
               <AddIcon />
             </Fab>
-            {this.state.createItemDialogOpen && (
-              // Wrapped in the conditional to ensured the dialog gets unmounted
-              // (thus resetting its contents) between uses. The MUI demos don't
-              // do this, which suggests that something else is wrong, but I
-              // haven't yet figured out what it is.
-              <CreateListItemDialog
-                open={this.state.createItemDialogOpen}
-                onClose={this.onCreateItemDialogClose}
-              />
-            )}
+            <CreateListItemDialog
+              open={this.state.createItemDialogOpen}
+              onClose={this.onCreateItemDialogClose}
+              initial={null}
+            />
             <Dialog open={this.state.creatingItemDialogOpen}>
               <DialogContent>
                 <DialogContentText>Creating Item</DialogContentText>

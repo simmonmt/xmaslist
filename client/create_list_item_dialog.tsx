@@ -21,6 +21,7 @@ interface Props {
   classes: any;
   open: boolean;
   onClose: (listData: ListItemDataProto | null) => void;
+  initial: ListItemDataProto | null;
 }
 
 interface State {
@@ -46,6 +47,20 @@ class CreateListItemDialog extends React.Component<Props, State> {
 
     this.onCancelClicked = this.onCancelClicked.bind(this);
     this.onOkClicked = this.onOkClicked.bind(this);
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.open !== this.props.open && !this.props.open) {
+      // The dialog closed. Reset the state.
+      this.setState({
+        name: this.props.initial ? this.props.initial.getName() : "",
+        nameErrorMessage: "",
+        desc: this.props.initial ? this.props.initial.getDesc() : "",
+        descErrorMessage: "",
+        url: this.props.initial ? this.props.initial.getUrl() : "",
+        urlErrorMessage: "",
+      });
+    }
   }
 
   render() {

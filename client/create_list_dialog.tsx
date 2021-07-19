@@ -27,7 +27,14 @@ interface State {
 class CreateListDialog extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = {
+    this.state = this.initialState();
+
+    this.handleCancel = this.handleCancel.bind(this);
+    this.handleOk = this.handleOk.bind(this);
+  }
+
+  private initialState(): State {
+    return {
       name: "",
       nameErrorMessage: "",
       beneficiary: "",
@@ -35,9 +42,15 @@ class CreateListDialog extends React.Component<Props, State> {
       eventDate: null,
       eventDateErrorMessage: "",
     };
+  }
 
-    this.handleCancel = this.handleCancel.bind(this);
-    this.handleOk = this.handleOk.bind(this);
+  componentDidUpdate(prevProps: Props) {
+    // This component doesn't unmount when the dialog closes. It also controls
+    // the dialog's input components, so the dialog won't have cleared state when it
+    // reopens. We have to handle reset ourselves.
+    if (this.props.open !== prevProps.open && !this.props.open) {
+      this.setState(this.initialState());
+    }
   }
 
   render() {
