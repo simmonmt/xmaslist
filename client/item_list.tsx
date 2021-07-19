@@ -134,10 +134,16 @@ class ItemList extends React.Component<Props, State> {
             >
               <AddIcon />
             </Fab>
-            <CreateListItemDialog
-              open={this.state.createItemDialogOpen}
-              onClose={this.onCreateItemDialogClose}
-            />
+            {this.state.createItemDialogOpen && (
+              // Wrapped in the conditional to ensured the dialog gets unmounted
+              // (thus resetting its contents) between uses. The MUI demos don't
+              // do this, which suggests that something else is wrong, but I
+              // haven't yet figured out what it is.
+              <CreateListItemDialog
+                open={this.state.createItemDialogOpen}
+                onClose={this.onCreateItemDialogClose}
+              />
+            )}
             <Dialog open={this.state.creatingItemDialogOpen}>
               <DialogContent>
                 <DialogContentText>Creating Item</DialogContentText>
@@ -158,6 +164,26 @@ class ItemList extends React.Component<Props, State> {
     if (!itemData) {
       return;
     }
+
+    this.props.listModel
+      .createListItem(this.listId, itemData)
+      .then((item: ListItemProto) => {
+        const copy = this.state.items.slice();
+        copy.push(item);
+
+        this.setState({ creatingItemDialogOpen: false, items: copy });
+      })
+      .catch((error: GrpcError) => {
+        if (error.code === StatusCode.UNAUTHENTICATED) {
+          this.setState({ loggedIn: false });
+          return;
+        }
+
+        this.setState({
+          creatingItemDialogOpen: false,
+          errorMessage: error.message || "Unknown error",
+        });
+      });
   }
 
   private listMeta() {

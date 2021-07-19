@@ -8,6 +8,8 @@ import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
 import { ListServicePromiseClient } from "../proto/list_service_grpc_web_pb";
 import {
   ChangeActiveStateRequest,
+  CreateListItemRequest,
+  CreateListItemResponse,
   CreateListRequest,
   CreateListResponse,
   GetListRequest,
@@ -97,6 +99,26 @@ export class ListModel {
     return this.listService.changeActiveState(req, this.metadata()).then(() => {
       Promise.resolve();
     });
+  }
+
+  createListItem(
+    listId: string,
+    itemData: ListItemDataProto
+  ): Promise<ListItemProto> {
+    const req = new CreateListItemRequest();
+    req.setListId(listId);
+    req.setData(itemData);
+
+    return this.listService
+      .createListItem(req, this.metadata())
+      .then((resp: CreateListItemResponse) => {
+        const item = resp.getItem();
+        if (!item) {
+          return Promise.reject(new Error("no item in response"));
+        }
+
+        return item;
+      });
   }
 
   updateListItem(

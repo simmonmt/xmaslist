@@ -64,6 +64,7 @@ class CreateListItemDialog extends React.Component<Props, State> {
     return (
       <Dialog
         open={this.props.open}
+        keepMounted={false}
         onClose={this.onCancelClicked}
         aria-labelledby="create-item-dialog-title"
       >
@@ -109,7 +110,7 @@ class CreateListItemDialog extends React.Component<Props, State> {
             Cancel
           </Button>
           <Button onClick={this.onOkClicked} color="primary">
-            Create List
+            Create Item
           </Button>
         </DialogActions>
       </Dialog>
