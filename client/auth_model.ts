@@ -6,8 +6,8 @@ import {
   LogoutRequest,
   LogoutResponse,
 } from "../proto/auth_service_pb";
-import { User } from "./user";
 import { AuthStorage } from "./auth_storage";
+import { User } from "./user";
 
 const COOKIE_NAME = "session";
 
@@ -26,6 +26,7 @@ export class AuthModel {
     this.cookies = cookies;
 
     const cookie = this.cookies.get(COOKIE_NAME);
+    console.log("auth model ctor: got cookie", cookie);
     const userInfo = this.authStorage.read();
     if (!cookie !== !userInfo) {
       console.log("Unknown user model state; clearing");
@@ -40,7 +41,9 @@ export class AuthModel {
   }
 
   getSessionCookie(): string | null {
-    return this.cookies.get(COOKIE_NAME);
+    const cookie = this.cookies.get(COOKIE_NAME);
+    console.log("auth model ctor: getSessionCookie", cookie);
+    return cookie;
   }
 
   login(username: string, password: string): Promise<User> {
@@ -59,6 +62,7 @@ export class AuthModel {
           return Promise.reject(new Error("an error occurred"));
         }
 
+        console.log("login: setting cookie", cookie);
         this.cookies.set(COOKIE_NAME, cookie, {
           expires: expiry,
           sameSite: true,
@@ -78,6 +82,7 @@ export class AuthModel {
     return this.authService
       .logout(req, undefined)
       .then((unused: LogoutResponse) => {
+        console.log("logout: clearing cookie");
         this.cookies.remove(COOKIE_NAME);
         this.authStorage.clear();
         return true;
