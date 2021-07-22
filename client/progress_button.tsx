@@ -29,7 +29,7 @@ class ProgressButton extends React.Component<
   }
 }
 
-const classProgressButtonStyles = createStyles({
+const progressButtonStyles = createStyles({
   wrapper: {
     position: "relative",
   },
@@ -42,29 +42,7 @@ const classProgressButtonStyles = createStyles({
   },
 });
 
-const ExportProgressButton: any = withStyles(classProgressButtonStyles)(
-  ProgressButton
-);
+const exportProgressButton: any =
+  withStyles(progressButtonStyles)(ProgressButton);
 
-export { ExportProgressButton as ProgressButton };
-
-export function SelfUpdatingProgressButton({
-  onButtonClick,
-  children,
-  ...rest
-}: {
-  onButtonClick: () => Promise<void>;
-  children: React.ReactNode;
-}) {
-  const [updating, setUpdating] = React.useState(false);
-  const handleClick = () => {
-    setUpdating(true);
-    onButtonClick().finally(() => setUpdating(false));
-  };
-
-  return (
-    <ExportProgressButton updating={updating} onClick={handleClick} {...rest}>
-      {children}
-    </ExportProgressButton>
-  );
-}
+export { exportProgressButton as ProgressButton };

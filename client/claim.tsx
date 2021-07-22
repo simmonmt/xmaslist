@@ -2,7 +2,7 @@ import { ButtonProps } from "@material-ui/core/Button";
 import Chip from "@material-ui/core/Chip";
 import * as React from "react";
 import { ListItem as ListItemProto } from "../proto/list_item_pb";
-import { SelfUpdatingProgressButton } from "./progress_button";
+import { ProgressButton } from "./progress_button";
 
 export function ClaimedChip({
   currentUserId,
@@ -21,12 +21,14 @@ export function ClaimedChip({
 }
 
 interface ClaimButtonProps extends ButtonProps {
+  updating: boolean;
   currentUserId: number;
   item: ListItemProto;
-  onClaimClick: (newState: boolean) => Promise<void>;
+  onClaimClick: (newState: boolean) => void;
 }
 
 export function ClaimButton({
+  updating,
   currentUserId,
   item,
   onClaimClick,
@@ -43,12 +45,13 @@ export function ClaimButton({
   const label = claimed ? "Unclaim" : "Claim";
 
   return (
-    <SelfUpdatingProgressButton
+    <ProgressButton
+      updating={updating}
       disabled={!active}
-      onButtonClick={() => onClaimClick(!claimed)}
+      onClick={() => onClaimClick(!claimed)}
       {...rest}
     >
       {label}
-    </SelfUpdatingProgressButton>
+    </ProgressButton>
   );
 }

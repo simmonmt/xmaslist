@@ -19,6 +19,7 @@ function isValidUrl(url: string): boolean {
 
 interface Props {
   classes: any;
+  action: string;
   open: boolean;
   onClose: (listData: ListItemDataProto | null) => void;
   initial: ListItemDataProto | null;
@@ -43,8 +44,7 @@ class CreateListItemDialog extends React.Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    if (prevProps.open !== this.props.open && !this.props.open) {
-      // The dialog closed. Reset the state.
+    if (prevProps.open !== this.props.open) {
       this.setState(CreateListItemDialog.stateFromInitial(this.props.initial));
     }
   }
@@ -86,7 +86,7 @@ class CreateListItemDialog extends React.Component<Props, State> {
         }}
       >
         <DialogTitle id="create-item-dialog-title">
-          Create List Item
+          {this.props.action} List Item
         </DialogTitle>
         <DialogContent>
           <TextField
@@ -127,7 +127,7 @@ class CreateListItemDialog extends React.Component<Props, State> {
             Cancel
           </Button>
           <Button onClick={this.onOkClicked} color="primary">
-            Create Item
+            {this.props.action} Item
           </Button>
         </DialogActions>
       </Dialog>

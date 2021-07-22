@@ -15,6 +15,7 @@ import {
 import { ClaimButton, ClaimedChip } from "./claim";
 import { CreateListItemDialog } from "./create_list_item_dialog";
 import { ListItemUpdater } from "./item_list";
+import { ProgressButton } from "./progress_button";
 import { User } from "./user";
 
 interface Props {
@@ -27,7 +28,9 @@ interface Props {
 }
 
 interface State {
+  claiming: boolean;
   modifyItemDialogOpen: boolean;
+  modifying: boolean;
 }
 
 class ItemListElement extends React.Component<Props, State> {
@@ -35,7 +38,9 @@ class ItemListElement extends React.Component<Props, State> {
     super(props);
 
     this.state = {
+      claiming: false,
       modifyItemDialogOpen: false,
+      modifying: false,
     };
 
     this.onModifyClick = this.onModifyClick.bind(this);
@@ -74,13 +79,18 @@ class ItemListElement extends React.Component<Props, State> {
           )}
           <div className={this.props.classes.buttons}>
             {this.props.mutable && [
-              <Button variant="contained" onClick={this.onModifyClick}>
+              <ProgressButton
+                variant="contained"
+                updating={this.state.modifying}
+                onClick={this.onModifyClick}
+              >
                 Modify
-              </Button>,
+              </ProgressButton>,
               <Button variant="contained">Delete</Button>,
             ]}
             {this.props.showClaim && (
               <ClaimButton
+                updating={this.state.claiming}
                 currentUserId={this.props.currentUser.id}
                 item={this.props.item}
                 onClaimClick={this.onClaimClick}
@@ -90,6 +100,7 @@ class ItemListElement extends React.Component<Props, State> {
           </div>
         </AccordionDetails>
         <CreateListItemDialog
+          action="Modify"
           open={this.state.modifyItemDialogOpen}
           onClose={this.onModifyItemDialogClose}
           initial={data}
@@ -108,17 +119,20 @@ class ItemListElement extends React.Component<Props, State> {
     );
   }
 
-  private onClaimClick(newClaimState: boolean): Promise<void> {
+  private onClaimClick(newClaimState: boolean) {
     const oldItemState = this.props.item.getState();
-    if (!oldItemState) return Promise.resolve(); // shouldn't happen
+    if (!oldItemState) return; // shouldn't happen
     const newItemState = oldItemState.cloneMessage();
     newItemState.setClaimed(newClaimState);
 
-    return this.props.itemUpdater.updateState(
-      this.props.item.getId(),
-      this.props.item.getVersion(),
-      newItemState
-    );
+    this.setState({ claiming: true });
+    this.props.itemUpdater
+      .updateState(
+        this.props.item.getId(),
+        this.props.item.getVersion(),
+        newItemState
+      )
+      .finally(() => this.setState({ claiming: false }));
   }
 
   private onModifyClick() {
@@ -126,9 +140,14 @@ class ItemListElement extends React.Component<Props, State> {
   }
 
   private onModifyItemDialogClose(data: ListItemDataProto | null) {
-    this.setState({ modifyItemDialogOpen: false });
+    this.setState({ modifyItemDialogOpen: false, modifying: data !== null });
+    if (!data) {
+      return;
+    }
 
-    console.log("modify");
+    this.props.itemUpdater
+      .updateData(this.props.item.getId(), this.props.item.getVersion(), data)
+      .finally(() => this.setState({ modifying: false }));
   }
 }
 

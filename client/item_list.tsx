@@ -135,6 +135,7 @@ class ItemList extends React.Component<Props, State> {
               <AddIcon />
             </Fab>
             <CreateListItemDialog
+              action="Create"
               open={this.state.createItemDialogOpen}
               onClose={this.onCreateItemDialogClose}
               initial={null}
