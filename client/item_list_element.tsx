@@ -27,7 +27,6 @@ interface Props {
 }
 
 interface State {
-  updating: boolean;
   modifyItemDialogOpen: boolean;
 }
 
@@ -36,7 +35,6 @@ class ItemListElement extends React.Component<Props, State> {
     super(props);
 
     this.state = {
-      updating: false,
       modifyItemDialogOpen: false,
     };
 
@@ -85,7 +83,6 @@ class ItemListElement extends React.Component<Props, State> {
               <ClaimButton
                 currentUserId={this.props.currentUser.id}
                 item={this.props.item}
-                updating={this.state.updating}
                 onClaimClick={this.onClaimClick}
                 color={this.props.mutable ? "default" : "primary"}
               />
@@ -111,22 +108,17 @@ class ItemListElement extends React.Component<Props, State> {
     );
   }
 
-  private onClaimClick(newClaimState: boolean) {
+  private onClaimClick(newClaimState: boolean): Promise<void> {
     const oldItemState = this.props.item.getState();
-    if (!oldItemState) return; // shouldn't happen
+    if (!oldItemState) return Promise.resolve(); // shouldn't happen
     const newItemState = oldItemState.cloneMessage();
     newItemState.setClaimed(newClaimState);
 
-    this.setState({ updating: true });
-    return this.props.itemUpdater
-      .updateState(
-        this.props.item.getId(),
-        this.props.item.getVersion(),
-        newItemState
-      )
-      .finally(() => {
-        this.setState({ updating: false });
-      });
+    return this.props.itemUpdater.updateState(
+      this.props.item.getId(),
+      this.props.item.getVersion(),
+      newItemState
+    );
   }
 
   private onModifyClick() {
@@ -135,6 +127,7 @@ class ItemListElement extends React.Component<Props, State> {
 
   private onModifyItemDialogClose(data: ListItemDataProto | null) {
     this.setState({ modifyItemDialogOpen: false });
+
     console.log("modify");
   }
 }
