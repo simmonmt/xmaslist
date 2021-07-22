@@ -53,7 +53,7 @@ func (ai *AuthInterceptor) authorize(ctx context.Context) (*sessions.Session, er
 	}
 	if session == nil {
 		return nil, status.Errorf(codes.Unauthenticated,
-			"no active session")
+			"no active session for cookie %v", cookie)
 	}
 
 	return session, nil
