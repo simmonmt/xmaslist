@@ -13,6 +13,7 @@ import {
   ListItemData as ListItemDataProto,
 } from "../proto/list_item_pb";
 import { ClaimButton, ClaimedChip } from "./claim";
+import { CreateListItemDialog } from "./create_list_item_dialog";
 import { ListItemUpdater } from "./item_list";
 import { User } from "./user";
 
@@ -27,6 +28,7 @@ interface Props {
 
 interface State {
   updating: boolean;
+  modifyItemDialogOpen: boolean;
 }
 
 class ItemListElement extends React.Component<Props, State> {
@@ -35,8 +37,11 @@ class ItemListElement extends React.Component<Props, State> {
 
     this.state = {
       updating: false,
+      modifyItemDialogOpen: false,
     };
 
+    this.onModifyClick = this.onModifyClick.bind(this);
+    this.onModifyItemDialogClose = this.onModifyItemDialogClose.bind(this);
     this.onClaimClick = this.onClaimClick.bind(this);
   }
 
@@ -71,7 +76,9 @@ class ItemListElement extends React.Component<Props, State> {
           )}
           <div className={this.props.classes.buttons}>
             {this.props.mutable && [
-              <Button variant="contained">Modify</Button>,
+              <Button variant="contained" onClick={this.onModifyClick}>
+                Modify
+              </Button>,
               <Button variant="contained">Delete</Button>,
             ]}
             {this.props.showClaim && (
@@ -85,6 +92,11 @@ class ItemListElement extends React.Component<Props, State> {
             )}
           </div>
         </AccordionDetails>
+        <CreateListItemDialog
+          open={this.state.modifyItemDialogOpen}
+          onClose={this.onModifyItemDialogClose}
+          initial={data}
+        />
       </Accordion>
     );
   }
@@ -115,6 +127,15 @@ class ItemListElement extends React.Component<Props, State> {
       .finally(() => {
         this.setState({ updating: false });
       });
+  }
+
+  private onModifyClick() {
+    this.setState({ modifyItemDialogOpen: true });
+  }
+
+  private onModifyItemDialogClose(data: ListItemDataProto | null) {
+    this.setState({ modifyItemDialogOpen: false });
+    console.log("modify");
   }
 }
 
