@@ -22,6 +22,7 @@ export function ClaimedChip({
 
 interface ClaimButtonProps extends ButtonProps {
   updating: boolean;
+  disabled?: boolean;
   currentUserId: number;
   item: ListItemProto;
   onClaimClick: (newState: boolean) => void;
@@ -29,6 +30,7 @@ interface ClaimButtonProps extends ButtonProps {
 
 export function ClaimButton({
   updating,
+  disabled,
   currentUserId,
   item,
   onClaimClick,
@@ -47,7 +49,7 @@ export function ClaimButton({
   return (
     <ProgressButton
       updating={updating}
-      disabled={!active}
+      disabled={disabled || !active}
       onClick={() => onClaimClick(!claimed)}
       {...rest}
     >

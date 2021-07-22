@@ -29,6 +29,7 @@ interface Props {
 
 interface State {
   claiming: boolean;
+  deleting: boolean;
   modifyItemDialogOpen: boolean;
   modifying: boolean;
 }
@@ -39,6 +40,7 @@ class ItemListElement extends React.Component<Props, State> {
 
     this.state = {
       claiming: false,
+      deleting: false,
       modifyItemDialogOpen: false,
       modifying: false,
     };
@@ -50,6 +52,9 @@ class ItemListElement extends React.Component<Props, State> {
 
   render() {
     const data = this.props.item.getData() || new ListItemDataProto();
+
+    const buttonsDisabled =
+      this.state.claiming || this.state.deleting || this.state.modifying;
 
     return (
       <Accordion key={"item-" + this.props.item.getId()}>
@@ -81,15 +86,19 @@ class ItemListElement extends React.Component<Props, State> {
             {this.props.mutable && [
               <ProgressButton
                 variant="contained"
+                disabled={buttonsDisabled}
                 updating={this.state.modifying}
                 onClick={this.onModifyClick}
               >
                 Modify
               </ProgressButton>,
-              <Button variant="contained">Delete</Button>,
+              <Button variant="contained" disabled={buttonsDisabled}>
+                Delete
+              </Button>,
             ]}
             {this.props.showClaim && (
               <ClaimButton
+                disabled={buttonsDisabled}
                 updating={this.state.claiming}
                 currentUserId={this.props.currentUser.id}
                 item={this.props.item}

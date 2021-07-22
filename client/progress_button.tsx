@@ -6,7 +6,7 @@ import * as React from "react";
 interface ProgressButtonProps {
   classes: any;
   updating: boolean;
-  disabled: boolean;
+  disabled?: boolean;
   children: React.ReactNode;
 }
 
