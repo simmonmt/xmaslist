@@ -213,3 +213,24 @@ func (db *DB) doUpdateListItem(ctx context.Context, txn *sql.Tx, listID int, ite
 
 	return item, err
 }
+
+func (db *DB) DeleteListItem(ctx context.Context, listID int, itemID int) error {
+	query := `DELETE FROM items
+	                WHERE list_id = @listID AND id = @itemID`
+
+	result, err := db.db.ExecContext(ctx, query,
+		sql.Named("listID", listID),
+		sql.Named("itemID", itemID))
+	if err != nil {
+		return err
+	}
+
+	if num, err := result.RowsAffected(); err != nil {
+		return err
+	} else if num != 1 {
+		return status.Errorf(codes.NotFound, "no item with ID %v",
+			itemID)
+	}
+
+	return nil
+}

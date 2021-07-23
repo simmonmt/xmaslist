@@ -64,7 +64,7 @@ func makeSessions(t *testing.T, clock util.Clock, db *database.DB, userResps tes
 	return
 }
 
-type updateListItemTestState struct {
+type listItemTestState struct {
 	Clock            *util.MonoClock
 	DB               *database.DB
 	Users            testutil.UserSetupResponses
@@ -73,7 +73,7 @@ type updateListItemTestState struct {
 	Server           *listServer
 }
 
-func setupListItemTestState(ctx context.Context, t *testing.T) *updateListItemTestState {
+func setupListItemTestState(ctx context.Context, t *testing.T) *listItemTestState {
 	clock := &util.MonoClock{Time: time.Unix(0, 0)}
 	db := testutil.SetupTestDatabase(ctx, t)
 	users := testutil.CreateTestUsers(ctx, t, db, []string{"a", "b"})
@@ -97,7 +97,7 @@ func setupListItemTestState(ctx context.Context, t *testing.T) *updateListItemTe
 		},
 	}
 
-	return &updateListItemTestState{
+	return &listItemTestState{
 		Clock:            clock,
 		DB:               db,
 		Users:            users,
@@ -105,6 +105,12 @@ func setupListItemTestState(ctx context.Context, t *testing.T) *updateListItemTe
 		SessionsByUserID: sessionsByUserID,
 		Server:           makeListServer(clock, sm, db),
 	}
+}
+
+func makeRequestContext(ctx context.Context, state *listItemTestState, username string) context.Context {
+	user := state.Users.UserByUsername(username)
+	session := state.SessionsByUserID[user.ID]
+	return context.WithValue(ctx, request.SessionKey, session)
 }
 
 func TestUpdateListItem_NonOwnerDataUpdate(t *testing.T) {
@@ -374,14 +380,8 @@ func TestUpdateListItem_UnclaimWithCrossOwnership(t *testing.T) {
 
 	list, item := state.Lists.GetItem("l1", "l1i2")
 
-	makeRequestContext := func(ctx context.Context, username string) context.Context {
-		user := state.Users.UserByUsername(username)
-		session := state.SessionsByUserID[user.ID]
-		return context.WithValue(ctx, request.SessionKey, session)
-	}
-
-	reqCtxA := makeRequestContext(ctx, "a")
-	reqCtxB := makeRequestContext(ctx, "b")
+	reqCtxA := makeRequestContext(ctx, state, "a")
+	reqCtxB := makeRequestContext(ctx, state, "b")
 
 	req := &lspb.UpdateListItemRequest{
 		ListId:      strconv.Itoa(list.ID),
@@ -404,4 +404,44 @@ func TestUpdateListItem_UnclaimWithCrossOwnership(t *testing.T) {
 			req, err)
 	}
 
+}
+
+func TestDeleteListItem(t *testing.T) {
+	state := setupListItemTestState(ctx, t)
+	defer state.DB.Close()
+
+	list, item := state.Lists.GetItem("l1", "l1i2")
+
+	ownerCtx := makeRequestContext(ctx, state, "a")
+	nonOwnerCtx := makeRequestContext(ctx, state, "b")
+
+	req := &lspb.DeleteListItemRequest{}
+
+	if _, err := state.Server.DeleteListItem(ownerCtx, req); err == nil || status.Code(err) != codes.InvalidArgument {
+		t.Fatalf(`DeleteListItem("b", %v) = _, %v, want InvalidArgument`,
+			req, err)
+	}
+
+	req.ListId = strconv.Itoa(list.ID)
+	if _, err := state.Server.DeleteListItem(ownerCtx, req); err == nil || status.Code(err) != codes.InvalidArgument {
+		t.Fatalf(`DeleteListItem("b", %v) = _, %v, want InvalidArgument`,
+			req, err)
+	}
+
+	req.ItemId = "1000" // non-existent ID
+	if _, err := state.Server.DeleteListItem(ownerCtx, req); err == nil || status.Code(err) != codes.NotFound {
+		t.Fatalf(`DeleteListItem("a", %v) = _, %v, want NotFound`,
+			req, err)
+	}
+
+	req.ItemId = strconv.Itoa(item.ID)
+	if _, err := state.Server.DeleteListItem(nonOwnerCtx, req); err == nil || status.Code(err) != codes.PermissionDenied {
+		t.Fatalf(`DeleteListItem("b", %v) = _, %v, want PermissionDenied`,
+			req, err)
+	}
+
+	if _, err := state.Server.DeleteListItem(ownerCtx, req); err != nil {
+		t.Fatalf(`DeleteListItem("a", %v) = _, %v, want nil`,
+			req, err)
+	}
 }

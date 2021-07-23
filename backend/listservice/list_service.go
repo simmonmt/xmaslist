@@ -299,7 +299,38 @@ func (s *listServer) CreateListItem(ctx context.Context, req *lspb.CreateListIte
 }
 
 func (s *listServer) DeleteListItem(ctx context.Context, req *lspb.DeleteListItemRequest) (*lspb.DeleteListItemResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "not implemented")
+	session, err := getSession(ctx)
+	if session == nil {
+		return nil, err
+	}
+
+	listID, err := strconv.Atoi(req.GetListId())
+	if req.GetListId() == "" {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"invalid list id")
+	}
+
+	itemID, err := strconv.Atoi(req.GetItemId())
+	if req.GetItemId() == "" {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"invalid item id")
+	}
+
+	list, err := dbutil.GetList(ctx, s.db, listID)
+	if err != nil {
+		return nil, err
+	}
+
+	if list.OwnerID != session.User.ID {
+		return nil, status.Errorf(codes.PermissionDenied,
+			"user does not own list")
+	}
+
+	if err := s.db.DeleteListItem(ctx, listID, itemID); err != nil {
+		return nil, err
+	}
+
+	return &lspb.DeleteListItemResponse{}, nil
 }
 
 func (s *listServer) UpdateListItem(ctx context.Context, req *lspb.UpdateListItemRequest) (*lspb.UpdateListItemResponse, error) {

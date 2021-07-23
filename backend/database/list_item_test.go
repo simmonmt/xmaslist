@@ -7,6 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/simmonmt/xmaslist/backend/database"
 	"github.com/simmonmt/xmaslist/backend/database/dbutil"
@@ -191,5 +194,37 @@ func TestUpdateListItems_Claim(t *testing.T) {
 	} else if diff := cmp.Diff(&wantItem, gotItem); diff != "" {
 		t.Fatalf(`readListItem(_, %d, %d) = %v, %v, want nil, %v, diff:\n%v`,
 			list.ID, item.ID, gotItem, err, &wantItem, diff)
+	}
+}
+
+func TestDeleteListItem(t *testing.T) {
+	db := testutil.SetupTestDatabase(ctx, t)
+	defer db.Close()
+	testutil.CreateTestUsers(ctx, t, db, []string{"a", "b"})
+	resps := createListItemTestLists(t, db)
+
+	list, item := resps.GetItem("l1", "l1i1")
+	if list == nil || item == nil {
+		t.Fatalf("bad test data")
+	}
+
+	badItemID := 1000
+	if err := db.DeleteListItem(ctx, list.ID, badItemID); err == nil || status.Code(err) != codes.NotFound {
+		t.Fatalf("DeleteListItem(_, %v, %v) = %v, want NotFound",
+			list.ID, badItemID, err)
+	}
+
+	if err := db.DeleteListItem(ctx, list.ID, item.ID); err != nil {
+		t.Fatalf("DeleteListItem(_, %v, %v) = %v, want nil",
+			list.ID, item.ID, err)
+	}
+
+	afterItems, err := db.ListListItems(ctx, list.ID, database.AllItems())
+	if err != nil {
+		t.Fatalf("failed to get list items")
+	}
+
+	if len(afterItems) != 1 || afterItems[0].Name != "l1i2" {
+		t.Fatalf("after items = %v, want only l1i2")
 	}
 }
