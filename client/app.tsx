@@ -1,4 +1,5 @@
 import DateFnsUtils from "@date-io/date-fns";
+import { createStyles, withStyles } from "@material-ui/core/styles";
 import { MuiPickersUtilsProvider } from "@material-ui/pickers";
 import * as React from "react";
 import {
@@ -24,7 +25,9 @@ import { User } from "./user";
 import { UserModel } from "./user_model";
 import { ViewList } from "./view_list";
 
-interface Props {}
+interface Props {
+  classes: any;
+}
 
 interface State {
   user: User | null;
@@ -66,7 +69,7 @@ class App extends React.Component<Props, State> {
     return (
       <MuiPickersUtilsProvider utils={DateFnsUtils}>
         <Router>
-          <div>
+          <div className={this.props.classes.root}>
             <Banner user={this.state.user} />
 
             <Switch>
@@ -127,4 +130,15 @@ class App extends React.Component<Props, State> {
   }
 }
 
-export { App };
+const appStyles = () =>
+  createStyles({
+    root: {
+      height: "100%",
+      display: "flex",
+      flexDirection: "column",
+    },
+  });
+
+const exportApp: any = withStyles(appStyles)(App);
+
+export { exportApp as App };

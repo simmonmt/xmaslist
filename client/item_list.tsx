@@ -1,4 +1,5 @@
 import Card from "@material-ui/core/Card";
+import grey from "@material-ui/core/colors/grey";
 import Dialog from "@material-ui/core/Dialog";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
@@ -124,9 +125,21 @@ class ItemList extends React.Component<Props, State> {
           {this.listMeta()}
         </Card>
 
-        <Card className={this.props.classes.card} raised>
-          {this.listItems()}
-        </Card>
+        {this.state.items.length > 0 && (
+          <Card className={this.props.classes.card} raised>
+            {this.listItems()}
+          </Card>
+        )}
+
+        {this.state.items.length === 0 && !this.state.loading && (
+          <div className={this.props.classes.emptyList}>
+            <Typography variant="h1" className={this.props.classes.emptyEmoji}>
+              ( •́ω•̩̥̀ )
+            </Typography>
+            <Typography variant="h4">This list is empty</Typography>
+          </div>
+        )}
+
         {this.props.mutable && (
           <div>
             <Fab
@@ -212,10 +225,6 @@ class ItemList extends React.Component<Props, State> {
   }
 
   private listItems() {
-    if (this.state.items.length == 0) {
-      return <div>The list is empty</div>;
-    }
-
     return (
       <div>{this.state.items.map((item) => this.makeItemListItem(item))}</div>
     );
@@ -342,6 +351,9 @@ const itemListStyles = (theme: Theme) =>
   createStyles({
     root: {
       width: "100%",
+      display: "flex",
+      flexDirection: "column",
+      flexGrow: 1,
     },
     card: {
       margin: "1em",
@@ -353,6 +365,19 @@ const itemListStyles = (theme: Theme) =>
       position: "absolute",
       bottom: theme.spacing(2),
       right: theme.spacing(2),
+    },
+    emptyList: {
+      color: grey[400],
+      flexGrow: 1,
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+
+      "& > *": { textAlign: "center" },
+    },
+    emptyEmoji: {
+      fontFamily: "Arial",
+      marginBottom: "1rem",
     },
   });
 

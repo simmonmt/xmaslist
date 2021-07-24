@@ -78,7 +78,7 @@ class Banner extends React.Component<Props, State> {
     }
 
     return (
-      <div className={classes.grow}>
+      <div>
         <AppBar position="static">
           <Toolbar>
             <Link

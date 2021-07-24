@@ -90,7 +90,7 @@ class ItemListElement extends React.Component<Props, State> {
                 updating={this.state.modifying}
                 onClick={this.onModifyClick}
               >
-                Modify
+                Edit
               </ProgressButton>,
               <ProgressButton
                 variant="contained"
