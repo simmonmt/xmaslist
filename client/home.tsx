@@ -290,6 +290,8 @@ class Home extends React.Component<HomeProps, HomeState> {
         <EditListDialog
           open={this.state.createDialogOpen}
           onClose={this.handleCreateDialogClose}
+          action="Create"
+          initial={null}
         />
         <Dialog open={this.state.creatingDialogOpen}>
           <DialogContent>

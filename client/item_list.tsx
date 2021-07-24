@@ -20,10 +20,12 @@ import {
   ListItemData as ListItemDataProto,
   ListItemState as ListItemStateProto,
 } from "../proto/list_item_pb";
-import { List as ListProto } from "../proto/list_pb";
+import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
+import { EditListDialog } from "./edit_list_dialog";
 import { EditListItemDialog } from "./edit_list_item_dialog";
 import { ItemListElement } from "./item_list_element";
 import { ListModel } from "./list_model";
+import { ProgressButton } from "./progress_button";
 import { User } from "./user";
 
 interface PathParams {
@@ -70,6 +72,8 @@ interface State {
   items: ListItemProto[];
   createItemDialogOpen: boolean;
   creatingItemDialogOpen: boolean;
+  modifyListDialogOpen: boolean;
+  modifyingList: boolean;
 }
 
 class ItemList extends React.Component<Props, State> {
@@ -86,6 +90,8 @@ class ItemList extends React.Component<Props, State> {
       items: [],
       createItemDialogOpen: false,
       creatingItemDialogOpen: false,
+      modifyListDialogOpen: false,
+      modifyingList: false,
     };
 
     this.listId = this.props.match.params.listId;
@@ -97,6 +103,8 @@ class ItemList extends React.Component<Props, State> {
 
     this.onCreateClicked = this.onCreateClicked.bind(this);
     this.onCreateItemDialogClose = this.onCreateItemDialogClose.bind(this);
+    this.onModifyListClicked = this.onModifyListClicked.bind(this);
+    this.onModifyListDialogClose = this.onModifyListDialogClose.bind(this);
   }
 
   componentDidMount() {
@@ -165,6 +173,15 @@ class ItemList extends React.Component<Props, State> {
             </Dialog>
           </div>
         )}
+
+        {this.state.list && (
+          <EditListDialog
+            action="Modify"
+            open={this.state.modifyListDialogOpen}
+            onClose={this.onModifyListDialogClose}
+            initial={this.state.list.getData() || null}
+          />
+        )}
       </div>
     );
   }
@@ -200,6 +217,37 @@ class ItemList extends React.Component<Props, State> {
       });
   }
 
+  private onModifyListClicked() {
+    this.setState({ modifyListDialogOpen: true });
+  }
+
+  private onModifyListDialogClose(data: ListDataProto | null) {
+    this.setState({
+      modifyListDialogOpen: false,
+      modifyingList: data !== null && this.state.list !== null,
+    });
+    if (!data || !this.state.list) {
+      return;
+    }
+
+    this.props.listModel
+      .updateList(this.state.list.getId(), this.state.list.getVersion(), data)
+      .then((list: ListProto) => {
+        this.setState({ modifyingList: false, list: list });
+      })
+      .catch((error: GrpcError) => {
+        if (error.code === StatusCode.UNAUTHENTICATED) {
+          this.setState({ loggedIn: false });
+          return;
+        }
+
+        this.setState({
+          modifyingList: false,
+          errorMessage: error.message || "Unknown error",
+        });
+      });
+  }
+
   private listMeta() {
     if (!this.state.list) return;
 
@@ -213,6 +261,16 @@ class ItemList extends React.Component<Props, State> {
             formatDate(data.getEventDate(), "PPPP")
           }
         </Typography>
+        {this.props.mode == "edit" && (
+          <div className={this.props.classes.buttons}>
+            <ProgressButton
+              updating={this.state.modifyingList}
+              onClick={this.onModifyListClicked}
+            >
+              Edit
+            </ProgressButton>
+          </div>
+        )}
       </div>
     );
   }
@@ -383,6 +441,10 @@ const itemListStyles = (theme: Theme) =>
     emptyEmoji: {
       fontFamily: "Arial",
       marginBottom: "1rem",
+    },
+    buttons: {
+      display: "flex",
+      justifyContent: "flex-end",
     },
   });
 

@@ -3,16 +3,16 @@ import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from "@material-ui/core/DialogTitle";
-import { createStyles, withStyles } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import { KeyboardDatePicker } from "@material-ui/pickers";
 import * as React from "react";
 import { ListData as ListDataProto } from "../proto/list_pb";
 
 interface Props {
-  classes: any;
+  action: string;
   open: boolean;
   onClose: (listData: ListDataProto | null) => void;
+  initial: ListDataProto | null;
 }
 
 interface State {
@@ -24,33 +24,35 @@ interface State {
   eventDateErrorMessage: string;
 }
 
-class EditListDialog extends React.Component<Props, State> {
+export class EditListDialog extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = this.initialState();
+    this.state = EditListDialog.stateFromInitial(props.initial);
 
     this.handleCancel = this.handleCancel.bind(this);
     this.handleOk = this.handleOk.bind(this);
   }
 
-  private initialState(): State {
-    return {
-      name: "",
-      nameErrorMessage: "",
-      beneficiary: "",
-      beneficiaryErrorMessage: "",
-      eventDate: null,
-      eventDateErrorMessage: "",
-    };
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.open !== this.props.open) {
+      this.setState(EditListDialog.stateFromInitial(this.props.initial));
+    }
   }
 
-  componentDidUpdate(prevProps: Props) {
-    // This component doesn't unmount when the dialog closes. It also controls
-    // the dialog's input components, so the dialog won't have cleared state when it
-    // reopens. We have to handle reset ourselves.
-    if (this.props.open !== prevProps.open && !this.props.open) {
-      this.setState(this.initialState());
+  private static stateFromInitial(initial: ListDataProto | null): State {
+    let eventDate: Date | null = null;
+    if (initial && initial.getEventDate() != 0) {
+      eventDate = new Date(initial.getEventDate() * 1000);
     }
+
+    return {
+      name: initial ? initial.getName() : "",
+      nameErrorMessage: "",
+      beneficiary: initial ? initial.getBeneficiary() : "",
+      beneficiaryErrorMessage: "",
+      eventDate: eventDate,
+      eventDateErrorMessage: "",
+    };
   }
 
   render() {
@@ -77,7 +79,9 @@ class EditListDialog extends React.Component<Props, State> {
           }
         }}
       >
-        <DialogTitle id="create-dialog-title">Create List</DialogTitle>
+        <DialogTitle id="create-dialog-title">
+          {this.props.action} List
+        </DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -118,7 +122,7 @@ class EditListDialog extends React.Component<Props, State> {
             Cancel
           </Button>
           <Button onClick={this.handleOk} color="primary">
-            Create List
+            {this.props.action} List
           </Button>
         </DialogActions>
       </Dialog>
@@ -170,11 +174,3 @@ class EditListDialog extends React.Component<Props, State> {
     this.props.onClose(listData);
   }
 }
-
-const createListDialogStyles = () => createStyles({});
-
-const StyledEditListDialog: any = withStyles(createListDialogStyles)(
-  EditListDialog
-);
-
-export { StyledEditListDialog as EditListDialog };

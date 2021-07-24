@@ -21,6 +21,8 @@ import {
   ListListsResponse,
   UpdateListItemRequest,
   UpdateListItemResponse,
+  UpdateListRequest,
+  UpdateListResponse,
 } from "../proto/list_service_pb";
 import { AuthModel } from "./auth_model";
 
@@ -31,44 +33,6 @@ export class ListModel {
   constructor(listService: ListServicePromiseClient, authModel: AuthModel) {
     this.listService = listService;
     this.authModel = authModel;
-  }
-
-  listLists(includeInactive: boolean): Promise<ListProto[]> {
-    const req = new ListListsRequest();
-    req.setIncludeInactive(includeInactive);
-
-    return this.listService
-      .listLists(req, this.metadata())
-      .then((resp: ListListsResponse) => {
-        return resp.getListsList();
-      });
-  }
-
-  getList(listId: string): Promise<ListProto> {
-    const req = new GetListRequest();
-    req.setListId(listId);
-
-    return this.listService
-      .getList(req, this.metadata())
-      .then((resp: GetListResponse) => {
-        const list = resp.getList();
-        if (!list) {
-          return Promise.reject(new Error("no list in response"));
-        }
-
-        return list;
-      });
-  }
-
-  listListItems(listId: string): Promise<ListItemProto[]> {
-    const req = new ListListItemsRequest();
-    req.setListId(listId);
-
-    return this.listService
-      .listListItems(req, this.metadata())
-      .then((resp: ListListItemsResponse) => {
-        return resp.getItemsList();
-      });
   }
 
   createList(listData: ListDataProto): Promise<ListProto> {
@@ -102,6 +66,28 @@ export class ListModel {
     });
   }
 
+  updateList(
+    listId: string,
+    version: number,
+    data: ListDataProto
+  ): Promise<ListProto> {
+    const req = new UpdateListRequest();
+    req.setListId(listId);
+    req.setListVersion(version);
+    req.setData(data);
+
+    return this.listService
+      .updateList(req, this.metadata())
+      .then((resp: UpdateListResponse) => {
+        const list = resp.getList();
+        if (!list) {
+          return Promise.reject(new Error("no list in response"));
+        }
+
+        return list;
+      });
+  }
+
   createListItem(
     listId: string,
     itemData: ListItemDataProto
@@ -119,6 +105,33 @@ export class ListModel {
         }
 
         return item;
+      });
+  }
+
+  listLists(includeInactive: boolean): Promise<ListProto[]> {
+    const req = new ListListsRequest();
+    req.setIncludeInactive(includeInactive);
+
+    return this.listService
+      .listLists(req, this.metadata())
+      .then((resp: ListListsResponse) => {
+        return resp.getListsList();
+      });
+  }
+
+  getList(listId: string): Promise<ListProto> {
+    const req = new GetListRequest();
+    req.setListId(listId);
+
+    return this.listService
+      .getList(req, this.metadata())
+      .then((resp: GetListResponse) => {
+        const list = resp.getList();
+        if (!list) {
+          return Promise.reject(new Error("no list in response"));
+        }
+
+        return list;
       });
   }
 
@@ -166,5 +179,16 @@ export class ListModel {
   private metadata(): Metadata {
     const cookie = this.authModel.getSessionCookie();
     return { authorization: cookie ? cookie : "" };
+  }
+
+  listListItems(listId: string): Promise<ListItemProto[]> {
+    const req = new ListListItemsRequest();
+    req.setListId(listId);
+
+    return this.listService
+      .listListItems(req, this.metadata())
+      .then((resp: ListListItemsResponse) => {
+        return resp.getItemsList();
+      });
   }
 }
