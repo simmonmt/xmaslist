@@ -15,15 +15,14 @@ import { UserServicePromiseClient } from "../proto/user_service_grpc_web_pb";
 import { AuthModel } from "./auth_model";
 import { AuthStorage } from "./auth_storage";
 import { Banner } from "./banner";
-import { EditList } from "./edit_list";
 import { Home } from "./home";
+import { ItemList } from "./item_list";
 import { ListModel } from "./list_model";
 import { Login } from "./login";
 import { Logout } from "./logout";
 import { ProtectedRoute, ProtectedRouteProps } from "./protected_route";
 import { User } from "./user";
 import { UserModel } from "./user_model";
-import { ViewList } from "./view_list";
 
 interface Props {
   classes: any;
@@ -90,20 +89,20 @@ class App extends React.Component<Props, State> {
                 {...defaultProtectedRouteProps}
                 path="/view/:listId"
               >
-                <ViewList
+                <ItemList
                   listModel={this.listModel}
                   currentUser={this.state.user!}
-                  mutable={false}
+                  mode="view"
                 />
               </ProtectedRoute>
               <ProtectedRoute
                 {...defaultProtectedRouteProps}
                 path="/edit/:listId"
               >
-                <EditList
+                <ItemList
                   listModel={this.listModel}
                   currentUser={this.state.user!}
-                  mutable={true}
+                  mode="edit"
                 />
               </ProtectedRoute>
               <ProtectedRoute {...defaultProtectedRouteProps} exact path="/">

@@ -22,6 +22,7 @@ import {
 } from "../proto/list_item_pb";
 import { List as ListProto } from "../proto/list_pb";
 import { CreateListItemDialog } from "./create_list_item_dialog";
+import { ItemListElement } from "./item_list_element";
 import { ListModel } from "./list_model";
 import { User } from "./user";
 
@@ -52,12 +53,13 @@ export interface ItemListApiArgs {
   itemUpdater: ListItemUpdater;
 }
 
+export type ItemListMode = "view" | "edit";
+
 export interface Props extends RouteComponentProps<PathParams> {
   classes: any;
   listModel: ListModel;
   currentUser: User;
-  mutable: boolean;
-  children: (api: ItemListApiArgs) => React.ReactNode;
+  mode: ItemListMode;
 }
 
 interface State {
@@ -140,7 +142,7 @@ class ItemList extends React.Component<Props, State> {
           </div>
         )}
 
-        {this.props.mutable && (
+        {this.props.mode == "edit" && (
           <div>
             <Fab
               color="primary"
@@ -216,12 +218,15 @@ class ItemList extends React.Component<Props, State> {
   }
 
   private makeItemListItem(item: ListItemProto) {
-    return this.props.children({
-      key: item.getId(),
-      item: item,
-      currentUser: this.props.currentUser,
-      itemUpdater: this.itemUpdater,
-    });
+    return (
+      <ItemListElement
+        key={item.getId()}
+        mode={this.props.mode}
+        item={item}
+        itemUpdater={this.itemUpdater}
+        currentUser={this.props.currentUser}
+      />
+    );
   }
 
   private listItems() {

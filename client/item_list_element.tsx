@@ -14,14 +14,13 @@ import {
 } from "../proto/list_item_pb";
 import { ClaimButton, ClaimedChip } from "./claim";
 import { CreateListItemDialog } from "./create_list_item_dialog";
-import { ListItemUpdater } from "./item_list";
+import { ItemListMode, ListItemUpdater } from "./item_list";
 import { ProgressButton } from "./progress_button";
 import { User } from "./user";
 
 interface Props {
   classes: any;
-  showClaim: boolean;
-  mutable: boolean;
+  mode: ItemListMode;
   item: ListItemProto;
   itemUpdater: ListItemUpdater;
   currentUser: User;
@@ -57,12 +56,14 @@ class ItemListElement extends React.Component<Props, State> {
     const buttonsDisabled =
       this.state.claiming || this.state.deleting || this.state.modifying;
 
+    const showClaim = this.props.mode == "view";
+
     return (
       <Accordion key={"item-" + this.props.item.getId()}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography variant="h6">{data.getName()}</Typography>
           <div className={this.props.classes.grow} />
-          {this.props.showClaim &&
+          {showClaim &&
             this.props.item.getState() &&
             this.props.item.getState()!.getClaimed() && (
               <ClaimedChip
@@ -84,7 +85,7 @@ class ItemListElement extends React.Component<Props, State> {
             </Typography>
           )}
           <div className={this.props.classes.buttons}>
-            {this.props.mutable && [
+            {this.props.mode == "edit" && [
               <ProgressButton
                 variant="contained"
                 disabled={buttonsDisabled}
@@ -102,14 +103,14 @@ class ItemListElement extends React.Component<Props, State> {
                 Delete
               </ProgressButton>,
             ]}
-            {this.props.showClaim && (
+            {showClaim && (
               <ClaimButton
                 disabled={buttonsDisabled}
                 updating={this.state.claiming}
                 currentUserId={this.props.currentUser.id}
                 item={this.props.item}
                 onClaimClick={this.onClaimClick}
-                color={this.props.mutable ? "default" : "primary"}
+                color={this.props.mode == "edit" ? "default" : "primary"}
               />
             )}
           </div>
