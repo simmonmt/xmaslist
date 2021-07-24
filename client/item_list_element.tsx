@@ -87,7 +87,6 @@ class ItemListElement extends React.Component<Props, State> {
           <div className={this.props.classes.buttons}>
             {this.props.mode == "edit" && [
               <ProgressButton
-                variant="contained"
                 disabled={buttonsDisabled}
                 updating={this.state.modifying}
                 onClick={this.onModifyClick}
@@ -95,7 +94,6 @@ class ItemListElement extends React.Component<Props, State> {
                 Edit
               </ProgressButton>,
               <ProgressButton
-                variant="contained"
                 disabled={buttonsDisabled}
                 updating={this.state.deleting}
                 onClick={this.onDeleteClick}

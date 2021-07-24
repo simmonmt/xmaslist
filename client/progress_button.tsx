@@ -18,7 +18,7 @@ class ProgressButton extends React.Component<
 
     return (
       <div className={classes.wrapper}>
-        <Button variant="contained" disabled={disabled || updating} {...rest}>
+        <Button disabled={disabled || updating} {...rest}>
           {children}
         </Button>
         {updating && (
