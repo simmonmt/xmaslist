@@ -1,6 +1,7 @@
 import Accordion from "@material-ui/core/Accordion";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
+import Box from "@material-ui/core/Box";
 import Link from "@material-ui/core/Link";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import { Theme } from "@material-ui/core/styles/createTheme";
@@ -124,7 +125,17 @@ class ItemListElement extends React.Component<Props, State> {
   }
 
   private makeLink(urlStr: string) {
-    const url = new URL(urlStr);
+    let url;
+    try {
+      url = new URL(urlStr);
+    } catch (error) {
+      return (
+        <Box component="span" color="error.main">
+          {urlStr}
+        </Box>
+      );
+    }
+
     const match = url.hostname.match(/^(?:.*\.)?([^.]+)\.[^.]+$/);
     return (
       <Link href={urlStr} target="_blank" rel="noreferrer">
