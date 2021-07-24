@@ -12,6 +12,7 @@ import {
   CreateListItemResponse,
   CreateListRequest,
   CreateListResponse,
+  DeleteListItemRequest,
   GetListRequest,
   GetListResponse,
   ListListItemsRequest,
@@ -150,6 +151,16 @@ export class ListModel {
 
         return item;
       });
+  }
+
+  deleteListItem(listId: string, itemId: string): Promise<void> {
+    const req = new DeleteListItemRequest();
+    req.setListId(listId);
+    req.setItemId(itemId);
+
+    return this.listService
+      .deleteListItem(req, this.metadata())
+      .then(() => Promise.resolve());
   }
 
   private metadata(): Metadata {

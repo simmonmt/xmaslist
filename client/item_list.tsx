@@ -40,6 +40,8 @@ export interface ListItemUpdater {
     itemVersion: number,
     state: ListItemStateProto
   ) => Promise<void>;
+
+  delete: (itemId: string) => Promise<void>;
 }
 
 export interface ItemListApiArgs {
@@ -87,6 +89,7 @@ class ItemList extends React.Component<Props, State> {
     this.itemUpdater = {
       updateData: this.updateListItemData.bind(this),
       updateState: this.updateListItemState.bind(this),
+      delete: this.deleteListItem.bind(this),
     };
 
     this.onCreateClicked = this.onCreateClicked.bind(this);
@@ -261,6 +264,32 @@ class ItemList extends React.Component<Props, State> {
             return item;
           }),
         });
+        return Promise.resolve();
+      })
+      .catch((error: GrpcError) => {
+        if (error.code === StatusCode.UNAUTHENTICATED) {
+          this.setState({ loggedIn: false });
+          return;
+        }
+
+        this.setState({
+          errorMessage: error.message || "Unknown error",
+        });
+        return Promise.resolve();
+      });
+  }
+
+  private deleteListItem(itemId: string): Promise<void> {
+    return this.props.listModel
+      .deleteListItem(this.listId, itemId)
+      .then(() => {
+        const tmp = this.state.items.slice();
+        for (let i = 0; i < tmp.length; ++i) {
+          if (tmp[i].getId() === itemId) {
+            tmp.splice(i, 1);
+          }
+        }
+        this.setState({ items: tmp });
         return Promise.resolve();
       })
       .catch((error: GrpcError) => {

@@ -1,7 +1,6 @@
 import Accordion from "@material-ui/core/Accordion";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
-import Button from "@material-ui/core/Button";
 import Link from "@material-ui/core/Link";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import { Theme } from "@material-ui/core/styles/createTheme";
@@ -45,9 +44,10 @@ class ItemListElement extends React.Component<Props, State> {
       modifying: false,
     };
 
+    this.onClaimClick = this.onClaimClick.bind(this);
+    this.onDeleteClick = this.onDeleteClick.bind(this);
     this.onModifyClick = this.onModifyClick.bind(this);
     this.onModifyItemDialogClose = this.onModifyItemDialogClose.bind(this);
-    this.onClaimClick = this.onClaimClick.bind(this);
   }
 
   render() {
@@ -92,9 +92,14 @@ class ItemListElement extends React.Component<Props, State> {
               >
                 Modify
               </ProgressButton>,
-              <Button variant="contained" disabled={buttonsDisabled}>
+              <ProgressButton
+                variant="contained"
+                disabled={buttonsDisabled}
+                updating={this.state.deleting}
+                onClick={this.onDeleteClick}
+              >
                 Delete
-              </Button>,
+              </ProgressButton>,
             ]}
             {this.props.showClaim && (
               <ClaimButton
@@ -157,6 +162,13 @@ class ItemListElement extends React.Component<Props, State> {
     this.props.itemUpdater
       .updateData(this.props.item.getId(), this.props.item.getVersion(), data)
       .finally(() => this.setState({ modifying: false }));
+  }
+
+  private onDeleteClick() {
+    this.setState({ deleting: true });
+    this.props.itemUpdater.delete(this.props.item.getId());
+    // No need to set deleting to false -- this component will be unmounted by
+    // the time the promise returned by delete() resolves.
   }
 }
 
