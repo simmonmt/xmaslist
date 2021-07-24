@@ -24,7 +24,7 @@ interface State {
   eventDateErrorMessage: string;
 }
 
-class CreateListDialog extends React.Component<Props, State> {
+class EditListDialog extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = this.initialState();
@@ -173,8 +173,8 @@ class CreateListDialog extends React.Component<Props, State> {
 
 const createListDialogStyles = () => createStyles({});
 
-const StyledCreateListDialog: any = withStyles(createListDialogStyles)(
-  CreateListDialog
+const StyledEditListDialog: any = withStyles(createListDialogStyles)(
+  EditListDialog
 );
 
-export { StyledCreateListDialog as CreateListDialog };
+export { StyledEditListDialog as EditListDialog };

@@ -24,7 +24,7 @@ import { Error as GrpcError, StatusCode } from "grpc-web";
 import * as React from "react";
 import { Link, Redirect } from "react-router-dom";
 import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
-import { CreateListDialog } from "./create_list_dialog";
+import { EditListDialog } from "./edit_list_dialog";
 import { ListModel } from "./list_model";
 import { User } from "./user";
 import { UserModel } from "./user_model";
@@ -287,7 +287,7 @@ class Home extends React.Component<HomeProps, HomeState> {
         >
           <AddIcon />
         </Fab>
-        <CreateListDialog
+        <EditListDialog
           open={this.state.createDialogOpen}
           onClose={this.handleCreateDialogClose}
         />
