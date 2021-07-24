@@ -34,10 +34,10 @@ interface State {
   urlErrorMessage: string;
 }
 
-class CreateListItemDialog extends React.Component<Props, State> {
+class EditListItemDialog extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = CreateListItemDialog.stateFromInitial(props.initial);
+    this.state = EditListItemDialog.stateFromInitial(props.initial);
 
     this.onCancelClicked = this.onCancelClicked.bind(this);
     this.onOkClicked = this.onOkClicked.bind(this);
@@ -45,7 +45,7 @@ class CreateListItemDialog extends React.Component<Props, State> {
 
   componentDidUpdate(prevProps: Props) {
     if (prevProps.open !== this.props.open) {
-      this.setState(CreateListItemDialog.stateFromInitial(this.props.initial));
+      this.setState(EditListItemDialog.stateFromInitial(this.props.initial));
     }
   }
 
@@ -177,8 +177,8 @@ class CreateListItemDialog extends React.Component<Props, State> {
 
 const createListItemDialogStyles = () => createStyles({});
 
-const exportCreateListItemDialog: any = withStyles(createListItemDialogStyles)(
-  CreateListItemDialog
+const exportEditListItemDialog: any = withStyles(createListItemDialogStyles)(
+  EditListItemDialog
 );
 
-export { exportCreateListItemDialog as CreateListItemDialog };
+export { exportEditListItemDialog as EditListItemDialog };

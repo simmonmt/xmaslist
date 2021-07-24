@@ -21,7 +21,7 @@ import {
   ListItemState as ListItemStateProto,
 } from "../proto/list_item_pb";
 import { List as ListProto } from "../proto/list_pb";
-import { CreateListItemDialog } from "./create_list_item_dialog";
+import { EditListItemDialog } from "./edit_list_item_dialog";
 import { ItemListElement } from "./item_list_element";
 import { ListModel } from "./list_model";
 import { User } from "./user";
@@ -152,7 +152,7 @@ class ItemList extends React.Component<Props, State> {
             >
               <AddIcon />
             </Fab>
-            <CreateListItemDialog
+            <EditListItemDialog
               action="Create"
               open={this.state.createItemDialogOpen}
               onClose={this.onCreateItemDialogClose}

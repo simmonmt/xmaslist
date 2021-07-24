@@ -13,7 +13,7 @@ import {
   ListItemData as ListItemDataProto,
 } from "../proto/list_item_pb";
 import { ClaimButton, ClaimedChip } from "./claim";
-import { CreateListItemDialog } from "./create_list_item_dialog";
+import { EditListItemDialog } from "./edit_list_item_dialog";
 import { ItemListMode, ListItemUpdater } from "./item_list";
 import { ProgressButton } from "./progress_button";
 import { User } from "./user";
@@ -113,7 +113,7 @@ class ItemListElement extends React.Component<Props, State> {
             )}
           </div>
         </AccordionDetails>
-        <CreateListItemDialog
+        <EditListItemDialog
           action="Modify"
           open={this.state.modifyItemDialogOpen}
           onClose={this.onModifyItemDialogClose}
