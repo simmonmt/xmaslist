@@ -22,7 +22,7 @@ import { ListModel } from "./list_model";
 import { User } from "./user";
 import { UserModel } from "./user_model";
 
-interface HomeProps {
+interface ListListProps {
   listModel: ListModel;
   userModel: UserModel;
   onShouldLogout: () => void;
@@ -30,7 +30,7 @@ interface HomeProps {
   classes: any;
 }
 
-interface HomeState {
+interface ListListState {
   loading: boolean;
   loggedIn: boolean;
   errorMessage: string;
@@ -40,10 +40,10 @@ interface HomeState {
   creatingDialogOpen: boolean;
 }
 
-class Home extends React.Component<HomeProps, HomeState> {
+class ListList extends React.Component<ListListProps, ListListState> {
   private readonly curYear: number;
 
-  constructor(props: HomeProps) {
+  constructor(props: ListListProps) {
     super(props);
     this.state = {
       loading: true,
@@ -255,7 +255,7 @@ class Home extends React.Component<HomeProps, HomeState> {
   }
 }
 
-const homeStyles = (theme: Theme) =>
+const listListStyles = (theme: Theme) =>
   createStyles({
     root: {
       width: "100%",
@@ -271,6 +271,6 @@ const homeStyles = (theme: Theme) =>
     },
   });
 
-const StyledHome: any = withStyles(homeStyles)(Home);
+const exportListList: any = withStyles(listListStyles)(ListList);
 
-export { StyledHome as Home };
+export { exportListList as ListList };
