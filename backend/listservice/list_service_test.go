@@ -76,7 +76,7 @@ type listItemTestState struct {
 func setupListItemTestState(ctx context.Context, t *testing.T) *listItemTestState {
 	clock := &util.MonoClock{Time: time.Unix(0, 0)}
 	db := testutil.SetupTestDatabase(ctx, t)
-	users := testutil.CreateTestUsers(ctx, t, db, []string{"a", "b"})
+	users := testutil.CreateTestUsers(ctx, t, db, []string{"a", "b", "c"})
 	sm, sessionsByUserID := makeSessions(t, clock, db, users)
 
 	reqs := []*testutil.ListSetupRequest{
@@ -379,9 +379,17 @@ func TestUpdateListItem_UnclaimWithCrossOwnership(t *testing.T) {
 	defer state.DB.Close()
 
 	list, item := state.Lists.GetItem("l1", "l1i2")
+	owner := state.Users.UserByID(list.OwnerID)
+	if owner.Username != "a" {
+		t.Fatalf("bad test data")
+	}
 
-	reqCtxA := makeRequestContext(ctx, state, "a")
-	reqCtxB := makeRequestContext(ctx, state, "b")
+	// c   Claimed the item      Can unclaim because it claimed
+	// b                         Can't unclaim - neither owner nor claimer
+	// a   Owns the list         Can unclaim because it's the owner
+	ownerCtx := makeRequestContext(ctx, state, "a")
+	nonOwnerCtx := makeRequestContext(ctx, state, "b")
+	claimCtx := makeRequestContext(ctx, state, "c")
 
 	req := &lspb.UpdateListItemRequest{
 		ListId:      strconv.Itoa(list.ID),
@@ -390,7 +398,7 @@ func TestUpdateListItem_UnclaimWithCrossOwnership(t *testing.T) {
 		State:       &lspb.ListItemState{Claimed: true},
 	}
 
-	resp, err := state.Server.UpdateListItem(reqCtxA, req)
+	resp, err := state.Server.UpdateListItem(claimCtx, req)
 	if err != nil {
 		t.Fatalf("failed to claim")
 	}
@@ -398,10 +406,16 @@ func TestUpdateListItem_UnclaimWithCrossOwnership(t *testing.T) {
 	req.ItemVersion = resp.GetItem().GetVersion()
 	req.GetState().Claimed = false
 
-	_, err = state.Server.UpdateListItem(reqCtxB, req)
+	_, err = state.Server.UpdateListItem(nonOwnerCtx, req)
 	if err == nil || status.Code(err) != codes.PermissionDenied {
 		t.Fatalf("UpdateListItem(_, %+v) = _, %v, want _, PermissionDenied",
 			req, err)
+	}
+
+	resp, err = state.Server.UpdateListItem(ownerCtx, req)
+	if err != nil {
+		t.Fatalf("UpdateListItem(_, %+v) = %v, %v, want _, nil",
+			req, resp, err)
 	}
 
 }

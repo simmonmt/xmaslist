@@ -395,7 +395,7 @@ func (s *listServer) UpdateListItem(ctx context.Context, req *lspb.UpdateListIte
 							codes.FailedPrecondition,
 							"item is already claimed")
 					}
-					if session.User.ID != state.ClaimedBy {
+					if session.User.ID != list.OwnerID && session.User.ID != state.ClaimedBy {
 						return status.Errorf(
 							codes.PermissionDenied,
 							"can't unclaim item already "+
