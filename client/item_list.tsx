@@ -258,7 +258,7 @@ class ItemList extends React.Component<Props, State> {
         <Typography variant="body1" color="textSecondary">
           {
             // Long localized date
-            formatDate(data.getEventDate(), "PPPP")
+            formatDate(new Date(data.getEventDate() * 1000), "PPPP")
           }
         </Typography>
         {this.props.mode == "edit" && (
