@@ -1,16 +1,20 @@
+import Box from "@material-ui/core/Box";
 import Card from "@material-ui/core/Card";
 import grey from "@material-ui/core/colors/grey";
 import Dialog from "@material-ui/core/Dialog";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
 import Fab from "@material-ui/core/Fab";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import FormGroup from "@material-ui/core/FormGroup";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import { Theme } from "@material-ui/core/styles/createTheme";
+import Switch from "@material-ui/core/Switch";
 import Typography from "@material-ui/core/Typography";
 import AddIcon from "@material-ui/icons/Add";
 import Alert from "@material-ui/lab/Alert";
-import { format as formatDate } from "date-fns";
+import { format as formatDate, isPast as isPastDate } from "date-fns";
 import { Error as GrpcError, StatusCode } from "grpc-web";
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
@@ -23,7 +27,7 @@ import {
 import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
 import { EditListDialog } from "./edit_list_dialog";
 import { EditListItemDialog } from "./edit_list_item_dialog";
-import { ItemListElement } from "./item_list_element";
+import { ItemListElement, ItemListElementMode } from "./item_list_element";
 import { ListModel } from "./list_model";
 import { ProgressButton } from "./progress_button";
 import { User } from "./user";
@@ -70,6 +74,7 @@ interface State {
   errorMessage: string;
   list: ListProto | null;
   items: ListItemProto[];
+  adminMode: boolean;
   createItemDialogOpen: boolean;
   creatingItemDialogOpen: boolean;
   modifyListDialogOpen: boolean;
@@ -88,6 +93,7 @@ class ItemList extends React.Component<Props, State> {
       errorMessage: "",
       list: null,
       items: [],
+      adminMode: false,
       createItemDialogOpen: false,
       creatingItemDialogOpen: false,
       modifyListDialogOpen: false,
@@ -105,6 +111,7 @@ class ItemList extends React.Component<Props, State> {
     this.onCreateItemDialogClose = this.onCreateItemDialogClose.bind(this);
     this.onModifyListClicked = this.onModifyListClicked.bind(this);
     this.onModifyListDialogClose = this.onModifyListDialogClose.bind(this);
+    this.onAdminModeChange = this.onAdminModeChange.bind(this);
   }
 
   componentDidMount() {
@@ -112,6 +119,25 @@ class ItemList extends React.Component<Props, State> {
   }
 
   render() {
+    let eventIsPast = false;
+    let userIsOwner = false;
+    if (this.state.list) {
+      const data = this.state.list.getData();
+      eventIsPast = isPastDate(
+        new Date(Number(data && data.getEventDate()) * 1000)
+      );
+
+      const metadata = this.state.list.getMetadata();
+      userIsOwner =
+        Number(metadata && metadata.getOwner()) === this.props.currentUser.id;
+    }
+
+    const showAdminModeToggle =
+      this.props.currentUser.isAdmin || (userIsOwner && eventIsPast);
+    const elementMode: ItemListElementMode = this.state.adminMode
+      ? "admin"
+      : this.props.mode;
+
     return (
       <div className={this.props.classes.root}>
         {!this.state.loggedIn && <Redirect to="/logout" />}
@@ -125,11 +151,24 @@ class ItemList extends React.Component<Props, State> {
             Error: {this.state.errorMessage}
           </Alert>
         )}
-        <div>
+        <Box display="flex" justifyContent="space-between">
           <Typography variant="body1">
             <RouterLink to="/">&lt;&lt; All lists</RouterLink>
           </Typography>
-        </div>
+          <FormGroup row>
+            {showAdminModeToggle && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={this.state.adminMode}
+                    onChange={this.onAdminModeChange}
+                  />
+                }
+                label="Show Claim State"
+              />
+            )}
+          </FormGroup>
+        </Box>
 
         <Card className={this.props.classes.card} raised>
           {this.listMeta()}
@@ -137,7 +176,7 @@ class ItemList extends React.Component<Props, State> {
 
         {this.state.items.length > 0 && (
           <Card className={this.props.classes.card} raised>
-            {this.listItems()}
+            {this.listItems(elementMode)}
           </Card>
         )}
 
@@ -248,6 +287,10 @@ class ItemList extends React.Component<Props, State> {
       });
   }
 
+  private onAdminModeChange(event: React.ChangeEvent<HTMLInputElement>) {
+    this.setState({ adminMode: event.target.checked });
+  }
+
   private listMeta() {
     if (!this.state.list) return;
 
@@ -275,11 +318,11 @@ class ItemList extends React.Component<Props, State> {
     );
   }
 
-  private makeItemListItem(item: ListItemProto) {
+  private makeItemListItem(item: ListItemProto, mode: ItemListElementMode) {
     return (
       <ItemListElement
         key={item.getId()}
-        mode={this.props.mode}
+        mode={mode}
         item={item}
         itemUpdater={this.itemUpdater}
         currentUser={this.props.currentUser}
@@ -287,9 +330,13 @@ class ItemList extends React.Component<Props, State> {
     );
   }
 
-  private listItems() {
+  private listItems(elementMode: ItemListElementMode) {
     return (
-      <div>{this.state.items.map((item) => this.makeItemListItem(item))}</div>
+      <div>
+        {this.state.items.map((item) =>
+          this.makeItemListItem(item, elementMode)
+        )}
+      </div>
     );
   }
 

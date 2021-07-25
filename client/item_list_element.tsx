@@ -14,13 +14,15 @@ import {
 } from "../proto/list_item_pb";
 import { ClaimButton, ClaimedChip } from "./claim";
 import { EditListItemDialog } from "./edit_list_item_dialog";
-import { ItemListMode, ListItemUpdater } from "./item_list";
+import { ListItemUpdater } from "./item_list";
 import { ProgressButton } from "./progress_button";
 import { User } from "./user";
 
+export type ItemListElementMode = "view" | "edit" | "admin";
+
 interface Props {
   classes: any;
-  mode: ItemListMode;
+  mode: ItemListElementMode;
   item: ListItemProto;
   itemUpdater: ListItemUpdater;
   currentUser: User;
@@ -56,7 +58,8 @@ class ItemListElement extends React.Component<Props, State> {
     const buttonsDisabled =
       this.state.claiming || this.state.deleting || this.state.modifying;
 
-    const showClaim = this.props.mode == "view";
+    const editMode = this.props.mode === "edit" || this.props.mode == "admin";
+    const showClaim = this.props.mode === "view" || this.props.mode === "admin";
 
     return (
       <Accordion key={"item-" + this.props.item.getId()}>
@@ -85,7 +88,17 @@ class ItemListElement extends React.Component<Props, State> {
             </Typography>
           )}
           <div className={this.props.classes.buttons}>
-            {this.props.mode == "edit" && [
+            {showClaim && (
+              <ClaimButton
+                disabled={buttonsDisabled}
+                updating={this.state.claiming}
+                currentUserId={this.props.currentUser.id}
+                item={this.props.item}
+                onClaimClick={this.onClaimClick}
+                color={editMode ? "default" : "primary"}
+              />
+            )}
+            {editMode && [
               <ProgressButton
                 disabled={buttonsDisabled}
                 updating={this.state.modifying}
@@ -101,16 +114,6 @@ class ItemListElement extends React.Component<Props, State> {
                 Delete
               </ProgressButton>,
             ]}
-            {showClaim && (
-              <ClaimButton
-                disabled={buttonsDisabled}
-                updating={this.state.claiming}
-                currentUserId={this.props.currentUser.id}
-                item={this.props.item}
-                onClaimClick={this.onClaimClick}
-                color={this.props.mode == "edit" ? "default" : "primary"}
-              />
-            )}
           </div>
         </AccordionDetails>
         <EditListItemDialog
