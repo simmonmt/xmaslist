@@ -11,8 +11,10 @@ import * as React from "react";
 import {
   ListItem as ListItemProto,
   ListItemData as ListItemDataProto,
+  ListItemMetadata as ListItemMetadataProto,
+  ListItemState as ListItemStateProto,
 } from "../proto/list_item_pb";
-import { ClaimButton, ClaimedChip } from "./claim";
+import { ClaimedChip } from "./claim";
 import { EditListItemDialog } from "./edit_list_item_dialog";
 import { ListItemUpdater } from "./item_list";
 import { ProgressButton } from "./progress_button";
@@ -88,16 +90,7 @@ class ItemListElement extends React.Component<Props, State> {
             </Typography>
           )}
           <div className={this.props.classes.buttons}>
-            {showClaim && (
-              <ClaimButton
-                disabled={buttonsDisabled}
-                updating={this.state.claiming}
-                currentUserId={this.props.currentUser.id}
-                item={this.props.item}
-                onClaimClick={this.onClaimClick}
-                color={editMode ? "default" : "primary"}
-              />
-            )}
+            {showClaim && this.claimButton()}
             {editMode && [
               <ProgressButton
                 disabled={buttonsDisabled}
@@ -123,6 +116,42 @@ class ItemListElement extends React.Component<Props, State> {
           initial={data}
         />
       </Accordion>
+    );
+  }
+
+  private claimButton() {
+    // Admin mode:
+    //   claim/unclaim, always usable
+    // View mode:
+    //   claim if unclaimed
+    //   unclaim if claimed by you else disabled
+    const state = this.props.item.getState() || new ListItemStateProto();
+    const metadata =
+      this.props.item.getMetadata() || new ListItemMetadataProto();
+    const claimed: boolean = state && state.getClaimed() === true;
+    const claimedByMe: boolean =
+      claimed &&
+      metadata &&
+      metadata.getClaimedBy() === this.props.currentUser.id;
+
+    const claimButtonLabel = claimed ? "Unclaim" : "Claim";
+
+    let claimButtonEnabled = true;
+    if (this.props.mode === "view") {
+      if (claimed) {
+        claimButtonEnabled = claimedByMe;
+      }
+    }
+
+    return (
+      <ProgressButton
+        updating={this.state.claiming}
+        disabled={!claimButtonEnabled}
+        color={this.props.mode === "edit" ? "default" : "primary"}
+        onClick={() => this.onClaimClick(!claimed)}
+      >
+        {claimButtonLabel}
+      </ProgressButton>
     );
   }
 
