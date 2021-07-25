@@ -39,8 +39,8 @@ class EditListItemDialog extends React.Component<Props, State> {
     super(props);
     this.state = EditListItemDialog.stateFromInitial(props.initial);
 
-    this.onCancelClicked = this.onCancelClicked.bind(this);
-    this.onOkClicked = this.onOkClicked.bind(this);
+    this.handleCancelClick = this.handleCancelClick.bind(this);
+    this.handleOkClick = this.handleOkClick.bind(this);
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -77,11 +77,11 @@ class EditListItemDialog extends React.Component<Props, State> {
       <Dialog
         open={this.props.open}
         keepMounted={false}
-        onClose={this.onCancelClicked}
+        onClose={this.handleCancelClick}
         aria-labelledby="create-item-dialog-title"
         onKeyUp={(e) => {
           if (e.key === "Enter") {
-            this.onOkClicked();
+            this.handleOkClick();
           }
         }}
       >
@@ -123,10 +123,10 @@ class EditListItemDialog extends React.Component<Props, State> {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={this.onCancelClicked} color="primary">
+          <Button onClick={this.handleCancelClick} color="primary">
             Cancel
           </Button>
-          <Button onClick={this.onOkClicked} color="primary">
+          <Button onClick={this.handleOkClick} color="primary">
             {this.props.action} Item
           </Button>
         </DialogActions>
@@ -134,11 +134,11 @@ class EditListItemDialog extends React.Component<Props, State> {
     );
   }
 
-  private onCancelClicked() {
+  private handleCancelClick() {
     this.props.onClose(null);
   }
 
-  private onOkClicked() {
+  private handleOkClick() {
     let error = false;
 
     if (this.state.name) {

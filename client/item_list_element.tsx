@@ -48,10 +48,11 @@ class ItemListElement extends React.Component<Props, State> {
       modifying: false,
     };
 
-    this.onClaimClick = this.onClaimClick.bind(this);
-    this.onDeleteClick = this.onDeleteClick.bind(this);
-    this.onModifyClick = this.onModifyClick.bind(this);
-    this.onModifyItemDialogClose = this.onModifyItemDialogClose.bind(this);
+    this.handleClaimClick = this.handleClaimClick.bind(this);
+    this.handleDeleteClick = this.handleDeleteClick.bind(this);
+    this.handleModifyClick = this.handleModifyClick.bind(this);
+    this.handleModifyItemDialogClose =
+      this.handleModifyItemDialogClose.bind(this);
   }
 
   render() {
@@ -95,14 +96,14 @@ class ItemListElement extends React.Component<Props, State> {
               <ProgressButton
                 disabled={buttonsDisabled}
                 updating={this.state.modifying}
-                onClick={this.onModifyClick}
+                onClick={this.handleModifyClick}
               >
                 Edit
               </ProgressButton>,
               <ProgressButton
                 disabled={buttonsDisabled}
                 updating={this.state.deleting}
-                onClick={this.onDeleteClick}
+                onClick={this.handleDeleteClick}
               >
                 Delete
               </ProgressButton>,
@@ -112,7 +113,7 @@ class ItemListElement extends React.Component<Props, State> {
         <EditListItemDialog
           action="Modify"
           open={this.state.modifyItemDialogOpen}
-          onClose={this.onModifyItemDialogClose}
+          onClose={this.handleModifyItemDialogClose}
           initial={data}
         />
       </Accordion>
@@ -148,7 +149,7 @@ class ItemListElement extends React.Component<Props, State> {
         updating={this.state.claiming}
         disabled={!claimButtonEnabled}
         color={this.props.mode === "edit" ? "default" : "primary"}
-        onClick={() => this.onClaimClick(!claimed)}
+        onClick={() => this.handleClaimClick(!claimed)}
       >
         {claimButtonLabel}
       </ProgressButton>
@@ -175,7 +176,7 @@ class ItemListElement extends React.Component<Props, State> {
     );
   }
 
-  private onClaimClick(newClaimState: boolean) {
+  private handleClaimClick(newClaimState: boolean) {
     const oldItemState = this.props.item.getState();
     if (!oldItemState) return; // shouldn't happen
     const newItemState = oldItemState.cloneMessage();
@@ -191,11 +192,11 @@ class ItemListElement extends React.Component<Props, State> {
       .finally(() => this.setState({ claiming: false }));
   }
 
-  private onModifyClick() {
+  private handleModifyClick() {
     this.setState({ modifyItemDialogOpen: true });
   }
 
-  private onModifyItemDialogClose(data: ListItemDataProto | null) {
+  private handleModifyItemDialogClose(data: ListItemDataProto | null) {
     this.setState({ modifyItemDialogOpen: false, modifying: data !== null });
     if (!data) {
       return;
@@ -206,7 +207,7 @@ class ItemListElement extends React.Component<Props, State> {
       .finally(() => this.setState({ modifying: false }));
   }
 
-  private onDeleteClick() {
+  private handleDeleteClick() {
     this.setState({ deleting: true });
     this.props.itemUpdater.delete(this.props.item.getId());
     // No need to set deleting to false -- this component will be unmounted by

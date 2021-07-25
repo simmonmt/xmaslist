@@ -109,12 +109,14 @@ class ItemList extends React.Component<Props, State> {
       delete: this.deleteListItem.bind(this),
     };
 
-    this.onAlertClose = this.onAlertClose.bind(this);
-    this.onCreateClicked = this.onCreateClicked.bind(this);
-    this.onCreateItemDialogClose = this.onCreateItemDialogClose.bind(this);
-    this.onModifyListClicked = this.onModifyListClicked.bind(this);
-    this.onModifyListDialogClose = this.onModifyListDialogClose.bind(this);
-    this.onAdminModeChange = this.onAdminModeChange.bind(this);
+    this.handleAlertClose = this.handleAlertClose.bind(this);
+    this.handleCreateClick = this.handleCreateClick.bind(this);
+    this.handleCreateItemDialogClose =
+      this.handleCreateItemDialogClose.bind(this);
+    this.handleModifyListClick = this.handleModifyListClick.bind(this);
+    this.handleModifyListDialogClose =
+      this.handleModifyListDialogClose.bind(this);
+    this.handleAdminModeChange = this.handleAdminModeChange.bind(this);
   }
 
   componentDidMount() {
@@ -149,7 +151,7 @@ class ItemList extends React.Component<Props, State> {
           <Alert
             severity="error"
             variant="standard"
-            onClose={this.onAlertClose}
+            onClose={this.handleAlertClose}
           >
             Error: {this.state.errorMessage}
           </Alert>
@@ -164,7 +166,7 @@ class ItemList extends React.Component<Props, State> {
                 control={
                   <Switch
                     checked={this.state.adminMode}
-                    onChange={this.onAdminModeChange}
+                    onChange={this.handleAdminModeChange}
                   />
                 }
                 label="Show Claim State"
@@ -198,14 +200,14 @@ class ItemList extends React.Component<Props, State> {
               color="primary"
               aria-label="create"
               className={this.props.classes.fab}
-              onClick={this.onCreateClicked}
+              onClick={this.handleCreateClick}
             >
               <AddIcon />
             </Fab>
             <EditListItemDialog
               action="Create"
               open={this.state.createItemDialogOpen}
-              onClose={this.onCreateItemDialogClose}
+              onClose={this.handleCreateItemDialogClose}
               initial={null}
             />
             <Dialog open={this.state.creatingItemDialogOpen}>
@@ -220,7 +222,7 @@ class ItemList extends React.Component<Props, State> {
           <EditListDialog
             action="Modify"
             open={this.state.modifyListDialogOpen}
-            onClose={this.onModifyListDialogClose}
+            onClose={this.handleModifyListDialogClose}
             initial={this.state.list.getData() || null}
           />
         )}
@@ -228,11 +230,11 @@ class ItemList extends React.Component<Props, State> {
     );
   }
 
-  private onCreateClicked() {
+  private handleCreateClick() {
     this.setState({ createItemDialogOpen: true });
   }
 
-  private onCreateItemDialogClose(itemData: ListItemDataProto | null) {
+  private handleCreateItemDialogClose(itemData: ListItemDataProto | null) {
     this.setState({ createItemDialogOpen: false });
     if (!itemData) {
       return;
@@ -259,11 +261,11 @@ class ItemList extends React.Component<Props, State> {
       });
   }
 
-  private onModifyListClicked() {
+  private handleModifyListClick() {
     this.setState({ modifyListDialogOpen: true });
   }
 
-  private onModifyListDialogClose(data: ListDataProto | null) {
+  private handleModifyListDialogClose(data: ListDataProto | null) {
     this.setState({
       modifyListDialogOpen: false,
       modifyingList: data !== null && this.state.list !== null,
@@ -290,7 +292,7 @@ class ItemList extends React.Component<Props, State> {
       });
   }
 
-  private onAdminModeChange(event: React.ChangeEvent<HTMLInputElement>) {
+  private handleAdminModeChange(event: React.ChangeEvent<HTMLInputElement>) {
     this.setState({ adminMode: event.target.checked });
   }
 
@@ -311,7 +313,7 @@ class ItemList extends React.Component<Props, State> {
           <div className={this.props.classes.buttons}>
             <ProgressButton
               updating={this.state.modifyingList}
-              onClick={this.onModifyListClicked}
+              onClick={this.handleModifyListClick}
             >
               Edit
             </ProgressButton>
@@ -427,7 +429,7 @@ class ItemList extends React.Component<Props, State> {
       });
   }
 
-  private onAlertClose() {
+  private handleAlertClose() {
     this.setState({ errorMessage: "" });
   }
 
