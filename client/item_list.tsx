@@ -107,6 +107,7 @@ class ItemList extends React.Component<Props, State> {
       delete: this.deleteListItem.bind(this),
     };
 
+    this.onAlertClose = this.onAlertClose.bind(this);
     this.onCreateClicked = this.onCreateClicked.bind(this);
     this.onCreateItemDialogClose = this.onCreateItemDialogClose.bind(this);
     this.onModifyListClicked = this.onModifyListClicked.bind(this);
