@@ -11,7 +11,6 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { List as ListProto } from "../proto/list_pb";
 import { User } from "./user";
-import { UserModel } from "./user_model";
 
 interface ListItemLinkProps {
   to: string;
@@ -43,12 +42,12 @@ function ListItemLink(props: ListItemLinkProps) {
 }
 
 interface ListListElementProps {
+  classes: any;
   list: ListProto;
-  userModel: UserModel;
+  listOwner: User;
   currentUser: User;
   curYear: number;
   onDeleteClicked: (id: string, isActive: boolean) => void;
-  classes: any;
 }
 
 interface ListListElementState {}
@@ -71,8 +70,8 @@ class ListListElement extends React.Component<
     const day = eventDate.getDate();
     const year = eventDate.getFullYear();
 
-    const ownerUser = this.props.userModel.getUser(meta.getOwner());
-    const owner = ownerUser ? ownerUser.fullname : "unknown";
+    const owner =
+      this.props.listOwner.fullname || this.props.listOwner.username;
 
     const linkVerb =
       this.props.currentUser.id === meta.getOwner() ? "edit" : "view";

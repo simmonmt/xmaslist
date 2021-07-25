@@ -167,11 +167,20 @@ class ListList extends React.Component<ListListProps, ListListState> {
       }
 
       const list = lists[i];
+
+      const owner = this.props.userModel.getUser(
+        list.getMetadata()!.getOwner()
+      );
+      if (!owner) {
+        console.log("list", list.getId(), "has unknown owner; skipping");
+        continue;
+      }
+
       out.push(
         <ListListElement
           key={list.getId()}
           list={list}
-          userModel={this.props.userModel}
+          listOwner={owner}
           currentUser={this.props.currentUser}
           curYear={this.curYear}
           onDeleteClicked={this.handleDeleteClicked}
