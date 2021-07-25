@@ -91,6 +91,7 @@ class App extends React.Component<Props, State> {
               >
                 <ItemList
                   listModel={this.listModel}
+                  userModel={this.userModel}
                   currentUser={this.state.user!}
                   mode="view"
                 />
@@ -101,6 +102,7 @@ class App extends React.Component<Props, State> {
               >
                 <ItemList
                   listModel={this.listModel}
+                  userModel={this.userModel}
                   currentUser={this.state.user!}
                   mode="edit"
                 />

@@ -31,6 +31,7 @@ import { ItemListElement, ItemListElementMode } from "./item_list_element";
 import { ListModel } from "./list_model";
 import { ProgressButton } from "./progress_button";
 import { User } from "./user";
+import { UserModel } from "./user_model";
 
 interface PathParams {
   listId: string;
@@ -64,6 +65,7 @@ export type ItemListMode = "view" | "edit";
 export interface Props extends RouteComponentProps<PathParams> {
   classes: any;
   listModel: ListModel;
+  userModel: UserModel;
   currentUser: User;
   mode: ItemListMode;
 }
@@ -430,17 +432,45 @@ class ItemList extends React.Component<Props, State> {
   }
 
   private loadData() {
+    let loadedList: ListProto | null;
+    let loadedItems: ListItemProto[];
+
     this.setState({ loading: true }, () => {
       this.props.listModel
         .getList(this.listId)
         .then((list: ListProto) => {
-          this.setState({ list: list });
+          loadedList = list;
           return this.props.listModel.listListItems(this.listId);
         })
         .then((items: ListItemProto[]) => {
+          loadedItems = items;
+
+          let users = [];
+          const metadata = loadedList!.getMetadata();
+          if (metadata) {
+            const owner = metadata.getOwner();
+            if (owner) {
+              users.push(owner);
+            }
+          }
+
+          for (const item of items) {
+            const metadata = item.getMetadata();
+            if (metadata) {
+              const claimedBy = metadata.getClaimedBy();
+              if (claimedBy) {
+                users.push(claimedBy);
+              }
+            }
+          }
+
+          return this.props.userModel.loadUsers(users);
+        })
+        .then(() => {
           this.setState({
             loading: false,
-            items: items,
+            list: loadedList,
+            items: loadedItems,
           });
         })
         .catch((error: GrpcError) => {
