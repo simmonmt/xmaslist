@@ -331,8 +331,18 @@ class ItemList extends React.Component<Props, State> {
         item={item}
         itemUpdater={this.itemUpdater}
         currentUser={this.props.currentUser}
+        claimUser={this.getClaimUser(item)}
       />
     );
+  }
+
+  private getClaimUser(item: ListItemProto): User | undefined {
+    const metadata = item.getMetadata();
+    const state = item.getState();
+    if (state && metadata && state.getClaimed()) {
+      return this.props.userModel.getUser(metadata.getClaimedBy());
+    }
+    return undefined;
   }
 
   private listItems(elementMode: ItemListElementMode) {
@@ -380,12 +390,24 @@ class ItemList extends React.Component<Props, State> {
     data: ListItemDataProto | null,
     state: ListItemStateProto | null
   ): Promise<void> {
+    let loadedItem: ListItemProto | null;
+
     return this.props.listModel
       .updateListItem(this.listId, itemId, itemVersion, data, state)
       .then((item: ListItemProto) => {
+        loadedItem = item;
+
+        const metadata = item.getMetadata();
+        const state = item.getState();
+        if (state && metadata && state.getClaimed()) {
+          return this.props.userModel.loadUsers([metadata.getClaimedBy()]);
+        }
+        return Promise.resolve(true);
+      })
+      .then(() => {
         this.setState({
-          items: this.makeUpdatedItems(item.getId(), () => {
-            return item;
+          items: this.makeUpdatedItems(loadedItem!.getId(), () => {
+            return loadedItem!;
           }),
         });
         return Promise.resolve();

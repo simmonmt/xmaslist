@@ -2,6 +2,7 @@ import Accordion from "@material-ui/core/Accordion";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
 import Box from "@material-ui/core/Box";
+import Chip from "@material-ui/core/Chip";
 import Link from "@material-ui/core/Link";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import { Theme } from "@material-ui/core/styles/createTheme";
@@ -14,7 +15,6 @@ import {
   ListItemMetadata as ListItemMetadataProto,
   ListItemState as ListItemStateProto,
 } from "../proto/list_item_pb";
-import { ClaimedChip } from "./claim";
 import { EditListItemDialog } from "./edit_list_item_dialog";
 import { ListItemUpdater } from "./item_list";
 import { ProgressButton } from "./progress_button";
@@ -28,6 +28,7 @@ interface Props {
   item: ListItemProto;
   itemUpdater: ListItemUpdater;
   currentUser: User;
+  claimUser?: User;
 }
 
 interface State {
@@ -64,6 +65,15 @@ class ItemListElement extends React.Component<Props, State> {
     const editMode = this.props.mode === "edit" || this.props.mode == "admin";
     const showClaim = this.props.mode === "view" || this.props.mode === "admin";
 
+    let claimChipLabel = "Claimed";
+    if (this.props.claimUser) {
+      if (this.props.claimUser.id == this.props.currentUser.id) {
+        claimChipLabel = "Claimed by you";
+      } else {
+        claimChipLabel = "Claimed by " + this.props.claimUser.fullname;
+      }
+    }
+
     return (
       <Accordion key={"item-" + this.props.item.getId()}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -72,10 +82,7 @@ class ItemListElement extends React.Component<Props, State> {
           {showClaim &&
             this.props.item.getState() &&
             this.props.item.getState()!.getClaimed() && (
-              <ClaimedChip
-                currentUserId={this.props.currentUser.id}
-                item={this.props.item}
-              />
+              <Chip label={claimChipLabel} />
             )}
         </AccordionSummary>
         <AccordionDetails className={this.props.classes.details}>
