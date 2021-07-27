@@ -35,6 +35,10 @@ var (
 		"if a duration, sleep before each response. if a comma-separated "+
 			"list of k=v pairs (method=duration), sleep the specific "+
 			"methods by the specified amounts")
+	errorResponses = flag.String("error_responses", "",
+		"if a code, return for all requests. if a comma-separated "+
+			"list of k=v pairs (method=code), fail the specified "+
+			"methods with the given codes")
 
 	grpcLog grpclog.LoggerV2
 )
@@ -113,8 +117,9 @@ func makeSlowResponseInterceptor(specStr string) (*SlowResponseInterceptor, erro
 		method := kv[0]
 		d, err := time.ParseDuration(kv[1])
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse duration in %v",
-				part)
+			return nil, fmt.Errorf(
+				"failed to parse duration in %v: %v",
+				part, err)
 		}
 
 		delays[method] = d
@@ -125,6 +130,64 @@ func makeSlowResponseInterceptor(specStr string) (*SlowResponseInterceptor, erro
 	}
 
 	return &SlowResponseInterceptor{delays: delays}, nil
+}
+
+func parseCode(str string) (codes.Code, error) {
+	str = `"` + str + `"`
+
+	var c codes.Code
+	if err := c.UnmarshalJSON([]byte(str)); err != nil {
+		return codes.OK, err
+	}
+	return c, nil
+}
+
+type ErrorResponseInterceptor struct {
+	allError codes.Code
+	errors   map[string]codes.Code
+}
+
+func (i *ErrorResponseInterceptor) Intercept(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	if i.allError != codes.OK {
+		return nil, status.Errorf(i.allError, "injected error")
+	} else if c, found := i.errors[info.FullMethod]; found {
+		log.Printf("failing %v: %v\n", info.FullMethod, c)
+		return nil, status.Errorf(c, "injected error")
+	}
+
+	return handler(ctx, req)
+}
+
+func makeErrorResponseInterceptor(specStr string) (*ErrorResponseInterceptor, error) {
+	c, err := parseCode(specStr)
+	if err == nil {
+		return &ErrorResponseInterceptor{allError: c}, nil
+	}
+
+	errors := map[string]codes.Code{}
+	parts := strings.Split(specStr, ",")
+	for _, part := range parts {
+		kv := strings.SplitN(part, "=", 2)
+		if len(kv) != 2 {
+			return nil, fmt.Errorf("failed to parse %v", part)
+		}
+
+		method := kv[0]
+		c, err := parseCode(kv[1])
+		if err != nil {
+			return nil, fmt.Errorf(
+				"failed to parse code in %v: %v",
+				part, err)
+		}
+
+		errors[method] = c
+	}
+
+	if len(errors) == 0 {
+		return nil, fmt.Errorf("no codes found in spec")
+	}
+
+	return &ErrorResponseInterceptor{errors: errors}, nil
 }
 
 func main() {
@@ -174,6 +237,15 @@ func main() {
 		interceptor, err := makeSlowResponseInterceptor(*slowResponses)
 		if err != nil {
 			log.Fatalf("failed to build slow response interceptor: %v", err)
+		}
+
+		interceptors = append(interceptors, interceptor.Intercept)
+	}
+
+	if *errorResponses != "" {
+		interceptor, err := makeErrorResponseInterceptor(*errorResponses)
+		if err != nil {
+			log.Fatalf("failed to build error response interceptor: %v", err)
 		}
 
 		interceptors = append(interceptors, interceptor.Intercept)
