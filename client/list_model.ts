@@ -1,6 +1,5 @@
 import { Metadata } from "grpc-web";
 import {
-  ListItem as ListItemProto,
   ListItemData as ListItemDataProto,
   ListItemState as ListItemStateProto,
 } from "../proto/list_item_pb";
@@ -25,6 +24,7 @@ import {
   UpdateListResponse,
 } from "../proto/list_service_pb";
 import { AuthModel } from "./auth_model";
+import { ListItem } from "./list_item";
 
 export class ListModel {
   private readonly listService: ListServicePromiseClient;
@@ -91,7 +91,7 @@ export class ListModel {
   createListItem(
     listId: string,
     itemData: ListItemDataProto
-  ): Promise<ListItemProto> {
+  ): Promise<ListItem> {
     const req = new CreateListItemRequest();
     req.setListId(listId);
     req.setData(itemData);
@@ -104,7 +104,7 @@ export class ListModel {
           return Promise.reject(new Error("no item in response"));
         }
 
-        return item;
+        return new ListItem(item);
       });
   }
 
@@ -141,7 +141,7 @@ export class ListModel {
     itemVersion: number,
     newData: ListItemDataProto | null,
     newState: ListItemStateProto | null
-  ): Promise<ListItemProto> {
+  ): Promise<ListItem> {
     const req = new UpdateListItemRequest();
     req.setListId(listId);
     req.setItemId(itemId);
@@ -162,7 +162,7 @@ export class ListModel {
           return Promise.reject(new Error("no item in response"));
         }
 
-        return item;
+        return new ListItem(item);
       });
   }
 
@@ -181,14 +181,14 @@ export class ListModel {
     return { authorization: cookie ? cookie : "" };
   }
 
-  listListItems(listId: string): Promise<ListItemProto[]> {
+  listListItems(listId: string): Promise<ListItem[]> {
     const req = new ListListItemsRequest();
     req.setListId(listId);
 
     return this.listService
       .listListItems(req, this.metadata())
       .then((resp: ListListItemsResponse) => {
-        return resp.getItemsList();
+        return resp.getItemsList().map((proto) => new ListItem(proto));
       });
   }
 }

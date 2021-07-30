@@ -243,9 +243,9 @@ class ItemList extends React.Component<Props, State> {
 
     this.props.listModel
       .createListItem(this.listId, itemData)
-      .then((itemProto: ListItemProto) => {
+      .then((item: ListItem) => {
         const copy = this.state.items.slice();
-        copy.push(new ListItem(itemProto));
+        copy.push(item);
 
         this.setState({ creatingItemDialogOpen: false, items: copy });
       })
@@ -384,9 +384,7 @@ class ItemList extends React.Component<Props, State> {
   ): Promise<void> {
     return this.props.listModel
       .updateListItem(this.listId, itemId, itemVersion, data, state)
-      .then((itemProto: ListItemProto) => {
-        const item = new ListItem(itemProto);
-
+      .then((item: ListItem) => {
         this.setState({
           items: this.makeUpdatedItems(item.getItemId(), () => {
             return item;
@@ -439,7 +437,7 @@ class ItemList extends React.Component<Props, State> {
 
   private loadData() {
     let loadedList: ListProto | null;
-    let loadedItems: ListItemProto[];
+    let loadedItems: ListItem[];
 
     this.setState({ loading: true }, () => {
       this.props.listModel
@@ -448,7 +446,7 @@ class ItemList extends React.Component<Props, State> {
           loadedList = list;
           return this.props.listModel.listListItems(this.listId);
         })
-        .then((items: ListItemProto[]) => {
+        .then((items: ListItem[]) => {
           loadedItems = items;
 
           let users = [];
@@ -461,20 +459,19 @@ class ItemList extends React.Component<Props, State> {
           }
 
           for (const item of items) {
-            const claimUserId = getClaimUserId(item);
-            if (claimUserId) {
-              users.push(claimUserId);
+            const claimedBy = item.getClaimedBy();
+            if (claimedBy) {
+              users.push(claimedBy);
             }
           }
 
           return this.props.userModel.loadUsers(users);
         })
         .then(() => {
-          const items = loadedItems.map((proto) => new ListItem(proto));
           this.setState({
             loading: false,
             list: loadedList,
-            items: items,
+            items: loadedItems,
           });
         })
         .catch((error) => {
@@ -490,15 +487,6 @@ class ItemList extends React.Component<Props, State> {
         });
     });
   }
-}
-
-function getClaimUserId(item: ListItemProto): number | undefined {
-  const state = item.getState();
-  const metadata = item.getMetadata();
-  if (state && metadata && state.getClaimed()) {
-    return metadata.getClaimedBy();
-  }
-  return undefined;
 }
 
 function isGrpcError(error: Error | GrpcError): error is GrpcError {
