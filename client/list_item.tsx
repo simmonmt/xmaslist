@@ -1,18 +1,16 @@
 import {
   ListItem as ListItemProto,
   ListItemData as ListItemDataProto,
+  ListItemMetadata as ListItemMetadataProto,
   ListItemState as ListItemStateProto,
 } from "../proto/list_item_pb";
-import { User } from "./user";
 
 export class ListItem {
   private readonly data: ListItemDataProto;
   private readonly state: ListItemStateProto;
+  private readonly metadata: ListItemMetadataProto;
 
-  constructor(
-    private readonly proto: ListItemProto,
-    private readonly claimUser: User | undefined
-  ) {
+  constructor(private readonly proto: ListItemProto) {
     const data = proto.getData();
     const metadata = proto.getMetadata();
     const state = proto.getState();
@@ -28,17 +26,12 @@ export class ListItem {
       throw new Error("malformed");
     }
 
-    if (state.getClaimed()) {
-      if (
-        !metadata.getClaimedBy() ||
-        !claimUser ||
-        metadata.getClaimedBy() != claimUser.id
-      ) {
-        throw new Error("bad claim state");
-      }
+    if (state.getClaimed() && !metadata.getClaimedBy()) {
+      throw new Error("bad claim state");
     }
 
     this.data = data;
+    this.metadata = metadata;
     this.state = state;
   }
 
@@ -58,11 +51,11 @@ export class ListItem {
     return this.state.getClaimed();
   }
 
-  getClaimUser(): User | undefined {
+  getClaimedBy(): number | undefined {
     if (!this.isClaimed()) {
       return undefined;
     }
-    return this.claimUser;
+    return this.metadata.getClaimedBy();
   }
 
   getName(): string {

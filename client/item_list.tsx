@@ -244,9 +244,8 @@ class ItemList extends React.Component<Props, State> {
     this.props.listModel
       .createListItem(this.listId, itemData)
       .then((itemProto: ListItemProto) => {
-        const item = new ListItem(itemProto, undefined);
         const copy = this.state.items.slice();
-        copy.push(item);
+        copy.push(new ListItem(itemProto));
 
         this.setState({ creatingItemDialogOpen: false, items: copy });
       })
@@ -333,6 +332,7 @@ class ItemList extends React.Component<Props, State> {
         item={item}
         itemUpdater={this.itemUpdater}
         currentUser={this.props.currentUser}
+        userModel={this.props.userModel}
       />
     );
   }
@@ -385,11 +385,7 @@ class ItemList extends React.Component<Props, State> {
     return this.props.listModel
       .updateListItem(this.listId, itemId, itemVersion, data, state)
       .then((itemProto: ListItemProto) => {
-        const claimUserId = getClaimUserId(itemProto);
-        const claimUser = claimUserId
-          ? this.props.userModel.getUser(claimUserId)
-          : undefined;
-        const item = new ListItem(itemProto, claimUser);
+        const item = new ListItem(itemProto);
 
         this.setState({
           items: this.makeUpdatedItems(item.getItemId(), () => {
@@ -474,17 +470,7 @@ class ItemList extends React.Component<Props, State> {
           return this.props.userModel.loadUsers(users);
         })
         .then(() => {
-          const items: ListItem[] = [];
-          for (const proto of loadedItems) {
-            const claimUserId = getClaimUserId(proto);
-            const claimUser = claimUserId
-              ? this.props.userModel.getUser(claimUserId)
-              : undefined;
-            const item = new ListItem(proto, claimUser);
-
-            items.push(item);
-          }
-
+          const items = loadedItems.map((proto) => new ListItem(proto));
           this.setState({
             loading: false,
             list: loadedList,

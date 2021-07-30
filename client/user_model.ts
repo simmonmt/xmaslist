@@ -19,6 +19,15 @@ export class UserModel {
     return this.users.get(id);
   }
 
+  getUserAsync(id: number): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (user) {
+      return Promise.resolve(user);
+    }
+
+    return this.loadUsers([id]).then(() => Promise.resolve(this.getUser(id)));
+  }
+
   loadUsers(ids: number[]): Promise<boolean> {
     let missingIds = new Set<number>();
     for (const id of ids) {

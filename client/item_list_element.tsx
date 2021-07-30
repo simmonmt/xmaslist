@@ -15,8 +15,33 @@ import { ListItemUpdater } from "./item_list";
 import { ListItem } from "./list_item";
 import { ProgressButton } from "./progress_button";
 import { User } from "./user";
+import { UserModel } from "./user_model";
 
 export type ItemListElementMode = "view" | "edit" | "admin";
+
+function ClaimChip({
+  userId,
+  userModel,
+}: {
+  userId: number;
+  userModel: UserModel;
+}) {
+  const [name, setName] = React.useState("");
+  userModel
+    .getUserAsync(userId)
+    .then((user) => {
+      if (user) {
+        setName(user.fullname ? user.fullname : user.username);
+      } else {
+        setName("UNKNOWN");
+      }
+    })
+    .catch(() => {
+      setName("ERROR");
+    });
+
+  return <Chip label={"Claimed by " + (name ? name : "...")} />;
+}
 
 interface Props {
   classes: any;
@@ -24,6 +49,7 @@ interface Props {
   item: ListItem;
   itemUpdater: ListItemUpdater;
   currentUser: User;
+  userModel: UserModel;
 }
 
 interface State {
@@ -59,23 +85,16 @@ class ItemListElement extends React.Component<Props, State> {
     const showClaim = this.props.mode === "view" || this.props.mode === "admin";
 
     const item = this.props.item;
-
-    let claimChipLabel = "Claimed";
-    const claimUser = item.getClaimUser();
-    if (claimUser) {
-      if (claimUser.id == this.props.currentUser.id) {
-        claimChipLabel = "Claimed by you";
-      } else {
-        claimChipLabel = "Claimed by " + claimUser.fullname;
-      }
-    }
+    const claimedBy = item.getClaimedBy();
 
     return (
       <Accordion key={"item-" + item.getItemId()}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography variant="h6">{item.getName()}</Typography>
           <div className={this.props.classes.grow} />
-          {showClaim && item.isClaimed() && <Chip label={claimChipLabel} />}
+          {showClaim && claimedBy && (
+            <ClaimChip userId={claimedBy} userModel={this.props.userModel} />
+          )}
         </AccordionSummary>
         <AccordionDetails className={this.props.classes.details}>
           {item.getDesc() && (
@@ -125,16 +144,18 @@ class ItemListElement extends React.Component<Props, State> {
     // View mode:
     //   claim if unclaimed
     //   unclaim if claimed by you else disabled
-    const claimUser = this.props.item.getClaimUser();
-    const claimedByMe: boolean =
-      claimUser !== undefined && claimUser.id === this.props.currentUser.id;
+    const claimedBy = this.props.item.getClaimedBy();
+    const claimButtonLabel = claimedBy ? "Unclaim" : "Claim";
 
-    const claimButtonLabel = claimUser ? "Unclaim" : "Claim";
-
+    // Enable the claim button unless we're in view mode and the claimant is
+    // someone other than the current user. This way Bob can't unclaim an item
+    // that Sue has already claimed (unless we're in admin mode, in which case
+    // all bets are off). We don't have a special case here for edit mode
+    // because the claim button isn't displayed in edit mode.
     let claimButtonEnabled = true;
     if (this.props.mode === "view") {
-      if (claimUser) {
-        claimButtonEnabled = claimedByMe;
+      if (claimedBy) {
+        claimButtonEnabled = claimedBy === this.props.currentUser.id;
       }
     }
 
