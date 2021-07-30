@@ -236,7 +236,10 @@ class ItemList extends React.Component<Props, State> {
   }
 
   private handleCreateItemDialogClose(itemData: ListItemDataProto | null) {
-    this.setState({ createItemDialogOpen: false });
+    this.setState({
+      createItemDialogOpen: false,
+      creatingItemDialogOpen: itemData !== null,
+    });
     if (!itemData) {
       return;
     }
