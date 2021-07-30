@@ -28,6 +28,7 @@ import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
 import { EditListDialog } from "./edit_list_dialog";
 import { EditListItemDialog } from "./edit_list_item_dialog";
 import { ItemListElement, ItemListElementMode } from "./item_list_element";
+import { ListItem } from "./list_item";
 import { ListModel } from "./list_model";
 import { ProgressButton } from "./progress_button";
 import { User } from "./user";
@@ -75,7 +76,7 @@ interface State {
   loading: boolean;
   errorMessage: string;
   list: ListProto | null;
-  items: ListItemProto[];
+  items: ListItem[];
   adminMode: boolean;
   createItemDialogOpen: boolean;
   creatingItemDialogOpen: boolean;
@@ -242,14 +243,15 @@ class ItemList extends React.Component<Props, State> {
 
     this.props.listModel
       .createListItem(this.listId, itemData)
-      .then((item: ListItemProto) => {
+      .then((itemProto: ListItemProto) => {
+        const item = new ListItem(itemProto, undefined);
         const copy = this.state.items.slice();
         copy.push(item);
 
         this.setState({ creatingItemDialogOpen: false, items: copy });
       })
-      .catch((error: GrpcError) => {
-        if (error.code === StatusCode.UNAUTHENTICATED) {
+      .catch((error) => {
+        if (isGrpcError(error) && error.code === StatusCode.UNAUTHENTICATED) {
           this.setState({ loggedIn: false });
           return;
         }
@@ -323,26 +325,16 @@ class ItemList extends React.Component<Props, State> {
     );
   }
 
-  private makeItemListItem(item: ListItemProto, mode: ItemListElementMode) {
+  private makeItemListItem(item: ListItem, mode: ItemListElementMode) {
     return (
       <ItemListElement
-        key={item.getId()}
+        key={item.getItemId()}
         mode={mode}
         item={item}
         itemUpdater={this.itemUpdater}
         currentUser={this.props.currentUser}
-        claimUser={this.getClaimUser(item)}
       />
     );
-  }
-
-  private getClaimUser(item: ListItemProto): User | undefined {
-    const metadata = item.getMetadata();
-    const state = item.getState();
-    if (state && metadata && state.getClaimed()) {
-      return this.props.userModel.getUser(metadata.getClaimedBy());
-    }
-    return undefined;
   }
 
   private listItems(elementMode: ItemListElementMode) {
@@ -357,11 +349,11 @@ class ItemList extends React.Component<Props, State> {
 
   private makeUpdatedItems(
     id: string,
-    updater: (item: ListItemProto) => ListItemProto
-  ): ListItemProto[] {
+    updater: (item: ListItem) => ListItem
+  ): ListItem[] {
     const tmp = this.state.items.slice();
     for (let i = 0; i < tmp.length; ++i) {
-      if (tmp[i].getId() === id) {
+      if (tmp[i].getItemId() === id) {
         tmp[i] = updater(tmp[i]);
       }
     }
@@ -390,30 +382,24 @@ class ItemList extends React.Component<Props, State> {
     data: ListItemDataProto | null,
     state: ListItemStateProto | null
   ): Promise<void> {
-    let loadedItem: ListItemProto | null;
-
     return this.props.listModel
       .updateListItem(this.listId, itemId, itemVersion, data, state)
-      .then((item: ListItemProto) => {
-        loadedItem = item;
+      .then((itemProto: ListItemProto) => {
+        const claimUserId = getClaimUserId(itemProto);
+        const claimUser = claimUserId
+          ? this.props.userModel.getUser(claimUserId)
+          : undefined;
+        const item = new ListItem(itemProto, claimUser);
 
-        const metadata = item.getMetadata();
-        const state = item.getState();
-        if (state && metadata && state.getClaimed()) {
-          return this.props.userModel.loadUsers([metadata.getClaimedBy()]);
-        }
-        return Promise.resolve(true);
-      })
-      .then(() => {
         this.setState({
-          items: this.makeUpdatedItems(loadedItem!.getId(), () => {
-            return loadedItem!;
+          items: this.makeUpdatedItems(item.getItemId(), () => {
+            return item;
           }),
         });
         return Promise.resolve();
       })
-      .catch((error: GrpcError) => {
-        if (error.code === StatusCode.UNAUTHENTICATED) {
+      .catch((error) => {
+        if (isGrpcError(error) && error.code === StatusCode.UNAUTHENTICATED) {
           this.setState({ loggedIn: false });
           return;
         }
@@ -431,7 +417,7 @@ class ItemList extends React.Component<Props, State> {
       .then(() => {
         const tmp = this.state.items.slice();
         for (let i = 0; i < tmp.length; ++i) {
-          if (tmp[i].getId() === itemId) {
+          if (tmp[i].getItemId() === itemId) {
             tmp.splice(i, 1);
           }
         }
@@ -479,26 +465,34 @@ class ItemList extends React.Component<Props, State> {
           }
 
           for (const item of items) {
-            const metadata = item.getMetadata();
-            if (metadata) {
-              const claimedBy = metadata.getClaimedBy();
-              if (claimedBy) {
-                users.push(claimedBy);
-              }
+            const claimUserId = getClaimUserId(item);
+            if (claimUserId) {
+              users.push(claimUserId);
             }
           }
 
           return this.props.userModel.loadUsers(users);
         })
         .then(() => {
+          const items: ListItem[] = [];
+          for (const proto of loadedItems) {
+            const claimUserId = getClaimUserId(proto);
+            const claimUser = claimUserId
+              ? this.props.userModel.getUser(claimUserId)
+              : undefined;
+            const item = new ListItem(proto, claimUser);
+
+            items.push(item);
+          }
+
           this.setState({
             loading: false,
             list: loadedList,
-            items: loadedItems,
+            items: items,
           });
         })
-        .catch((error: GrpcError) => {
-          if (error.code === StatusCode.UNAUTHENTICATED) {
+        .catch((error) => {
+          if (isGrpcError(error) && error.code === StatusCode.UNAUTHENTICATED) {
             this.setState({ loggedIn: false });
             return;
           }
@@ -510,6 +504,19 @@ class ItemList extends React.Component<Props, State> {
         });
     });
   }
+}
+
+function getClaimUserId(item: ListItemProto): number | undefined {
+  const state = item.getState();
+  const metadata = item.getMetadata();
+  if (state && metadata && state.getClaimed()) {
+    return metadata.getClaimedBy();
+  }
+  return undefined;
+}
+
+function isGrpcError(error: Error | GrpcError): error is GrpcError {
+  return (error as any).metadata !== undefined;
 }
 
 const itemListStyles = (theme: Theme) =>

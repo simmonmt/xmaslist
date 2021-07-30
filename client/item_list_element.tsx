@@ -9,14 +9,10 @@ import { Theme } from "@material-ui/core/styles/createTheme";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import * as React from "react";
-import {
-  ListItem as ListItemProto,
-  ListItemData as ListItemDataProto,
-  ListItemMetadata as ListItemMetadataProto,
-  ListItemState as ListItemStateProto,
-} from "../proto/list_item_pb";
+import { ListItemData as ListItemDataProto } from "../proto/list_item_pb";
 import { EditListItemDialog } from "./edit_list_item_dialog";
 import { ListItemUpdater } from "./item_list";
+import { ListItem } from "./list_item";
 import { ProgressButton } from "./progress_button";
 import { User } from "./user";
 
@@ -25,10 +21,9 @@ export type ItemListElementMode = "view" | "edit" | "admin";
 interface Props {
   classes: any;
   mode: ItemListElementMode;
-  item: ListItemProto;
+  item: ListItem;
   itemUpdater: ListItemUpdater;
   currentUser: User;
-  claimUser?: User;
 }
 
 interface State {
@@ -57,44 +52,41 @@ class ItemListElement extends React.Component<Props, State> {
   }
 
   render() {
-    const data = this.props.item.getData() || new ListItemDataProto();
-
     const buttonsDisabled =
       this.state.claiming || this.state.deleting || this.state.modifying;
 
     const editMode = this.props.mode === "edit" || this.props.mode == "admin";
     const showClaim = this.props.mode === "view" || this.props.mode === "admin";
 
+    const item = this.props.item;
+
     let claimChipLabel = "Claimed";
-    if (this.props.claimUser) {
-      if (this.props.claimUser.id == this.props.currentUser.id) {
+    const claimUser = item.getClaimUser();
+    if (claimUser) {
+      if (claimUser.id == this.props.currentUser.id) {
         claimChipLabel = "Claimed by you";
       } else {
-        claimChipLabel = "Claimed by " + this.props.claimUser.fullname;
+        claimChipLabel = "Claimed by " + claimUser.fullname;
       }
     }
 
     return (
-      <Accordion key={"item-" + this.props.item.getId()}>
+      <Accordion key={"item-" + item.getItemId()}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6">{data.getName()}</Typography>
+          <Typography variant="h6">{item.getName()}</Typography>
           <div className={this.props.classes.grow} />
-          {showClaim &&
-            this.props.item.getState() &&
-            this.props.item.getState()!.getClaimed() && (
-              <Chip label={claimChipLabel} />
-            )}
+          {showClaim && item.isClaimed() && <Chip label={claimChipLabel} />}
         </AccordionSummary>
         <AccordionDetails className={this.props.classes.details}>
-          {data.getDesc() && (
+          {item.getDesc() && (
             <div className={this.props.classes.detailSec}>
-              <Typography variant="body1">{data.getDesc()}</Typography>
+              <Typography variant="body1">{item.getDesc()}</Typography>
             </div>
           )}
-          {data.getDesc() && data.getUrl() && <div />}
-          {data.getUrl() && (
+          {item.getDesc() && item.getUrl() && <div />}
+          {item.getUrl() && (
             <Typography variant="body1">
-              Link: {this.makeLink(data.getUrl())}
+              Link: {this.makeLink(item.getUrl())}
             </Typography>
           )}
           <div className={this.props.classes.buttons}>
@@ -121,7 +113,7 @@ class ItemListElement extends React.Component<Props, State> {
           action="Modify"
           open={this.state.modifyItemDialogOpen}
           onClose={this.handleModifyItemDialogClose}
-          initial={data}
+          initial={item.getData()}
         />
       </Accordion>
     );
@@ -133,20 +125,15 @@ class ItemListElement extends React.Component<Props, State> {
     // View mode:
     //   claim if unclaimed
     //   unclaim if claimed by you else disabled
-    const state = this.props.item.getState() || new ListItemStateProto();
-    const metadata =
-      this.props.item.getMetadata() || new ListItemMetadataProto();
-    const claimed: boolean = state && state.getClaimed() === true;
+    const claimUser = this.props.item.getClaimUser();
     const claimedByMe: boolean =
-      claimed &&
-      metadata &&
-      metadata.getClaimedBy() === this.props.currentUser.id;
+      claimUser !== undefined && claimUser.id === this.props.currentUser.id;
 
-    const claimButtonLabel = claimed ? "Unclaim" : "Claim";
+    const claimButtonLabel = claimUser ? "Unclaim" : "Claim";
 
     let claimButtonEnabled = true;
     if (this.props.mode === "view") {
-      if (claimed) {
+      if (claimUser) {
         claimButtonEnabled = claimedByMe;
       }
     }
@@ -156,7 +143,7 @@ class ItemListElement extends React.Component<Props, State> {
         updating={this.state.claiming}
         disabled={!claimButtonEnabled}
         color={this.props.mode === "edit" ? "default" : "primary"}
-        onClick={() => this.handleClaimClick(!claimed)}
+        onClick={() => this.handleClaimClick(!this.props.item.isClaimed())}
       >
         {claimButtonLabel}
       </ProgressButton>
@@ -184,16 +171,14 @@ class ItemListElement extends React.Component<Props, State> {
   }
 
   private handleClaimClick(newClaimState: boolean) {
-    const oldItemState = this.props.item.getState();
-    if (!oldItemState) return; // shouldn't happen
-    const newItemState = oldItemState.cloneMessage();
+    const newItemState = this.props.item.getState();
     newItemState.setClaimed(newClaimState);
 
     this.setState({ claiming: true });
     this.props.itemUpdater
       .updateState(
-        this.props.item.getId(),
-        this.props.item.getVersion(),
+        this.props.item.getItemId(),
+        this.props.item.getItemVersion(),
         newItemState
       )
       .finally(() => this.setState({ claiming: false }));
@@ -210,13 +195,17 @@ class ItemListElement extends React.Component<Props, State> {
     }
 
     this.props.itemUpdater
-      .updateData(this.props.item.getId(), this.props.item.getVersion(), data)
+      .updateData(
+        this.props.item.getItemId(),
+        this.props.item.getItemVersion(),
+        data
+      )
       .finally(() => this.setState({ modifying: false }));
   }
 
   private handleDeleteClick() {
     this.setState({ deleting: true });
-    this.props.itemUpdater.delete(this.props.item.getId());
+    this.props.itemUpdater.delete(this.props.item.getItemId());
     // No need to set deleting to false -- this component will be unmounted by
     // the time the promise returned by delete() resolves.
   }
