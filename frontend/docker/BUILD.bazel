@@ -10,14 +10,14 @@ container_image(
     name = "frontend_full",
     base = ":frontend_binary",
     cmd = [
-        "--index_file=index.html",
+        "--index_file=index_prod.html",
         "--serve_dir=/docroot",
         "--port=8080",
     ],
     directory = "/docroot",
     files = [
-        "//client:bundle",
-        "//client:index.html",
+        "//client:bundle.min",
+        "//client:index_prod.html",
     ],
 )
 

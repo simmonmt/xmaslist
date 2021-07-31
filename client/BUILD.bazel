@@ -59,7 +59,6 @@ rollup_bundle(
     config_file = "rollup.config.js",
     entry_point = ":index.tsx",
     format = "iife",
-    visibility = ["//visibility:public"],
     deps = PROTO_DEPS + [
         ":tsconfig",
         "@npm//:node_modules",
@@ -72,10 +71,10 @@ terser_minified(
     name = "bundle.min",
     src = ":bundle",
     config_file = "terser_config.json",
+    visibility = ["//visibility:public"],
 )
 
 exports_files([
-    "index.html",
     "index_prod.html",
 ])
 
