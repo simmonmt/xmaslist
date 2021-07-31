@@ -42,6 +42,7 @@
     },
     "dependencies": {
         "@bazel/labs": "^3.7.0",
+        "@bazel/terser": "^3.7.0",
         "@date-io/date-fns": "1.x",
         "@material-ui/core": "^4.12.1",
         "@material-ui/icons": "^4.11.2",
@@ -51,6 +52,7 @@
         "date-fns": "^2.22.1",
         "lorem-ipsum": "^2.0.3",
         "react-router-dom": "^5.2.0",
+        "terser": "^5.7.1",
         "universal-cookie": "^4.0.4"
     }
 }

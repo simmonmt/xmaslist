@@ -1,3 +1,4 @@
+load("@npm//@bazel/terser:index.bzl", "terser_minified")
 load("@npm//@bazel/rollup:index.bzl", "rollup_bundle")
 load("@npm//@bazel/typescript:index.bzl", "ts_config", "ts_library", "ts_project")
 load("@npm//http-server-spa:index.bzl", "http_server_spa")
@@ -67,7 +68,16 @@ rollup_bundle(
     ],
 )
 
-exports_files(["index.html"])
+terser_minified(
+    name = "bundle.min",
+    src = ":bundle",
+    config_file = "terser_config.json",
+)
+
+exports_files([
+    "index.html",
+    "index_prod.html",
+])
 
 http_server_spa(
     name = "server",
@@ -78,6 +88,19 @@ http_server_spa(
     templated_args = [
         "client",
         "index.html",
+        "8080",
+    ],
+)
+
+http_server_spa(
+    name = "server_prod",
+    data = [
+        "index_prod.html",
+        ":bundle.min",
+    ],
+    templated_args = [
+        "client",
+        "index_prod.html",
         "8080",
     ],
 )
