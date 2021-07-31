@@ -44,4 +44,4 @@ volumes:
 
 secrets:
   backend_session_secret:
-    file: ./session_secret.txt
+    file: ./dev_session_secret.txt
