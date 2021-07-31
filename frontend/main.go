@@ -25,7 +25,7 @@ func main() {
 		log.Fatalf("--index_file is required")
 	}
 	if *serveDir == "" {
-		log.Fatalf("--server_dir is required")
+		log.Fatalf("--serve_dir is required")
 	}
 
 	http.ListenAndServe(fmt.Sprintf(":%d", *port),
