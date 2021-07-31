@@ -1,7 +1,4 @@
 import Card from "@material-ui/core/Card";
-import Dialog from "@material-ui/core/Dialog";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
 import Divider from "@material-ui/core/Divider";
 import Fab from "@material-ui/core/Fab";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
@@ -19,6 +16,7 @@ import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
 import { EditListDialog } from "./edit_list_dialog";
 import { ListListElement } from "./list_list_element";
 import { ListModel } from "./list_model";
+import { ProgressDialog } from "./progress_dialog";
 import { User } from "./user";
 import { UserModel } from "./user_model";
 
@@ -150,11 +148,10 @@ class ListList extends React.Component<ListListProps, ListListState> {
           action="Create"
           initial={null}
         />
-        <Dialog open={this.state.creatingDialogOpen}>
-          <DialogContent>
-            <DialogContentText>Creating list</DialogContentText>
-          </DialogContent>
-        </Dialog>
+        <ProgressDialog
+          open={this.state.creatingDialogOpen}
+          label="Creating List"
+        />
       </div>
     );
   }

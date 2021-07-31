@@ -1,9 +1,6 @@
 import Box from "@material-ui/core/Box";
 import Card from "@material-ui/core/Card";
 import grey from "@material-ui/core/colors/grey";
-import Dialog from "@material-ui/core/Dialog";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
 import Fab from "@material-ui/core/Fab";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import FormGroup from "@material-ui/core/FormGroup";
@@ -31,6 +28,7 @@ import { ItemListElement, ItemListElementMode } from "./item_list_element";
 import { ListItem } from "./list_item";
 import { ListModel } from "./list_model";
 import { ProgressButton } from "./progress_button";
+import { ProgressDialog } from "./progress_dialog";
 import { User } from "./user";
 import { UserModel } from "./user_model";
 
@@ -211,11 +209,10 @@ class ItemList extends React.Component<Props, State> {
               onClose={this.handleCreateItemDialogClose}
               initial={null}
             />
-            <Dialog open={this.state.creatingItemDialogOpen}>
-              <DialogContent>
-                <DialogContentText>Creating Item</DialogContentText>
-              </DialogContent>
-            </Dialog>
+            <ProgressDialog
+              open={this.state.creatingItemDialogOpen}
+              label="Creating Item"
+            />
           </div>
         )}
 
