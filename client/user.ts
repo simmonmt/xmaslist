@@ -14,4 +14,8 @@ export class User {
     this.fullname = mkStr(userInfo.getFullname());
     this.isAdmin = Boolean(userInfo.getIsAdmin());
   }
+
+  name(): string {
+    return this.fullname ? this.fullname : this.username;
+  }
 }

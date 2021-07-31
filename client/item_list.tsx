@@ -74,6 +74,7 @@ interface State {
   loading: boolean;
   errorMessage: string;
   list: ListProto | null;
+  listOwner: User | undefined;
   items: ListItem[];
   adminMode: boolean;
   createItemDialogOpen: boolean;
@@ -93,6 +94,7 @@ class ItemList extends React.Component<Props, State> {
       loading: false,
       errorMessage: "",
       list: null,
+      listOwner: undefined,
       items: [],
       adminMode: false,
       createItemDialogOpen: false,
@@ -298,18 +300,36 @@ class ItemList extends React.Component<Props, State> {
   }
 
   private listMeta() {
-    if (!this.state.list) return;
+    if (!this.state.list || !this.state.listOwner) return;
 
     const data = this.state.list.getData()!;
     return (
       <div className={this.props.classes.meta}>
         <Typography variant="h2">{data.getName()}</Typography>
-        <Typography variant="body1" color="textSecondary">
+        <Typography variant="body1">
           {
             // Long localized date
             formatDate(new Date(data.getEventDate() * 1000), "PPPP")
           }
         </Typography>
+        <div>
+          <span className={this.props.classes.metaFor}>
+            <Typography variant="body1" component="span" color="textSecondary">
+              For:
+            </Typography>{" "}
+            <Typography variant="body1" component="span">
+              {data.getBeneficiary()}
+            </Typography>
+          </span>
+          <span>
+            <Typography variant="body1" component="span" color="textSecondary">
+              By:
+            </Typography>{" "}
+            <Typography variant="body1" component="span">
+              {this.state.listOwner.name()}
+            </Typography>
+          </span>
+        </div>
         {this.props.mode == "edit" && (
           <div className={this.props.classes.buttons}>
             <ProgressButton
@@ -437,6 +457,7 @@ class ItemList extends React.Component<Props, State> {
 
   private loadData() {
     let loadedList: ListProto | null;
+    let listOwnerId: number | undefined;
     let loadedItems: ListItem[];
 
     this.setState({ loading: true }, () => {
@@ -452,9 +473,9 @@ class ItemList extends React.Component<Props, State> {
           let users = [];
           const metadata = loadedList!.getMetadata();
           if (metadata) {
-            const owner = metadata.getOwner();
-            if (owner) {
-              users.push(owner);
+            listOwnerId = metadata.getOwner();
+            if (listOwnerId) {
+              users.push(listOwnerId);
             }
           }
 
@@ -468,9 +489,12 @@ class ItemList extends React.Component<Props, State> {
           return this.props.userModel.loadUsers(users);
         })
         .then(() => {
+          if (!loadedList || !listOwnerId) return;
+
           this.setState({
             loading: false,
             list: loadedList,
+            listOwner: this.props.userModel.getUser(listOwnerId),
             items: loadedItems,
           });
         })
@@ -506,6 +530,9 @@ const itemListStyles = (theme: Theme) =>
     },
     meta: {
       textAlign: "center",
+    },
+    metaFor: {
+      marginRight: theme.spacing(2),
     },
     fab: {
       position: "absolute",

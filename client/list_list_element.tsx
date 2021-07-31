@@ -70,9 +70,6 @@ class ListListElement extends React.Component<
     const day = eventDate.getDate();
     const year = eventDate.getFullYear();
 
-    const owner =
-      this.props.listOwner.fullname || this.props.listOwner.username;
-
     const linkVerb =
       this.props.currentUser.id === meta.getOwner() ? "edit" : "view";
     const linkTarget = `/${linkVerb}/${listId}`;
@@ -120,7 +117,7 @@ class ListListElement extends React.Component<
                 >
                   By:
                 </Typography>{" "}
-                {owner}
+                {this.props.listOwner.name()}
               </div>
             </div>
           </div>
