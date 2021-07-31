@@ -3,7 +3,7 @@ version: "3.8"
 services:
   envoy:
     image: envoyproxy/envoy:v1.18.2
-    container_name: envoy
+    container_name: xmaslist_envoy
     volumes:
       - type: bind
         source: ./envoy.yaml
@@ -19,7 +19,7 @@ services:
     - "host.docker.internal:host-gateway"
   backend:
     image: simmonmt/xmaslist/backend
-    container_name: backend
+    container_name: xmaslist_backend
     command:
       - "--port=9090"
       - "--db=/db/db.sqlite"
@@ -28,6 +28,6 @@ services:
       - "9090:9090"
   frontend:
     image: simmonmt/xmaslist/frontend
-    container_name: frontend
+    container_name: xmaslist_frontend
     ports:
       - "8080:8080"

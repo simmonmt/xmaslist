@@ -18,6 +18,7 @@ PROGDIR=$(dirname "$0")
 
 docker-compose \
   --project-directory ${PROGDIR} \
+  --project-name xmaslist \
   -f ${PROGDIR}/base.yml \
   -f ${PROGDIR}/prod.yml \
   "$@"
