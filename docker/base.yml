@@ -20,16 +20,10 @@ services:
   backend:
     image: simmonmt/xmaslist/backend
     container_name: backend
-    volumes:
-      - type: volume
-        source: xmaslist_database
-        target: /db
-    secrets:
-      - backend_session_secret
     command:
       - "--port=9090"
       - "--db=/db/db.sqlite"
-      - "--session_secret=/run/secrets/backend_session_secret"
+      - "--session_secret=/secret/session_secret.txt"
     ports:
       - "9090:9090"
   frontend:
@@ -37,11 +31,3 @@ services:
     container_name: frontend
     ports:
       - "8080:8080"
-
-volumes:
-  xmaslist_database:
-    external: true
-
-secrets:
-  backend_session_secret:
-    file: ./dev_session_secret.txt

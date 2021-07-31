@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  backend:
+    volumes:
+      - type: bind
+        source: ./dev_session_secret.txt
+        target: /secret/session_secret.txt
+      - type: bind
+        source: "${XMASLIST_DATABASE}"
+        target: /db/db.sqlite

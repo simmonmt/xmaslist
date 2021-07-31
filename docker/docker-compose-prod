@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -e
+
+function die {
+    echo "${PROGNAME}:" "$@" >&2
+    exit 1
+}
+
+function usage {
+    echo "Usage: ${PROGNAME} [--rm]" >&2
+    exit 2
+}
+
+PROGNAME=$(basename "$0")
+
+PROGDIR=$(dirname "$0")
+
+docker-compose \
+  --project-directory ${PROGDIR} \
+  -f ${PROGDIR}/base.yml \
+  -f ${PROGDIR}/prod.yml \
+  "$@"
