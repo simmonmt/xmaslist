@@ -87,7 +87,7 @@ http_server_spa(
     templated_args = [
         "client",
         "index.html",
-        "8080",
+        "8083",
     ],
 )
 
@@ -100,6 +100,6 @@ http_server_spa(
     templated_args = [
         "client",
         "index_prod.html",
-        "8080",
+        "8083",
     ],
 )

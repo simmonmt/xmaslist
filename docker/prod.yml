@@ -1,6 +1,13 @@
 version: "3.8"
 
 services:
+  envoy:
+    ports:
+      - target: 8080
+        published: 3400
+        protocol: tcp
+        mode: host
+
   backend:
     volumes:
       - type: volume

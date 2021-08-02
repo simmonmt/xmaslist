@@ -43,9 +43,13 @@ while : ; do
     shift
 done
 
+[[ -z "${XMASLIST_DATABASE}" ]] && usage
+
+CONTAINER_TAG=latest \
+CONTAINER_PREFIX=xmaslist_dev \
 docker-compose \
   --project-directory ${PROGDIR} \
-  --project-name xmaslist
+  --project-name xmaslist \
   -f ${PROGDIR}/base.yml \
   -f ${PROGDIR}/dev.yml \
   "$@"

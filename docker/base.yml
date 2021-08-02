@@ -3,31 +3,33 @@ version: "3.8"
 services:
   envoy:
     image: envoyproxy/envoy:v1.18.2
-    container_name: xmaslist_envoy
+    container_name: ${CONTAINER_PREFIX}_envoy
     volumes:
       - type: bind
         source: ./envoy.yaml
         target: /etc/envoy/envoy.yaml
-    ports:
-      - "8081:8081"
-      - "8082:8082"
     command:
       - "envoy"
       - "-c"
       - "/etc/envoy/envoy.yaml"
-    extra_hosts:
-    - "host.docker.internal:host-gateway"
+
   backend:
-    image: simmonmt/xmaslist/backend
-    container_name: xmaslist_backend
+    image: simmonmt/xmaslist/backend:${CONTAINER_TAG}
+    container_name: ${CONTAINER_PREFIX}_backend
     command:
-      - "--port=9090"
+      - "--port=8082"
       - "--db=/db/db.sqlite"
       - "--session_secret=/secret/session_secret.txt"
-    ports:
-      - "9090:9090"
+
+
   frontend:
-    image: simmonmt/xmaslist/frontend
-    container_name: xmaslist_frontend
-    ports:
-      - "8080:8080"
+    image: simmonmt/xmaslist/frontend:${CONTAINER_TAG}
+    container_name: ${CONTAINER_PREFIX}_frontend
+    command:
+      - "--index_file=index_prod.html"
+      - "--serve_dir=/docroot"
+      - "--port=8083"
+
+networks:
+  default:
+    name: ${CONTAINER_PREFIX}_net

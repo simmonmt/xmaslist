@@ -1,7 +1,26 @@
 version: "3.8"
 
 services:
+  envoy:
+    extra_hosts:
+    - "backend:host-gateway"
+    - "frontend:host-gateway"
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
+      - target: 8081
+        published: 8081
+        protocol: tcp
+        mode: host
+
   backend:
+    ports:
+      - target: 8082
+        published: 8082
+        protocol: tcp
+        mode: host
     volumes:
       - type: bind
         source: ./dev_session_secret.txt
@@ -9,3 +28,10 @@ services:
       - type: bind
         source: "${XMASLIST_DATABASE}"
         target: /db/db.sqlite
+
+  frontend:
+    ports:
+      - target: 8083
+        published: 8083
+        protocol: tcp
+        mode: host

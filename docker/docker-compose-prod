@@ -16,6 +16,8 @@ PROGNAME=$(basename "$0")
 
 PROGDIR=$(dirname "$0")
 
+CONTAINER_TAG=latest \
+CONTAINER_PREFIX=xmaslist_prod \
 docker-compose \
   --project-directory ${PROGDIR} \
   --project-name xmaslist \

@@ -12,7 +12,7 @@ container_image(
     cmd = [
         "--index_file=index_prod.html",
         "--serve_dir=/docroot",
-        "--port=8080",
+        "--port=${PORT}",
     ],
     directory = "/docroot",
     files = [
