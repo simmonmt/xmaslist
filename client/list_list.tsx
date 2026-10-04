@@ -13,8 +13,8 @@ import { Error as GrpcError, StatusCode } from "grpc-web";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
 import {
-  List as ListProto,
   ListData as ListDataProto,
+  List as ListProto,
 } from "xmaslist-proto/proto/list_pb.js";
 import { EditListDialog } from "./edit_list_dialog";
 import { ListListElement } from "./list_list_element";

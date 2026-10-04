@@ -15,15 +15,15 @@ import { format as formatDate, isPast as isPastDate } from "date-fns";
 import { Error as GrpcError, StatusCode } from "grpc-web";
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
-import { Link as RouterLink, Redirect, withRouter } from "react-router-dom";
+import { Redirect, Link as RouterLink, withRouter } from "react-router-dom";
 import {
-  ListItem as ListItemProto,
   ListItemData as ListItemDataProto,
+  ListItem as ListItemProto,
   ListItemState as ListItemStateProto,
 } from "xmaslist-proto/proto/list_item_pb.js";
 import {
-  List as ListProto,
   ListData as ListDataProto,
+  List as ListProto,
 } from "xmaslist-proto/proto/list_pb.js";
 import { EditListDialog } from "./edit_list_dialog";
 import { EditListItemDialog } from "./edit_list_item_dialog";

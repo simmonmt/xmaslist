@@ -3,9 +3,9 @@ import { createStyles, withStyles } from "@material-ui/core/styles";
 import { MuiPickersUtilsProvider } from "@material-ui/pickers";
 import * as React from "react";
 import {
-  BrowserRouter as Router,
   Redirect,
   Route,
+  BrowserRouter as Router,
   Switch,
 } from "react-router-dom";
 import Cookies from "universal-cookie";

@@ -1,7 +1,7 @@
 import {
-  ListItem as ListItemProto,
   ListItemData as ListItemDataProto,
   ListItemMetadata as ListItemMetadataProto,
+  ListItem as ListItemProto,
   ListItemState as ListItemStateProto,
 } from "xmaslist-proto/proto/list_item_pb.js";
 

@@ -4,8 +4,8 @@ import {
   ListItemState as ListItemStateProto,
 } from "xmaslist-proto/proto/list_item_pb.js";
 import {
-  List as ListProto,
   ListData as ListDataProto,
+  List as ListProto,
 } from "xmaslist-proto/proto/list_pb.js";
 import { ListServicePromiseClient } from "xmaslist-proto/proto/list_service_grpc_web_pb.js";
 import {

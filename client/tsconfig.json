@@ -1,16 +1,17 @@
 {
    "compilerOptions" : {
-      "jsx" : "react",
+      "target" : "es2020",
       "lib" : [
-         "es2015.promise",
-         "es2018.promise",
-	 "es2015.collection",
-	 "es2015.core",
-	 "es2015",
+         "es2020",
          "dom",
-         "es5"
+         "dom.iterable"
       ],
-      "moduleResolution" : "node",
+      "module" : "esnext",
+      "moduleResolution" : "bundler",
+      "jsx" : "react",
+      // Vite transpiles each file on its own (esbuild/oxc); tsc only checks.
+      "isolatedModules" : true,
+      "noEmit" : true,
       // "traceResolution" : true,
       "strict" : true,
       // Browser code: do not pull in @types/node (or other global types).
