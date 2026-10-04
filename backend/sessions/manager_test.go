@@ -73,7 +73,7 @@ func TestSessionIDFromCookie(t *testing.T) {
 
 	if ok, sessionID := manager.SessionIDFromCookie(cookie); !ok || sessionID <= 0 || wantSessionID != sessionID {
 		t.Fatalf(`SessionIDFromCookie(%v) = %v, %v; want true, %v`,
-			cookie, ok, wantSessionID)
+			cookie, ok, sessionID, wantSessionID)
 	}
 
 	badCookie := cookie + "bad"
@@ -140,7 +140,7 @@ func TestCreateSession_MultipleUsers(t *testing.T) {
 	cookieA, expiryA, err := manager.CreateSession(ctx, userA)
 	if err != nil || expiryA != wantExpiryA {
 		t.Fatalf("CreateSession A = _, %v, %v, want _, %v, nil",
-			cookieA, expiryA, wantExpiryA, err)
+			expiryA, err, wantExpiryA)
 	}
 
 	// Advance the clock so we're not creating B's session at the same time
@@ -153,7 +153,7 @@ func TestCreateSession_MultipleUsers(t *testing.T) {
 	cookieB, expiryB, err := manager.CreateSession(ctx, userB)
 	if err != nil || expiryB != wantExpiryB {
 		t.Fatalf("CreateSession B = _, %v, %v, want _, %v, nil",
-			cookieB, expiryB, wantExpiryB, err)
+			expiryB, err, wantExpiryB)
 	}
 
 	sessionIDA, _, err := parseCookie(cookieA)

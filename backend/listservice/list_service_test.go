@@ -363,7 +363,7 @@ func TestUpdateListItem_Claim(t *testing.T) {
 			resp, err = state.Server.UpdateListItem(reqCtx, req)
 			if err != nil {
 				t.Fatalf("UpdateListItem(_, %+v) = _, %v, want _, nil",
-					req, resp, err, wantResp)
+					req, err)
 			}
 
 			if diff := cmp.Diff(resp, wantResp, protocmp.Transform()); diff != "" {

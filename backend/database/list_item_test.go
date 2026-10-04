@@ -225,6 +225,6 @@ func TestDeleteListItem(t *testing.T) {
 	}
 
 	if len(afterItems) != 1 || afterItems[0].Name != "l1i2" {
-		t.Fatalf("after items = %v, want only l1i2")
+		t.Fatalf("after items = %v, want only l1i2", afterItems)
 	}
 }
