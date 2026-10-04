@@ -1,34 +1,12 @@
 version: "3.8"
 
 services:
-  envoy:
-    image: envoyproxy/envoy:v1.18.2
-    container_name: ${CONTAINER_PREFIX}_envoy
-    volumes:
-      - type: bind
-        source: ./envoy.yaml
-        target: /etc/envoy/envoy.yaml
-    command:
-      - "envoy"
-      - "-c"
-      - "/etc/envoy/envoy.yaml"
-
-  backend:
-    image: simmonmt/xmaslist/backend:${CONTAINER_TAG}
-    container_name: ${CONTAINER_PREFIX}_backend
-    command:
-      - "--port=8082"
-      - "--db=/db/db.sqlite"
-      - "--session_secret=/secret/session_secret.txt"
-
-
-  frontend:
-    image: simmonmt/xmaslist/frontend:${CONTAINER_TAG}
-    container_name: ${CONTAINER_PREFIX}_frontend
-    command:
-      - "--index_file=index.html"
-      - "--serve_dir=/docroot"
-      - "--port=8083"
+  # The backend, which also serves the client. The image's default command
+  # serves on port 8080, with the database at /db/db.sqlite and the session
+  # secret at /secret/session_secret.txt.
+  xmaslist:
+    image: simmonmt/xmaslist:${CONTAINER_TAG}
+    container_name: ${CONTAINER_PREFIX}_xmaslist
 
 networks:
   default:

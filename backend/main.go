@@ -18,6 +18,7 @@ import (
 	"github.com/simmonmt/xmaslist/backend/database"
 	"github.com/simmonmt/xmaslist/backend/listservice"
 	"github.com/simmonmt/xmaslist/backend/sessions"
+	"github.com/simmonmt/xmaslist/backend/static"
 	"github.com/simmonmt/xmaslist/backend/userservice"
 	"github.com/simmonmt/xmaslist/backend/util"
 	"github.com/simmonmt/xmaslist/proto/auth_service/auth_serviceconnect"
@@ -32,6 +33,9 @@ var (
 		"user_session_length", 24*time.Hour, "length of user sessions")
 	sessionSecretPath = flag.String(
 		"session_secret", "", "path to session secret file")
+	serveDir = flag.String("serve_dir", "",
+		"if set, serve the client (the Vite build output) from this "+
+			"directory on the RPC port")
 	slowResponses = flag.String("slow_responses", "",
 		"if a duration, sleep before each response. if a comma-separated "+
 			"list of k=v pairs (method=duration), sleep the specific "+
@@ -299,8 +303,17 @@ func main() {
 	mux.Handle(grpcreflect.NewHandlerV1(reflector, readMaxBytes))
 	mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector, readMaxBytes))
 
-	// Serve HTTP/1.1 (Connect, gRPC-Web) as well as unencrypted HTTP/2
-	// (h2c), which gRPC clients (Envoy, grpcurl) require.
+	// Everything that isn't an RPC goes to the client.
+	if *serveDir != "" {
+		staticHandler, err := static.NewHandler(*serveDir)
+		if err != nil {
+			log.Fatalf("failed to set up --serve_dir: %v", err)
+		}
+		mux.Handle("/", staticHandler)
+	}
+
+	// Serve HTTP/1.1 (Connect, gRPC-Web, the client) as well as unencrypted
+	// HTTP/2 (h2c), which gRPC clients (e.g. grpcurl) require.
 	protocols := new(http.Protocols)
 	protocols.SetHTTP1(true)
 	protocols.SetUnencryptedHTTP2(true)
@@ -308,6 +321,10 @@ func main() {
 	server := &http.Server{
 		Handler:   mux,
 		Protocols: protocols,
+		// Browsers connect directly, so don't let slow or idle
+		// clients hold connections open forever.
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
 	log.Printf("serving on port %v...\n", *port)

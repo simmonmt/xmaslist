@@ -2,11 +2,10 @@ SHELL := /bin/bash
 .SHELLFLAGS := -eo pipefail -c
 
 BUF := node_modules/.bin/buf
-BACKEND_IMAGE := simmonmt/xmaslist/backend:latest
-FRONTEND_IMAGE := simmonmt/xmaslist/frontend:latest
+IMAGE := simmonmt/xmaslist:latest
 
-.PHONY: all gen gen-go gen-js build build-go build-client test dev images \
-	image-backend image-frontend clean
+.PHONY: all gen gen-go gen-js build build-go build-client test dev run-backend \
+	images clean
 
 all: build
 
@@ -36,16 +35,22 @@ build-client: gen-js
 test: gen-go
 	go test ./...
 
+# Vite dev server on port 8083. It proxies RPCs to the backend on port 8082
+# (see `run-backend`).
 dev: gen-js
 	npm run dev
 
-images: image-backend image-frontend
+# Backend for `make dev`: make run-backend DB=path/to/db.sqlite [ARGS=...]
+run-backend: gen-go
+	@if [[ -z "$(DB)" ]] ; then \
+		echo "usage: make run-backend DB=path/to/db.sqlite [ARGS=...]" >&2 ; \
+		exit 2 ; \
+	fi
+	go run ./backend --port=8082 --db="$(DB)" \
+		--session_secret=docker/dev_session_secret.txt $(ARGS)
 
-image-backend:
-	docker build -f backend/Dockerfile -t $(BACKEND_IMAGE) .
-
-image-frontend:
-	docker build -f frontend/Dockerfile -t $(FRONTEND_IMAGE) .
+images:
+	docker build -t $(IMAGE) .
 
 clean:
 	rm -rf proto/*/ client/gen client/dist

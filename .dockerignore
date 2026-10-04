@@ -9,3 +9,8 @@ client/gen
 # Generated Go code (proto/<pkg>/); keep the .proto sources.
 proto/*
 !proto/*.proto
+
+# Not needed to build the image.
+Dockerfile
+.dockerignore
+docker
