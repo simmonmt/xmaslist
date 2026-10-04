@@ -1,0 +1,8 @@
+# The module root is the repo root because the protos import each other as
+# "proto/<name>.proto". Only proto/ is included so that buf doesn't pick up
+# stray .proto files (node_modules etc.).
+version: v2
+modules:
+  - path: .
+    includes:
+      - proto

@@ -6,7 +6,7 @@ import DialogTitle from "@material-ui/core/DialogTitle";
 import TextField from "@material-ui/core/TextField";
 import { KeyboardDatePicker } from "@material-ui/pickers";
 import * as React from "react";
-import { ListData as ListDataProto } from "../proto/list_pb";
+import { ListData as ListDataProto } from "xmaslist-proto/proto/list_pb.js";
 
 interface Props {
   action: string;

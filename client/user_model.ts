@@ -1,6 +1,9 @@
 import { Metadata } from "grpc-web";
-import { UserServicePromiseClient } from "../proto/user_service_grpc_web_pb";
-import { GetUsersRequest, GetUsersResponse } from "../proto/user_service_pb";
+import { UserServicePromiseClient } from "xmaslist-proto/proto/user_service_grpc_web_pb.js";
+import {
+  GetUsersRequest,
+  GetUsersResponse,
+} from "xmaslist-proto/proto/user_service_pb.js";
 import { AuthModel } from "./auth_model";
 import { User } from "./user";
 

@@ -1,0 +1,10 @@
+# Go code generation. Output lands in proto/<pkg>/ (per each file's
+# go_package) and is not checked in. Run via `make gen`.
+version: v2
+plugins:
+  - local: ["go", "tool", "protoc-gen-go"]
+    out: .
+    opt: module=github.com/simmonmt/xmaslist
+  - local: ["go", "tool", "protoc-gen-go-grpc"]
+    out: .
+    opt: module=github.com/simmonmt/xmaslist

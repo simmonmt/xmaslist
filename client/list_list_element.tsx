@@ -9,7 +9,7 @@ import RestoreFromTrashIcon from "@material-ui/icons/RestoreFromTrash";
 import { format } from "date-fns";
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { List as ListProto } from "../proto/list_pb";
+import { List as ListProto } from "xmaslist-proto/proto/list_pb.js";
 import { User } from "./user";
 
 interface ListItemLinkProps {

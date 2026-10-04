@@ -6,7 +6,7 @@ import DialogTitle from "@material-ui/core/DialogTitle";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import * as React from "react";
-import { ListItemData as ListItemDataProto } from "../proto/list_item_pb";
+import { ListItemData as ListItemDataProto } from "xmaslist-proto/proto/list_item_pb.js";
 
 function isValidUrl(url: string): boolean {
   try {

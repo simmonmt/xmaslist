@@ -9,9 +9,9 @@ import {
   Switch,
 } from "react-router-dom";
 import Cookies from "universal-cookie";
-import { AuthServicePromiseClient } from "../proto/auth_service_grpc_web_pb";
-import { ListServicePromiseClient } from "../proto/list_service_grpc_web_pb";
-import { UserServicePromiseClient } from "../proto/user_service_grpc_web_pb";
+import { AuthServicePromiseClient } from "xmaslist-proto/proto/auth_service_grpc_web_pb.js";
+import { ListServicePromiseClient } from "xmaslist-proto/proto/list_service_grpc_web_pb.js";
+import { UserServicePromiseClient } from "xmaslist-proto/proto/user_service_grpc_web_pb.js";
 import { AuthModel } from "./auth_model";
 import { AuthStorage } from "./auth_storage";
 import { Banner } from "./banner";

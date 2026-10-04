@@ -1,5 +1,0 @@
-[{
-  "regex": "missing strict dependencies",
-  "command": "bazel",
-  "args": ["run", "//:gazelle_fix"]
-}]

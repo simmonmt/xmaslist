@@ -1,4 +1,4 @@
-import { UserInfo } from "../proto/user_info_pb";
+import { UserInfo } from "xmaslist-proto/proto/user_info_pb.js";
 
 export const STORAGE_NAME = "user_info";
 

@@ -54,7 +54,12 @@ DB_TMPFILE=/tmp/db.sqlite
 
 sqlite3 ${DB_TMPFILE} <db/schema/schema.txt
 if [[ "${LOADTESTDATA}" -eq 1 ]] ; then
-    bazel run cmd/db_util -- load --spec - ${DB_TMPFILE} <<-EOF
+    DB_UTIL_TMPDIR=$(mktemp -d)
+    trap "rm -rf ${DB_UTIL_TMPDIR}" EXIT INT QUIT TERM
+    DB_UTIL="${DB_UTIL_TMPDIR}/db_util"
+    go build -o "${DB_UTIL}" ./cmd/db_util
+
+    "${DB_UTIL}" load --spec - ${DB_TMPFILE} <<-EOF
 	users:
 	  - username: "a"
 	    fullname: "Elmer McSquicken"
@@ -106,8 +111,8 @@ if [[ "${LOADTESTDATA}" -eq 1 ]] ; then
 	      eventdate: "2021-09-21T00:00:00-04:00"
 	EOF
 
-    bazel-bin/cmd/db_util/db_util_/db_util user list ${DB_TMPFILE}
-    bazel-bin/cmd/db_util/db_util_/db_util list list ${DB_TMPFILE}
+    "${DB_UTIL}" user list ${DB_TMPFILE}
+    "${DB_UTIL}" list list ${DB_TMPFILE}
 fi
 
 docker volume create ${VOL}

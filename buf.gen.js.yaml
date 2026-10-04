@@ -1,0 +1,13 @@
+# Browser (grpc-web) code generation. Output lands in client/gen/proto/ and is
+# not checked in. Run via `make gen`.
+#
+# protoc-gen-js comes from the protoc-gen-js npm package. protoc-gen-grpc-web is
+# downloaded by tools/fetch-protoc-gen-grpc-web.mjs (npm postinstall).
+version: v2
+plugins:
+  - local: node_modules/protoc-gen-js/bin/protoc-gen-js
+    out: client/gen
+    opt: [import_style=commonjs, binary]
+  - local: node_modules/.tools/protoc-gen-grpc-web
+    out: client/gen
+    opt: [import_style=commonjs+dts, mode=grpcweb]

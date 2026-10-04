@@ -3,6 +3,7 @@
       "jsx" : "react",
       "lib" : [
          "es2015.promise",
+         "es2018.promise",
 	 "es2015.collection",
 	 "es2015.core",
 	 "es2015",
@@ -11,16 +12,12 @@
       ],
       "moduleResolution" : "node",
       // "traceResolution" : true,
-      "rootDirs" : [
-         // ../ because we're in //client not //.
-         "..",
-         "../bazel-out/k8-fastbuild/bin",
-         "../bazel-out/darwin-fastbuild/bin"
-      ],
-      "strict" : true
+      "strict" : true,
+      // Browser code: do not pull in @types/node (or other global types).
+      "types" : []
    },
-   //"include" : [
-   //   "*.tsx",
-   //   "*.ts"
-   //]
+   "include" : [
+      "*.tsx",
+      "*.ts"
+   ]
 }

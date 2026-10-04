@@ -3,7 +3,7 @@ import {
   ListItemData as ListItemDataProto,
   ListItemMetadata as ListItemMetadataProto,
   ListItemState as ListItemStateProto,
-} from "../proto/list_item_pb";
+} from "xmaslist-proto/proto/list_item_pb.js";
 
 export class ListItem {
   private readonly data: ListItemDataProto;

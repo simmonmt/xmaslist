@@ -20,8 +20,11 @@ import {
   ListItem as ListItemProto,
   ListItemData as ListItemDataProto,
   ListItemState as ListItemStateProto,
-} from "../proto/list_item_pb";
-import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
+} from "xmaslist-proto/proto/list_item_pb.js";
+import {
+  List as ListProto,
+  ListData as ListDataProto,
+} from "xmaslist-proto/proto/list_pb.js";
 import { EditListDialog } from "./edit_list_dialog";
 import { EditListItemDialog } from "./edit_list_item_dialog";
 import { ItemListElement, ItemListElementMode } from "./item_list_element";

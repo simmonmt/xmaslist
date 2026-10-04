@@ -14,6 +14,8 @@ import (
 )
 
 type userServer struct {
+	aspb.UnimplementedAuthServiceServer
+
 	clock          util.Clock
 	sessionManager *sessions.Manager
 	db             *database.DB

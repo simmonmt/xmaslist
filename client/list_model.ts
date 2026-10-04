@@ -2,9 +2,12 @@ import { Metadata } from "grpc-web";
 import {
   ListItemData as ListItemDataProto,
   ListItemState as ListItemStateProto,
-} from "../proto/list_item_pb";
-import { List as ListProto, ListData as ListDataProto } from "../proto/list_pb";
-import { ListServicePromiseClient } from "../proto/list_service_grpc_web_pb";
+} from "xmaslist-proto/proto/list_item_pb.js";
+import {
+  List as ListProto,
+  ListData as ListDataProto,
+} from "xmaslist-proto/proto/list_pb.js";
+import { ListServicePromiseClient } from "xmaslist-proto/proto/list_service_grpc_web_pb.js";
 import {
   ChangeActiveStateRequest,
   CreateListItemRequest,
@@ -22,7 +25,7 @@ import {
   UpdateListItemResponse,
   UpdateListRequest,
   UpdateListResponse,
-} from "../proto/list_service_pb";
+} from "xmaslist-proto/proto/list_service_pb.js";
 import { AuthModel } from "./auth_model";
 import { ListItem } from "./list_item";
 

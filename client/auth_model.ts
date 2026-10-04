@@ -1,11 +1,11 @@
 import Cookies from "universal-cookie";
-import { AuthServicePromiseClient } from "../proto/auth_service_grpc_web_pb";
+import { AuthServicePromiseClient } from "xmaslist-proto/proto/auth_service_grpc_web_pb.js";
 import {
   LoginRequest,
   LoginResponse,
   LogoutRequest,
   LogoutResponse,
-} from "../proto/auth_service_pb";
+} from "xmaslist-proto/proto/auth_service_pb.js";
 import { AuthStorage } from "./auth_storage";
 import { User } from "./user";
 

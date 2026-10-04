@@ -26,7 +26,7 @@ services:
     image: simmonmt/xmaslist/frontend:${CONTAINER_TAG}
     container_name: ${CONTAINER_PREFIX}_frontend
     command:
-      - "--index_file=index_prod.html"
+      - "--index_file=index.html"
       - "--serve_dir=/docroot"
       - "--port=8083"
 

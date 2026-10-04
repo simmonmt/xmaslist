@@ -9,7 +9,7 @@ import { Theme } from "@material-ui/core/styles/createTheme";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import * as React from "react";
-import { ListItemData as ListItemDataProto } from "../proto/list_item_pb";
+import { ListItemData as ListItemDataProto } from "xmaslist-proto/proto/list_item_pb.js";
 import { EditListItemDialog } from "./edit_list_item_dialog";
 import { ListItemUpdater } from "./item_list";
 import { ListItem } from "./list_item";

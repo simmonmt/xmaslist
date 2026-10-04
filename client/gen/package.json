@@ -1,0 +1,6 @@
+{
+    "name": "xmaslist-proto",
+    "version": "0.0.0",
+    "private": true,
+    "description": "Generated grpc-web/protobuf code (from `make gen`), as a local package so Vite pre-bundles its CommonJS modules."
+}

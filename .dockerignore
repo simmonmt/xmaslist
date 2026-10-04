@@ -1,0 +1,11 @@
+.git
+.jj
+.claude
+node_modules
+client/dist
+client/gen/proto
+**/*.sqlite
+
+# Generated Go code (proto/<pkg>/); keep the .proto sources.
+proto/*
+!proto/*.proto

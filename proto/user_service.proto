@@ -4,6 +4,8 @@ import "proto/user_info.proto";
 
 package xmaslist;
 
+option go_package = "github.com/simmonmt/xmaslist/proto/user_service";
+
 message GetUsersRequest {
   repeated int32 ids = 1;
 }
