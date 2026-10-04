@@ -235,7 +235,7 @@ func (s *listServer) ListListItems(ctx context.Context, req *lspb.ListListItemsR
 	}
 
 	listID, err := strconv.Atoi(req.GetListId())
-	if req.GetListId() == "" {
+	if req.GetListId() == "" || err != nil {
 		return nil, status.Errorf(codes.InvalidArgument,
 			"invalid list id")
 	}
@@ -260,7 +260,7 @@ func (s *listServer) CreateListItem(ctx context.Context, req *lspb.CreateListIte
 	}
 
 	listID, err := strconv.Atoi(req.GetListId())
-	if req.GetListId() == "" {
+	if req.GetListId() == "" || err != nil {
 		return nil, status.Errorf(codes.InvalidArgument,
 			"invalid list id")
 	}
@@ -305,13 +305,13 @@ func (s *listServer) DeleteListItem(ctx context.Context, req *lspb.DeleteListIte
 	}
 
 	listID, err := strconv.Atoi(req.GetListId())
-	if req.GetListId() == "" {
+	if req.GetListId() == "" || err != nil {
 		return nil, status.Errorf(codes.InvalidArgument,
 			"invalid list id")
 	}
 
 	itemID, err := strconv.Atoi(req.GetItemId())
-	if req.GetItemId() == "" {
+	if req.GetItemId() == "" || err != nil {
 		return nil, status.Errorf(codes.InvalidArgument,
 			"invalid item id")
 	}
@@ -340,7 +340,7 @@ func (s *listServer) UpdateListItem(ctx context.Context, req *lspb.UpdateListIte
 	}
 
 	listID, err := strconv.Atoi(req.GetListId())
-	if req.GetListId() == "" {
+	if req.GetListId() == "" || err != nil {
 		return nil, status.Errorf(codes.InvalidArgument,
 			"invalid list id")
 	}

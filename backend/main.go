@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -49,7 +48,7 @@ func init() {
 }
 
 func readSessionSecret(path string) (string, error) {
-	a, err := ioutil.ReadFile(path)
+	a, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}

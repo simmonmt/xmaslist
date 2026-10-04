@@ -33,6 +33,9 @@ func (s *userServer) Login(ctx context.Context, req *aspb.LoginRequest) (*aspb.L
 	}
 
 	user, err := s.db.LookupUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
 
 	cookie, expiry, err := s.sessionManager.CreateSession(ctx, user)
 	if err != nil {
