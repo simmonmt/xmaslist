@@ -7,8 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"connectrpc.com/connect"
 )
 
 type User struct {
@@ -54,8 +53,8 @@ func (db *DB) CreateUser(ctx context.Context, user *User, password string) (int,
 }
 
 var (
-	invalidUserPassword = status.Errorf(codes.PermissionDenied,
-		"invalid user/password")
+	invalidUserPassword = connect.NewError(connect.CodePermissionDenied,
+		errors.New("invalid user/password"))
 )
 
 func (db *DB) AuthenticateUser(ctx context.Context, username, password string) (int, error) {

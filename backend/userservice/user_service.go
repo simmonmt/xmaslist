@@ -2,20 +2,21 @@ package userservice
 
 import (
 	"context"
+	"errors"
+	"net/http"
 
+	"connectrpc.com/connect"
 	"github.com/simmonmt/xmaslist/backend/database"
 	"github.com/simmonmt/xmaslist/backend/request"
 	"github.com/simmonmt/xmaslist/backend/sessions"
 	"github.com/simmonmt/xmaslist/backend/util"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	uspb "github.com/simmonmt/xmaslist/proto/user_service"
+	"github.com/simmonmt/xmaslist/proto/user_service/user_serviceconnect"
 )
 
 type userServer struct {
-	uspb.UnimplementedUserServiceServer
+	user_serviceconnect.UnimplementedUserServiceHandler
 
 	clock util.Clock
 	db    *database.DB
@@ -24,13 +25,15 @@ type userServer struct {
 func getSession(ctx context.Context) (*sessions.Session, error) {
 	val := ctx.Value(request.SessionKey)
 	if val == nil {
-		return nil, status.Errorf(codes.Internal, "missing session")
+		return nil, connect.NewError(connect.CodeInternal,
+			errors.New("missing session"))
 	}
 
 	return val.(*sessions.Session), nil
 }
 
-func (s *userServer) GetUsers(ctx context.Context, req *uspb.GetUsersRequest) (*uspb.GetUsersResponse, error) {
+func (s *userServer) GetUsers(ctx context.Context, connectReq *connect.Request[uspb.GetUsersRequest]) (*connect.Response[uspb.GetUsersResponse], error) {
+	req := connectReq.Msg
 	session, err := getSession(ctx)
 	if session == nil {
 		return nil, err
@@ -48,14 +51,14 @@ func (s *userServer) GetUsers(ctx context.Context, req *uspb.GetUsersRequest) (*
 		}
 	}
 
-	return resp, nil
+	return connect.NewResponse(resp), nil
 }
 
-func RegisterHandlers(server *grpc.Server, clock util.Clock, db *database.DB) {
+func RegisterHandlers(mux *http.ServeMux, clock util.Clock, db *database.DB, opts ...connect.HandlerOption) {
 	handlers := &userServer{
 		clock: clock,
 		db:    db,
 	}
 
-	uspb.RegisterUserServiceServer(server, handlers)
+	mux.Handle(user_serviceconnect.NewUserServiceHandler(handlers, opts...))
 }

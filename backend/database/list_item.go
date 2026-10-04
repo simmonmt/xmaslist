@@ -6,8 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"connectrpc.com/connect"
 )
 
 type ListItemState struct {
@@ -162,9 +161,9 @@ func (db *DB) doUpdateListItem(ctx context.Context, txn *sql.Tx, listID int, ite
 	}
 
 	if item.Version != itemVersion {
-		return nil, status.Errorf(codes.FailedPrecondition,
-			"item version ID mismatch; requested %v, need %v",
-			itemVersion, item.Version)
+		return nil, connect.NewError(connect.CodeFailedPrecondition,
+			fmt.Errorf("item version ID mismatch; requested %v, need %v",
+				itemVersion, item.Version))
 	}
 
 	if err := update(&item.ListItemData, &item.ListItemState); err != nil {
@@ -228,8 +227,8 @@ func (db *DB) DeleteListItem(ctx context.Context, listID int, itemID int) error 
 	if num, err := result.RowsAffected(); err != nil {
 		return err
 	} else if num != 1 {
-		return status.Errorf(codes.NotFound, "no item with ID %v",
-			itemID)
+		return connect.NewError(connect.CodeNotFound,
+			fmt.Errorf("no item with ID %v", itemID))
 	}
 
 	return nil

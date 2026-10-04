@@ -2,10 +2,10 @@ package dbutil
 
 import (
 	"context"
+	"fmt"
 
+	"connectrpc.com/connect"
 	"github.com/simmonmt/xmaslist/backend/database"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func GetListItem(ctx context.Context, db *database.DB, listID, itemID int) (*database.ListItem, error) {
@@ -15,8 +15,8 @@ func GetListItem(ctx context.Context, db *database.DB, listID, itemID int) (*dat
 	}
 
 	if len(items) == 0 {
-		return nil, status.Errorf(codes.NotFound,
-			"no item with id %v in list %v", itemID, listID)
+		return nil, connect.NewError(connect.CodeNotFound,
+			fmt.Errorf("no item with id %v in list %v", itemID, listID))
 	}
 
 	return items[0], nil

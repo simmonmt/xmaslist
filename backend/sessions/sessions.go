@@ -1,9 +1,10 @@
 package sessions
 
 import (
-	"google.golang.org/grpc/grpclog"
+	"log"
+	"os"
 )
 
 var (
-	logger = grpclog.Component("sessions")
+	logger = log.New(os.Stderr, "[sessions] ", log.LstdFlags)
 )

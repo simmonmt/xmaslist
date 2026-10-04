@@ -2,23 +2,24 @@ package listservice
 
 import (
 	"context"
+	"errors"
+	"net/http"
 	"strconv"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/simmonmt/xmaslist/backend/database"
 	"github.com/simmonmt/xmaslist/backend/database/dbutil"
 	"github.com/simmonmt/xmaslist/backend/request"
 	"github.com/simmonmt/xmaslist/backend/sessions"
 	"github.com/simmonmt/xmaslist/backend/util"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	lspb "github.com/simmonmt/xmaslist/proto/list_service"
+	"github.com/simmonmt/xmaslist/proto/list_service/list_serviceconnect"
 )
 
 type listServer struct {
-	lspb.UnimplementedListServiceServer
+	list_serviceconnect.UnimplementedListServiceHandler
 
 	clock          util.Clock
 	sessionManager *sessions.Manager
@@ -28,7 +29,8 @@ type listServer struct {
 func getSession(ctx context.Context) (*sessions.Session, error) {
 	val := ctx.Value(request.SessionKey)
 	if val == nil {
-		return nil, status.Errorf(codes.Internal, "missing session")
+		return nil, connect.NewError(connect.CodeInternal,
+			errors.New("missing session"))
 	}
 
 	return val.(*sessions.Session), nil
@@ -84,7 +86,8 @@ func itemFromDatabaseItem(item *database.ListItem) *lspb.ListItem {
 	}
 }
 
-func (s *listServer) ListLists(ctx context.Context, req *lspb.ListListsRequest) (*lspb.ListListsResponse, error) {
+func (s *listServer) ListLists(ctx context.Context, connectReq *connect.Request[lspb.ListListsRequest]) (*connect.Response[lspb.ListListsResponse], error) {
+	req := connectReq.Msg
 	session, err := getSession(ctx)
 	if session == nil {
 		return nil, err
@@ -101,10 +104,11 @@ func (s *listServer) ListLists(ctx context.Context, req *lspb.ListListsRequest) 
 		resp.Lists = append(resp.Lists, listFromDatabaseList(list))
 	}
 
-	return resp, nil
+	return connect.NewResponse(resp), nil
 }
 
-func (s *listServer) GetList(ctx context.Context, req *lspb.GetListRequest) (*lspb.GetListResponse, error) {
+func (s *listServer) GetList(ctx context.Context, connectReq *connect.Request[lspb.GetListRequest]) (*connect.Response[lspb.GetListResponse], error) {
+	req := connectReq.Msg
 	session, err := getSession(ctx)
 	if session == nil {
 		return nil, err
@@ -112,8 +116,8 @@ func (s *listServer) GetList(ctx context.Context, req *lspb.GetListRequest) (*ls
 
 	listID, err := strconv.Atoi(req.GetListId())
 	if req.GetListId() == "" || err != nil {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"invalid list id")
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			errors.New("invalid list id"))
 	}
 
 	list, err := dbutil.GetList(ctx, s.db, listID)
@@ -121,12 +125,13 @@ func (s *listServer) GetList(ctx context.Context, req *lspb.GetListRequest) (*ls
 		return nil, err
 	}
 
-	return &lspb.GetListResponse{
+	return connect.NewResponse(&lspb.GetListResponse{
 		List: listFromDatabaseList(list),
-	}, nil
+	}), nil
 }
 
-func (s *listServer) CreateList(ctx context.Context, req *lspb.CreateListRequest) (*lspb.CreateListResponse, error) {
+func (s *listServer) CreateList(ctx context.Context, connectReq *connect.Request[lspb.CreateListRequest]) (*connect.Response[lspb.CreateListResponse], error) {
+	req := connectReq.Msg
 	session, err := getSession(ctx)
 	if session == nil {
 		return nil, err
@@ -134,8 +139,8 @@ func (s *listServer) CreateList(ctx context.Context, req *lspb.CreateListRequest
 
 	pbData := req.GetData()
 	if pbData.GetName() == "" || pbData.GetBeneficiary() == "" || pbData.GetEventDate() <= 0 {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"missing/bad args")
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			errors.New("missing/bad args"))
 	}
 
 	listData := &database.ListData{
@@ -151,12 +156,13 @@ func (s *listServer) CreateList(ctx context.Context, req *lspb.CreateListRequest
 		return nil, err
 	}
 
-	return &lspb.CreateListResponse{
+	return connect.NewResponse(&lspb.CreateListResponse{
 		List: listFromDatabaseList(list),
-	}, nil
+	}), nil
 }
 
-func (s *listServer) ChangeActiveState(ctx context.Context, req *lspb.ChangeActiveStateRequest) (*lspb.ChangeActiveStateResponse, error) {
+func (s *listServer) ChangeActiveState(ctx context.Context, connectReq *connect.Request[lspb.ChangeActiveStateRequest]) (*connect.Response[lspb.ChangeActiveStateResponse], error) {
+	req := connectReq.Msg
 	session, err := getSession(ctx)
 	if session == nil {
 		return nil, err
@@ -164,8 +170,8 @@ func (s *listServer) ChangeActiveState(ctx context.Context, req *lspb.ChangeActi
 
 	listID, err := strconv.Atoi(req.GetListId())
 	if req.GetListId() == "" || err != nil || req.GetListVersion() <= 0 {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"missing/bad args")
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			errors.New("missing/bad args"))
 	}
 
 	_, err = s.db.UpdateList(ctx, listID, int(req.GetListVersion()),
@@ -178,10 +184,11 @@ func (s *listServer) ChangeActiveState(ctx context.Context, req *lspb.ChangeActi
 		return nil, err
 	}
 
-	return &lspb.ChangeActiveStateResponse{}, nil
+	return connect.NewResponse(&lspb.ChangeActiveStateResponse{}), nil
 }
 
-func (s *listServer) UpdateList(ctx context.Context, req *lspb.UpdateListRequest) (*lspb.UpdateListResponse, error) {
+func (s *listServer) UpdateList(ctx context.Context, connectReq *connect.Request[lspb.UpdateListRequest]) (*connect.Response[lspb.UpdateListResponse], error) {
+	req := connectReq.Msg
 	session, err := getSession(ctx)
 	if session == nil {
 		return nil, err
@@ -189,8 +196,8 @@ func (s *listServer) UpdateList(ctx context.Context, req *lspb.UpdateListRequest
 
 	listID, err := strconv.Atoi(req.GetListId())
 	if req.GetListId() == "" || err != nil || req.GetListVersion() <= 0 {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"missing/bad args")
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			errors.New("missing/bad args"))
 	}
 
 	pbData := req.GetData()
@@ -214,8 +221,8 @@ func (s *listServer) UpdateList(ctx context.Context, req *lspb.UpdateListRequest
 			}
 
 			if num == 0 {
-				return status.Errorf(codes.InvalidArgument,
-					"no values to set")
+				return connect.NewError(connect.CodeInvalidArgument,
+					errors.New("no values to set"))
 			}
 			return nil
 		})
@@ -223,12 +230,13 @@ func (s *listServer) UpdateList(ctx context.Context, req *lspb.UpdateListRequest
 		return nil, err
 	}
 
-	return &lspb.UpdateListResponse{
+	return connect.NewResponse(&lspb.UpdateListResponse{
 		List: listFromDatabaseList(list),
-	}, nil
+	}), nil
 }
 
-func (s *listServer) ListListItems(ctx context.Context, req *lspb.ListListItemsRequest) (*lspb.ListListItemsResponse, error) {
+func (s *listServer) ListListItems(ctx context.Context, connectReq *connect.Request[lspb.ListListItemsRequest]) (*connect.Response[lspb.ListListItemsResponse], error) {
+	req := connectReq.Msg
 	session, err := getSession(ctx)
 	if session == nil {
 		return nil, err
@@ -236,8 +244,8 @@ func (s *listServer) ListListItems(ctx context.Context, req *lspb.ListListItemsR
 
 	listID, err := strconv.Atoi(req.GetListId())
 	if req.GetListId() == "" || err != nil {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"invalid list id")
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			errors.New("invalid list id"))
 	}
 
 	items, err := s.db.ListListItems(ctx, listID, database.AllItems())
@@ -250,10 +258,11 @@ func (s *listServer) ListListItems(ctx context.Context, req *lspb.ListListItemsR
 		resp.Items = append(resp.Items, itemFromDatabaseItem(item))
 	}
 
-	return resp, nil
+	return connect.NewResponse(resp), nil
 }
 
-func (s *listServer) CreateListItem(ctx context.Context, req *lspb.CreateListItemRequest) (*lspb.CreateListItemResponse, error) {
+func (s *listServer) CreateListItem(ctx context.Context, connectReq *connect.Request[lspb.CreateListItemRequest]) (*connect.Response[lspb.CreateListItemResponse], error) {
+	req := connectReq.Msg
 	session, err := getSession(ctx)
 	if session == nil {
 		return nil, err
@@ -261,8 +270,8 @@ func (s *listServer) CreateListItem(ctx context.Context, req *lspb.CreateListIte
 
 	listID, err := strconv.Atoi(req.GetListId())
 	if req.GetListId() == "" || err != nil {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"invalid list id")
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			errors.New("invalid list id"))
 	}
 
 	list, err := dbutil.GetList(ctx, s.db, listID)
@@ -271,14 +280,14 @@ func (s *listServer) CreateListItem(ctx context.Context, req *lspb.CreateListIte
 	}
 
 	if list.OwnerID != session.User.ID {
-		return nil, status.Errorf(codes.PermissionDenied,
-			"user does not own list")
+		return nil, connect.NewError(connect.CodePermissionDenied,
+			errors.New("user does not own list"))
 	}
 
 	pbData := req.GetData()
 	if pbData.GetName() == "" {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"missing/bad args")
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			errors.New("missing/bad args"))
 	}
 
 	listItemData := &database.ListItemData{
@@ -293,12 +302,13 @@ func (s *listServer) CreateListItem(ctx context.Context, req *lspb.CreateListIte
 		return nil, err
 	}
 
-	return &lspb.CreateListItemResponse{
+	return connect.NewResponse(&lspb.CreateListItemResponse{
 		Item: itemFromDatabaseItem(listItem),
-	}, nil
+	}), nil
 }
 
-func (s *listServer) DeleteListItem(ctx context.Context, req *lspb.DeleteListItemRequest) (*lspb.DeleteListItemResponse, error) {
+func (s *listServer) DeleteListItem(ctx context.Context, connectReq *connect.Request[lspb.DeleteListItemRequest]) (*connect.Response[lspb.DeleteListItemResponse], error) {
+	req := connectReq.Msg
 	session, err := getSession(ctx)
 	if session == nil {
 		return nil, err
@@ -306,14 +316,14 @@ func (s *listServer) DeleteListItem(ctx context.Context, req *lspb.DeleteListIte
 
 	listID, err := strconv.Atoi(req.GetListId())
 	if req.GetListId() == "" || err != nil {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"invalid list id")
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			errors.New("invalid list id"))
 	}
 
 	itemID, err := strconv.Atoi(req.GetItemId())
 	if req.GetItemId() == "" || err != nil {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"invalid item id")
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			errors.New("invalid item id"))
 	}
 
 	list, err := dbutil.GetList(ctx, s.db, listID)
@@ -322,18 +332,19 @@ func (s *listServer) DeleteListItem(ctx context.Context, req *lspb.DeleteListIte
 	}
 
 	if list.OwnerID != session.User.ID {
-		return nil, status.Errorf(codes.PermissionDenied,
-			"user does not own list")
+		return nil, connect.NewError(connect.CodePermissionDenied,
+			errors.New("user does not own list"))
 	}
 
 	if err := s.db.DeleteListItem(ctx, listID, itemID); err != nil {
 		return nil, err
 	}
 
-	return &lspb.DeleteListItemResponse{}, nil
+	return connect.NewResponse(&lspb.DeleteListItemResponse{}), nil
 }
 
-func (s *listServer) UpdateListItem(ctx context.Context, req *lspb.UpdateListItemRequest) (*lspb.UpdateListItemResponse, error) {
+func (s *listServer) UpdateListItem(ctx context.Context, connectReq *connect.Request[lspb.UpdateListItemRequest]) (*connect.Response[lspb.UpdateListItemResponse], error) {
+	req := connectReq.Msg
 	session, err := getSession(ctx)
 	if session == nil {
 		return nil, err
@@ -341,8 +352,8 @@ func (s *listServer) UpdateListItem(ctx context.Context, req *lspb.UpdateListIte
 
 	listID, err := strconv.Atoi(req.GetListId())
 	if req.GetListId() == "" || err != nil {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"invalid list id")
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			errors.New("invalid list id"))
 	}
 
 	list, err := dbutil.GetList(ctx, s.db, listID)
@@ -351,30 +362,30 @@ func (s *listServer) UpdateListItem(ctx context.Context, req *lspb.UpdateListIte
 	}
 
 	if !list.Active {
-		return nil, status.Errorf(codes.FailedPrecondition,
-			"list is not active")
+		return nil, connect.NewError(connect.CodeFailedPrecondition,
+			errors.New("list is not active"))
 	}
 
 	itemID, err := strconv.Atoi(req.GetItemId())
 	if req.GetItemId() == "" || err != nil {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"invalid item id")
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			errors.New("invalid item id"))
 	}
 
 	if req.GetItemVersion() == 0 {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"missing item version")
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			errors.New("missing item version"))
 	}
 
 	if req.Data != nil {
 		if list.OwnerID != session.User.ID {
-			return nil, status.Errorf(codes.PermissionDenied,
-				"only owner can update list data")
+			return nil, connect.NewError(connect.CodePermissionDenied,
+				errors.New("only owner can update list data"))
 		}
 
 		if req.Data.GetName() == "" {
-			return nil, status.Errorf(codes.InvalidArgument,
-				"invalid item name")
+			return nil, connect.NewError(connect.CodeInvalidArgument,
+				errors.New("invalid item name"))
 		}
 	}
 
@@ -391,21 +402,18 @@ func (s *listServer) UpdateListItem(ctx context.Context, req *lspb.UpdateListIte
 			if req.State != nil {
 				if state.ClaimedBy != 0 {
 					if req.State.GetClaimed() {
-						return status.Errorf(
-							codes.FailedPrecondition,
-							"item is already claimed")
+						return connect.NewError(connect.CodeFailedPrecondition,
+							errors.New("item is already claimed"))
 					}
 					if session.User.ID != list.OwnerID && session.User.ID != state.ClaimedBy {
-						return status.Errorf(
-							codes.PermissionDenied,
-							"can't unclaim item already "+
-								"claimed by another user")
+						return connect.NewError(connect.CodePermissionDenied,
+							errors.New("can't unclaim item already "+
+								"claimed by another user"))
 					}
 				} else {
 					if !req.State.GetClaimed() {
-						return status.Errorf(
-							codes.FailedPrecondition,
-							"item isn't claimed")
+						return connect.NewError(connect.CodeFailedPrecondition,
+							errors.New("item isn't claimed"))
 					}
 				}
 
@@ -422,17 +430,17 @@ func (s *listServer) UpdateListItem(ctx context.Context, req *lspb.UpdateListIte
 		return nil, err
 	}
 
-	return &lspb.UpdateListItemResponse{
+	return connect.NewResponse(&lspb.UpdateListItemResponse{
 		Item: itemFromDatabaseItem(item),
-	}, nil
+	}), nil
 }
 
-func RegisterHandlers(server *grpc.Server, clock util.Clock, sessionManager *sessions.Manager, db *database.DB) {
+func RegisterHandlers(mux *http.ServeMux, clock util.Clock, sessionManager *sessions.Manager, db *database.DB, opts ...connect.HandlerOption) {
 	handlers := &listServer{
 		clock:          clock,
 		sessionManager: sessionManager,
 		db:             db,
 	}
 
-	lspb.RegisterListServiceServer(server, handlers)
+	mux.Handle(list_serviceconnect.NewListServiceHandler(handlers, opts...))
 }

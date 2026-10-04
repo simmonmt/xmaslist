@@ -74,7 +74,7 @@ func (sm *Manager) CreateSession(ctx context.Context, user *database.User) (cook
 	}
 
 	cookie = sm.validator.MakeCookie(session.ID)
-	logger.Infof("Created session for user %v, expires %v; cookie %v",
+	logger.Printf("Created session for user %v, expires %v; cookie %v",
 		user, expiry, cookie)
 
 	return cookie, expiry, nil

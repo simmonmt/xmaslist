@@ -7,9 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
+	"connectrpc.com/connect"
 	"github.com/google/go-cmp/cmp"
 	"github.com/simmonmt/xmaslist/backend/database"
 	"github.com/simmonmt/xmaslist/backend/database/dbutil"
@@ -209,7 +207,7 @@ func TestDeleteListItem(t *testing.T) {
 	}
 
 	badItemID := 1000
-	if err := db.DeleteListItem(ctx, list.ID, badItemID); err == nil || status.Code(err) != codes.NotFound {
+	if err := db.DeleteListItem(ctx, list.ID, badItemID); err == nil || connect.CodeOf(err) != connect.CodeNotFound {
 		t.Fatalf("DeleteListItem(_, %v, %v) = %v, want NotFound",
 			list.ID, badItemID, err)
 	}

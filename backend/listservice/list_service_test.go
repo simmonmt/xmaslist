@@ -7,9 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/google/go-cmp/cmp"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/testing/protocmp"
 
 	"github.com/simmonmt/xmaslist/backend/database"
@@ -107,6 +106,26 @@ func setupListItemTestState(ctx context.Context, t *testing.T) *listItemTestStat
 	}
 }
 
+// updateListItem calls the UpdateListItem handler, unwrapping the connect
+// request and response.
+func (s *listItemTestState) updateListItem(ctx context.Context, req *lspb.UpdateListItemRequest) (*lspb.UpdateListItemResponse, error) {
+	resp, err := s.Server.UpdateListItem(ctx, connect.NewRequest(req))
+	if err != nil {
+		return nil, err
+	}
+	return resp.Msg, nil
+}
+
+// deleteListItem calls the DeleteListItem handler, unwrapping the connect
+// request and response.
+func (s *listItemTestState) deleteListItem(ctx context.Context, req *lspb.DeleteListItemRequest) (*lspb.DeleteListItemResponse, error) {
+	resp, err := s.Server.DeleteListItem(ctx, connect.NewRequest(req))
+	if err != nil {
+		return nil, err
+	}
+	return resp.Msg, nil
+}
+
 func makeRequestContext(ctx context.Context, state *listItemTestState, username string) context.Context {
 	user := state.Users.UserByUsername(username)
 	session := state.SessionsByUserID[user.ID]
@@ -140,8 +159,8 @@ func TestUpdateListItem_NonOwnerDataUpdate(t *testing.T) {
 		Data: &lspb.ListItemData{Name: "name"},
 	}
 
-	resp, err := state.Server.UpdateListItem(reqCtx, req)
-	if err == nil || status.Code(err) != codes.PermissionDenied {
+	resp, err := state.updateListItem(reqCtx, req)
+	if err == nil || connect.CodeOf(err) != connect.CodePermissionDenied {
 		t.Fatalf("UpdateListItem(_, %+v) = %+v, %v, want _, PermissionDenied",
 			req, resp, err)
 	}
@@ -168,8 +187,8 @@ func TestUpdateListItem(t *testing.T) {
 		Data: &lspb.ListItemData{},
 	}
 
-	resp, err := state.Server.UpdateListItem(reqCtx, req)
-	if err == nil || status.Code(err) != codes.InvalidArgument {
+	resp, err := state.updateListItem(reqCtx, req)
+	if err == nil || connect.CodeOf(err) != connect.CodeInvalidArgument {
 		t.Fatalf("UpdateListItem(_, %+v) = %+v, %v, want _, InvalidArgument",
 			req, resp, err)
 	}
@@ -202,7 +221,7 @@ func TestUpdateListItem(t *testing.T) {
 		},
 	}
 
-	resp, err = state.Server.UpdateListItem(reqCtx, req)
+	resp, err = state.updateListItem(reqCtx, req)
 	if err != nil {
 		t.Fatalf("UpdateListItem(_, %+v) = %v, %v, want %v, nil",
 			req, resp, err, wantResp)
@@ -234,7 +253,7 @@ func TestUpdateListItem(t *testing.T) {
 		ClaimedWhen: state.Clock.Time.Unix(),
 	}
 
-	resp, err = state.Server.UpdateListItem(reqCtx, req)
+	resp, err = state.updateListItem(reqCtx, req)
 	if err != nil {
 		t.Fatalf("UpdateListItem(_, %+v) = %v, %v, want %v, nil",
 			req, resp, err, wantResp)
@@ -284,8 +303,8 @@ func TestUpdateListItem_Claim(t *testing.T) {
 				},
 			}
 
-			resp, err := state.Server.UpdateListItem(reqCtx, req)
-			if err == nil || status.Code(err) != codes.FailedPrecondition || !strings.Contains(err.Error(), "isn't claimed") {
+			resp, err := state.updateListItem(reqCtx, req)
+			if err == nil || connect.CodeOf(err) != connect.CodeFailedPrecondition || !strings.Contains(err.Error(), "isn't claimed") {
 				t.Fatalf("UpdateListItem(_, %+v) = %+v, %v, want _, FailedPrecondition",
 					req, resp, err)
 			}
@@ -318,7 +337,7 @@ func TestUpdateListItem_Claim(t *testing.T) {
 				},
 			}
 
-			resp, err = state.Server.UpdateListItem(reqCtx, req)
+			resp, err = state.updateListItem(reqCtx, req)
 			if err != nil {
 				t.Fatalf("UpdateListItem(_, %+v) = %v, %v, want %v, nil",
 					req, resp, err, wantResp)
@@ -331,8 +350,8 @@ func TestUpdateListItem_Claim(t *testing.T) {
 			// Try the claim again, but without updating the version
 			// token. This should fail because of the token mismatch.
 
-			_, err = state.Server.UpdateListItem(reqCtx, req)
-			if err == nil || status.Code(err) != codes.FailedPrecondition || !strings.Contains(err.Error(), "version ID mismatch") {
+			_, err = state.updateListItem(reqCtx, req)
+			if err == nil || connect.CodeOf(err) != connect.CodeFailedPrecondition || !strings.Contains(err.Error(), "version ID mismatch") {
 				t.Fatalf("UpdateListItem(_, %+v) = _, %v, want _, FailedPrecondition",
 					req, err)
 			}
@@ -342,8 +361,8 @@ func TestUpdateListItem_Claim(t *testing.T) {
 			// because the item is already claimed.
 
 			req.ItemVersion = resp.GetItem().GetVersion()
-			resp, err = state.Server.UpdateListItem(reqCtx, req)
-			if err == nil || status.Code(err) != codes.FailedPrecondition || !strings.Contains(err.Error(), "already claimed") {
+			resp, err = state.updateListItem(reqCtx, req)
+			if err == nil || connect.CodeOf(err) != connect.CodeFailedPrecondition || !strings.Contains(err.Error(), "already claimed") {
 				t.Fatalf("UpdateListItem(_, %+v) = %+v, %v, want _, FailedPrecondition",
 					req, resp, err)
 			}
@@ -360,7 +379,7 @@ func TestUpdateListItem_Claim(t *testing.T) {
 			wantResp.GetItem().GetMetadata().Updated =
 				state.Clock.Time.Unix()
 
-			resp, err = state.Server.UpdateListItem(reqCtx, req)
+			resp, err = state.updateListItem(reqCtx, req)
 			if err != nil {
 				t.Fatalf("UpdateListItem(_, %+v) = _, %v, want _, nil",
 					req, err)
@@ -398,7 +417,7 @@ func TestUpdateListItem_UnclaimWithCrossOwnership(t *testing.T) {
 		State:       &lspb.ListItemState{Claimed: true},
 	}
 
-	resp, err := state.Server.UpdateListItem(claimCtx, req)
+	resp, err := state.updateListItem(claimCtx, req)
 	if err != nil {
 		t.Fatalf("failed to claim")
 	}
@@ -406,13 +425,13 @@ func TestUpdateListItem_UnclaimWithCrossOwnership(t *testing.T) {
 	req.ItemVersion = resp.GetItem().GetVersion()
 	req.GetState().Claimed = false
 
-	_, err = state.Server.UpdateListItem(nonOwnerCtx, req)
-	if err == nil || status.Code(err) != codes.PermissionDenied {
+	_, err = state.updateListItem(nonOwnerCtx, req)
+	if err == nil || connect.CodeOf(err) != connect.CodePermissionDenied {
 		t.Fatalf("UpdateListItem(_, %+v) = _, %v, want _, PermissionDenied",
 			req, err)
 	}
 
-	resp, err = state.Server.UpdateListItem(ownerCtx, req)
+	resp, err = state.updateListItem(ownerCtx, req)
 	if err != nil {
 		t.Fatalf("UpdateListItem(_, %+v) = %v, %v, want _, nil",
 			req, resp, err)
@@ -431,30 +450,30 @@ func TestDeleteListItem(t *testing.T) {
 
 	req := &lspb.DeleteListItemRequest{}
 
-	if _, err := state.Server.DeleteListItem(ownerCtx, req); err == nil || status.Code(err) != codes.InvalidArgument {
+	if _, err := state.deleteListItem(ownerCtx, req); err == nil || connect.CodeOf(err) != connect.CodeInvalidArgument {
 		t.Fatalf(`DeleteListItem("b", %v) = _, %v, want InvalidArgument`,
 			req, err)
 	}
 
 	req.ListId = strconv.Itoa(list.ID)
-	if _, err := state.Server.DeleteListItem(ownerCtx, req); err == nil || status.Code(err) != codes.InvalidArgument {
+	if _, err := state.deleteListItem(ownerCtx, req); err == nil || connect.CodeOf(err) != connect.CodeInvalidArgument {
 		t.Fatalf(`DeleteListItem("b", %v) = _, %v, want InvalidArgument`,
 			req, err)
 	}
 
 	req.ItemId = "1000" // non-existent ID
-	if _, err := state.Server.DeleteListItem(ownerCtx, req); err == nil || status.Code(err) != codes.NotFound {
+	if _, err := state.deleteListItem(ownerCtx, req); err == nil || connect.CodeOf(err) != connect.CodeNotFound {
 		t.Fatalf(`DeleteListItem("a", %v) = _, %v, want NotFound`,
 			req, err)
 	}
 
 	req.ItemId = strconv.Itoa(item.ID)
-	if _, err := state.Server.DeleteListItem(nonOwnerCtx, req); err == nil || status.Code(err) != codes.PermissionDenied {
+	if _, err := state.deleteListItem(nonOwnerCtx, req); err == nil || connect.CodeOf(err) != connect.CodePermissionDenied {
 		t.Fatalf(`DeleteListItem("b", %v) = _, %v, want PermissionDenied`,
 			req, err)
 	}
 
-	if _, err := state.Server.DeleteListItem(ownerCtx, req); err != nil {
+	if _, err := state.deleteListItem(ownerCtx, req); err != nil {
 		t.Fatalf(`DeleteListItem("a", %v) = _, %v, want nil`,
 			req, err)
 	}

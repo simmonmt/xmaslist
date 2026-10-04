@@ -2,16 +2,16 @@ package database_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
 	"testing"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/simmonmt/xmaslist/backend/database"
 	"github.com/simmonmt/xmaslist/backend/database/testutil"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func listIDs(lists []*database.List) []int {
@@ -95,12 +95,12 @@ func TestCreateAndListLists(t *testing.T) {
 	}
 }
 
-func statusCode(err error) (codes.Code, error) {
-	s, ok := status.FromError(err)
-	if !ok {
-		return codes.Unknown, fmt.Errorf("not a status")
+func statusCode(err error) (connect.Code, error) {
+	var connectErr *connect.Error
+	if !errors.As(err, &connectErr) {
+		return connect.CodeUnknown, fmt.Errorf("not a connect error")
 	}
-	return s.Code(), nil
+	return connectErr.Code(), nil
 }
 
 func readList(ctx context.Context, db *database.DB, listID int) (*database.List, error) {
@@ -142,7 +142,7 @@ func TestUpdateList(t *testing.T) {
 			list.Version+1, err)
 		return
 	}
-	if code, err := statusCode(err); err != nil || code != codes.FailedPrecondition {
+	if code, err := statusCode(err); err != nil || code != connect.CodeFailedPrecondition {
 		t.Errorf("UpdateList(bad version %v) error want status failed precondition, got %v, %v",
 			list.Version+1, code, err)
 		return
@@ -161,7 +161,7 @@ func TestUpdateList(t *testing.T) {
 			otherUser.ID, err)
 		return
 	}
-	if code, err := statusCode(err); err != nil || code != codes.PermissionDenied {
+	if code, err := statusCode(err); err != nil || code != connect.CodePermissionDenied {
 		t.Errorf("UpdateList(bad user %v) error want status permission denied, got %v, %v",
 			otherUser.ID, code, err)
 	}

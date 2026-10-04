@@ -2,25 +2,27 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"strings"
 	"time"
 
+	"connectrpc.com/connect"
+	"connectrpc.com/grpcreflect"
 	"github.com/simmonmt/xmaslist/backend/authservice"
 	"github.com/simmonmt/xmaslist/backend/database"
 	"github.com/simmonmt/xmaslist/backend/listservice"
 	"github.com/simmonmt/xmaslist/backend/sessions"
 	"github.com/simmonmt/xmaslist/backend/userservice"
 	"github.com/simmonmt/xmaslist/backend/util"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/grpclog"
-	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/status"
+	"github.com/simmonmt/xmaslist/proto/auth_service/auth_serviceconnect"
+	"github.com/simmonmt/xmaslist/proto/list_service/list_serviceconnect"
+	"github.com/simmonmt/xmaslist/proto/user_service/user_serviceconnect"
 )
 
 var (
@@ -38,14 +40,7 @@ var (
 		"if a code, return for all requests. if a comma-separated "+
 			"list of k=v pairs (method=code), fail the specified "+
 			"methods with the given codes")
-
-	grpcLog grpclog.LoggerV2
 )
-
-func init() {
-	grpcLog = grpclog.NewLoggerV2(os.Stdout, os.Stderr, os.Stderr)
-	grpclog.SetLoggerV2(grpcLog)
-}
 
 func readSessionSecret(path string) (string, error) {
 	a, err := os.ReadFile(path)
@@ -61,24 +56,32 @@ func readSessionSecret(path string) (string, error) {
 	return secret, nil
 }
 
-func loggingInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
-	start := time.Now()
-	res, err = handler(ctx, req)
-	grpcLog.Infof("Request - Method:%s Duration:%s Error:%v\n",
-		info.FullMethod, time.Since(start), err)
-	return
+func loggingInterceptor(next connect.UnaryFunc) connect.UnaryFunc {
+	return func(ctx context.Context, req connect.AnyRequest) (res connect.AnyResponse, err error) {
+		start := time.Now()
+		res, err = next(ctx, req)
+		log.Printf("Request - Method:%s Protocol:%s Duration:%s Error:%v\n",
+			req.Spec().Procedure, req.Peer().Protocol,
+			time.Since(start), err)
+		return
+	}
 }
 
-func errorRewriteInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	res, err := handler(ctx, req)
-	if err != nil {
-		if _, ok := status.FromError(err); ok {
-			return nil, err
+// errorRewriteInterceptor turns errors that aren't *connect.Error into
+// CodeInternal errors (connect would otherwise report them as CodeUnknown).
+func errorRewriteInterceptor(next connect.UnaryFunc) connect.UnaryFunc {
+	return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
+		res, err := next(ctx, req)
+		if err != nil {
+			var connectErr *connect.Error
+			if errors.As(err, &connectErr) {
+				return nil, err
+			}
+			return nil, connect.NewError(connect.CodeInternal, err)
 		}
-		return nil, status.Errorf(codes.Internal, "%v", err)
-	}
 
-	return res, err
+		return res, err
+	}
 }
 
 type SlowResponseInterceptor struct {
@@ -86,17 +89,20 @@ type SlowResponseInterceptor struct {
 	delays   map[string]time.Duration
 }
 
-func (i *SlowResponseInterceptor) Intercept(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	res, err := handler(ctx, req)
+func (i *SlowResponseInterceptor) Intercept(next connect.UnaryFunc) connect.UnaryFunc {
+	return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
+		res, err := next(ctx, req)
 
-	if i.allDelay != 0 {
-		time.Sleep(i.allDelay)
-	} else if delay, found := i.delays[info.FullMethod]; found {
-		log.Printf("delaying %v by %v\n", info.FullMethod, delay)
-		time.Sleep(delay)
+		method := req.Spec().Procedure
+		if i.allDelay != 0 {
+			time.Sleep(i.allDelay)
+		} else if delay, found := i.delays[method]; found {
+			log.Printf("delaying %v by %v\n", method, delay)
+			time.Sleep(delay)
+		}
+
+		return res, err
 	}
-
-	return res, err
 }
 
 func makeSlowResponseInterceptor(specStr string) (*SlowResponseInterceptor, error) {
@@ -131,30 +137,50 @@ func makeSlowResponseInterceptor(specStr string) (*SlowResponseInterceptor, erro
 	return &SlowResponseInterceptor{delays: delays}, nil
 }
 
-func parseCode(str string) (codes.Code, error) {
-	str = `"` + str + `"`
+// codeOK stands in for gRPC's OK code, which connect doesn't define. It means
+// "don't inject an error".
+const codeOK connect.Code = 0
 
-	var c codes.Code
-	if err := c.UnmarshalJSON([]byte(str)); err != nil {
-		return codes.OK, err
+// codesByName maps gRPC code names (e.g. PERMISSION_DENIED), as accepted by
+// --error_responses, to connect codes.
+var codesByName = map[string]connect.Code{
+	"OK":        codeOK,
+	"CANCELLED": connect.CodeCanceled, // connect spells it "canceled"
+}
+
+func init() {
+	for c := connect.CodeUnknown; c <= connect.CodeUnauthenticated; c++ {
+		codesByName[strings.ToUpper(c.String())] = c
+	}
+}
+
+func parseCode(str string) (connect.Code, error) {
+	c, found := codesByName[str]
+	if !found {
+		return codeOK, fmt.Errorf("invalid code: %q", str)
 	}
 	return c, nil
 }
 
 type ErrorResponseInterceptor struct {
-	allError codes.Code
-	errors   map[string]codes.Code
+	allError connect.Code
+	errors   map[string]connect.Code
 }
 
-func (i *ErrorResponseInterceptor) Intercept(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	if i.allError != codes.OK {
-		return nil, status.Errorf(i.allError, "injected error")
-	} else if c, found := i.errors[info.FullMethod]; found {
-		log.Printf("failing %v: %v\n", info.FullMethod, c)
-		return nil, status.Errorf(c, "injected error")
-	}
+func (i *ErrorResponseInterceptor) Intercept(next connect.UnaryFunc) connect.UnaryFunc {
+	return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
+		method := req.Spec().Procedure
+		if i.allError != codeOK {
+			return nil, connect.NewError(i.allError,
+				errors.New("injected error"))
+		} else if c, found := i.errors[method]; found && c != codeOK {
+			log.Printf("failing %v: %v\n", method, c)
+			return nil, connect.NewError(c,
+				errors.New("injected error"))
+		}
 
-	return handler(ctx, req)
+		return next(ctx, req)
+	}
 }
 
 func makeErrorResponseInterceptor(specStr string) (*ErrorResponseInterceptor, error) {
@@ -163,7 +189,7 @@ func makeErrorResponseInterceptor(specStr string) (*ErrorResponseInterceptor, er
 		return &ErrorResponseInterceptor{allError: c}, nil
 	}
 
-	errors := map[string]codes.Code{}
+	errors := map[string]connect.Code{}
 	parts := strings.Split(specStr, ",")
 	for _, part := range parts {
 		kv := strings.SplitN(part, "=", 2)
@@ -226,10 +252,10 @@ func main() {
 		sessionManager: sessionManager,
 	}
 
-	interceptors := []grpc.UnaryServerInterceptor{
-		loggingInterceptor,
-		errorRewriteInterceptor,
-		authInterceptor.intercept,
+	interceptors := []connect.Interceptor{
+		connect.UnaryInterceptorFunc(loggingInterceptor),
+		connect.UnaryInterceptorFunc(errorRewriteInterceptor),
+		&authInterceptor,
 	}
 
 	if *slowResponses != "" {
@@ -238,7 +264,8 @@ func main() {
 			log.Fatalf("failed to build slow response interceptor: %v", err)
 		}
 
-		interceptors = append(interceptors, interceptor.Intercept)
+		interceptors = append(interceptors,
+			connect.UnaryInterceptorFunc(interceptor.Intercept))
 	}
 
 	if *errorResponses != "" {
@@ -247,18 +274,41 @@ func main() {
 			log.Fatalf("failed to build error response interceptor: %v", err)
 		}
 
-		interceptors = append(interceptors, interceptor.Intercept)
+		interceptors = append(interceptors,
+			connect.UnaryInterceptorFunc(interceptor.Intercept))
 	}
 
-	opts := []grpc.ServerOption{
-		grpc.ChainUnaryInterceptor(interceptors...),
+	// Match grpc-go's default 4 MiB cap on incoming messages.
+	readMaxBytes := connect.WithReadMaxBytes(4 << 20)
+
+	opts := []connect.HandlerOption{
+		connect.WithInterceptors(interceptors...),
+		readMaxBytes,
 	}
 
-	server := grpc.NewServer(opts...)
-	authservice.RegisterHandlers(server, clock, sessionManager, db)
-	listservice.RegisterHandlers(server, clock, sessionManager, db)
-	userservice.RegisterHandlers(server, clock, db)
-	reflection.Register(server)
+	mux := http.NewServeMux()
+	authservice.RegisterHandlers(mux, clock, sessionManager, db, opts...)
+	listservice.RegisterHandlers(mux, clock, sessionManager, db, opts...)
+	userservice.RegisterHandlers(mux, clock, db, opts...)
+
+	reflector := grpcreflect.NewStaticReflector(
+		auth_serviceconnect.AuthServiceName,
+		list_serviceconnect.ListServiceName,
+		user_serviceconnect.UserServiceName,
+	)
+	mux.Handle(grpcreflect.NewHandlerV1(reflector, readMaxBytes))
+	mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector, readMaxBytes))
+
+	// Serve HTTP/1.1 (Connect, gRPC-Web) as well as unencrypted HTTP/2
+	// (h2c), which gRPC clients (Envoy, grpcurl) require.
+	protocols := new(http.Protocols)
+	protocols.SetHTTP1(true)
+	protocols.SetUnencryptedHTTP2(true)
+
+	server := &http.Server{
+		Handler:   mux,
+		Protocols: protocols,
+	}
 
 	log.Printf("serving on port %v...\n", *port)
 	if err := server.Serve(sock); err != nil {

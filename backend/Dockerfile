@@ -4,7 +4,7 @@
 FROM golang:1.26.8-trixie AS go
 
 # Proto generation needs both Node (buf comes from npm) and Go (protoc-gen-go
-# and protoc-gen-go-grpc run via `go tool`), so build in the Node image with
+# and protoc-gen-connect-go run via `go tool`), so build in the Node image with
 # the Go toolchain copied in. The image has gcc, which go-sqlite3 (cgo) needs.
 FROM node:26.10.0-trixie AS build
 COPY --from=go /usr/local/go /usr/local/go

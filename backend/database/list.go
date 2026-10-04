@@ -6,8 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"connectrpc.com/connect"
 )
 
 type ListsByID []*List
@@ -98,15 +97,15 @@ func (db *DB) doUpdateList(ctx context.Context, txn *sql.Tx, listID int, listVer
 	}
 
 	if list.Version != listVersion {
-		return nil, status.Errorf(codes.FailedPrecondition,
-			"version ID mismatch; got %v want %v",
-			list.Version, listVersion)
+		return nil, connect.NewError(connect.CodeFailedPrecondition,
+			fmt.Errorf("version ID mismatch; got %v want %v",
+				list.Version, listVersion))
 	}
 
 	if list.OwnerID != userID {
-		return nil, status.Errorf(codes.PermissionDenied,
-			"user %v does not own list %v (owner %v)",
-			userID, list.ID, list.OwnerID)
+		return nil, connect.NewError(connect.CodePermissionDenied,
+			fmt.Errorf("user %v does not own list %v (owner %v)",
+				userID, list.ID, list.OwnerID))
 	}
 
 	if err := update(&list.ListData); err != nil {

@@ -5,6 +5,6 @@ plugins:
   - local: ["go", "tool", "protoc-gen-go"]
     out: .
     opt: module=github.com/simmonmt/xmaslist
-  - local: ["go", "tool", "protoc-gen-go-grpc"]
+  - local: ["go", "tool", "protoc-gen-connect-go"]
     out: .
     opt: module=github.com/simmonmt/xmaslist
