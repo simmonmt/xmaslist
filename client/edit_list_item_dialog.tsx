@@ -1,3 +1,4 @@
+import { create } from "@bufbuild/protobuf";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
@@ -6,7 +7,10 @@ import DialogTitle from "@material-ui/core/DialogTitle";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import * as React from "react";
-import { ListItemData as ListItemDataProto } from "xmaslist-proto/proto/list_item_pb.js";
+import {
+  ListItemData as ListItemDataProto,
+  ListItemDataSchema,
+} from "./gen/proto/list_item_pb";
 
 function isValidUrl(url: string): boolean {
   try {
@@ -51,11 +55,11 @@ class EditListItemDialog extends React.Component<Props, State> {
 
   private static stateFromInitial(initial: ListItemDataProto | null): State {
     return {
-      name: initial ? initial.getName() : "",
+      name: initial ? initial.name : "",
       nameErrorMessage: "",
-      desc: initial ? initial.getDesc() : "",
+      desc: initial ? initial.desc : "",
       descErrorMessage: "",
-      url: initial ? initial.getUrl() : "",
+      url: initial ? initial.url : "",
       urlErrorMessage: "",
     };
   }
@@ -163,13 +167,12 @@ class EditListItemDialog extends React.Component<Props, State> {
       return;
     }
 
-    const itemData = new ListItemDataProto();
-    itemData.setName(this.state.name);
+    const itemData = create(ListItemDataSchema, { name: this.state.name });
     if (this.state.desc) {
-      itemData.setDesc(this.state.desc);
+      itemData.desc = this.state.desc;
     }
     if (this.state.url) {
-      itemData.setUrl(this.state.url);
+      itemData.url = this.state.url;
     }
     this.props.onClose(itemData);
   }

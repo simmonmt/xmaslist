@@ -7,27 +7,8 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
-    // The app is a single bundle (as it was under Bazel/rollup).
+    // The app is a single bundle
     chunkSizeWarningLimit: 2000,
-    rolldownOptions: {
-      onwarn(warning, warn) {
-        // google-protobuf uses eval; nothing we can fix upstream.
-        if (
-          warning.code === "EVAL" &&
-          warning.id?.includes("google-protobuf")
-        ) {
-          return;
-        }
-        warn(warning);
-      },
-    },
-  },
-  optimizeDeps: {
-    // The generated protobuf/grpc-web code (client/gen, see `make gen`) is
-    // CommonJS. It's a linked local package, which Vite doesn't pre-bundle
-    // by default, so the dev server would serve it untransformed. Force it
-    // through the dependency optimizer so it's converted to ESM.
-    include: ["xmaslist-proto/proto/*.js"],
   },
   server: {
     // Envoy's dev config (docker/envoy.yaml) routes / to port 8083, and

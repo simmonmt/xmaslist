@@ -1,4 +1,5 @@
-import { UserInfo } from "xmaslist-proto/proto/user_info_pb.js";
+import { fromBinary, toBinary } from "@bufbuild/protobuf";
+import { UserInfo, UserInfoSchema } from "./gen/proto/user_info_pb";
 
 export const STORAGE_NAME = "user_info";
 
@@ -20,20 +21,34 @@ export class AuthStorage {
     }
 
     console.log("AuthStorage read UserInfo from local storage");
-    const ser = new Uint8Array(
-      atob(local)
-        .split("")
-        .map(function (c) {
-          return c.charCodeAt(0);
-        })
-    );
-    this.userInfo = UserInfo.deserializeBinary(ser);
+    try {
+      const ser = new Uint8Array(
+        atob(local)
+          .split("")
+          .map(function (c) {
+            return c.charCodeAt(0);
+          })
+      );
+      this.userInfo = fromBinary(UserInfoSchema, ser);
+    } catch (error) {
+      // Treat a corrupt value as logged out (AuthModel then clears the
+      // session cookie too).
+      console.log(
+        "AuthStorage: bad UserInfo in local storage; clearing",
+        error
+      );
+      this.clear();
+      return null;
+    }
     return this.userInfo;
   }
 
   write(userInfo: UserInfo) {
     const ser = btoa(
-      String.fromCharCode.apply(null, Array.from(userInfo.serializeBinary()))
+      String.fromCharCode.apply(
+        null,
+        Array.from(toBinary(UserInfoSchema, userInfo))
+      )
     );
     localStorage.setItem(STORAGE_NAME, ser);
 

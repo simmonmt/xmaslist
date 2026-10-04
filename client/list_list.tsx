@@ -1,3 +1,5 @@
+import { clone } from "@bufbuild/protobuf";
+import { Code, ConnectError } from "@connectrpc/connect";
 import Card from "@material-ui/core/Card";
 import Divider from "@material-ui/core/Divider";
 import Fab from "@material-ui/core/Fab";
@@ -9,14 +11,14 @@ import { Theme } from "@material-ui/core/styles/createTheme";
 import Switch from "@material-ui/core/Switch";
 import AddIcon from "@material-ui/icons/Add";
 import Alert from "@material-ui/lab/Alert";
-import { Error as GrpcError, StatusCode } from "grpc-web";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
+import { EditListDialog } from "./edit_list_dialog";
 import {
   ListData as ListDataProto,
   List as ListProto,
-} from "xmaslist-proto/proto/list_pb.js";
-import { EditListDialog } from "./edit_list_dialog";
+  ListSchema,
+} from "./gen/proto/list_pb";
 import { ListListElement } from "./list_list_element";
 import { ListModel } from "./list_model";
 import { ProgressDialog } from "./progress_dialog";
@@ -78,7 +80,7 @@ class ListList extends React.Component<ListListProps, ListListState> {
       .then((lists: ListProto[]) => {
         let needIds = new Set<number>();
         for (const list of lists) {
-          needIds.add(list.getMetadata()!.getOwner());
+          needIds.add(list.metadata!.owner);
         }
 
         loadedLists = lists;
@@ -90,15 +92,16 @@ class ListList extends React.Component<ListListProps, ListListState> {
           lists: loadedLists,
         });
       })
-      .catch((error: GrpcError) => {
-        if (error.code === StatusCode.UNAUTHENTICATED) {
+      .catch((e) => {
+        const error = ConnectError.from(e);
+        if (error.code === Code.Unauthenticated) {
           this.setState({ loggedIn: false });
           return;
         }
 
         this.setState({
           loading: false,
-          errorMessage: error.message || "Unknown error",
+          errorMessage: error.rawMessage || "Unknown error",
         });
       });
   }
@@ -168,17 +171,15 @@ class ListList extends React.Component<ListListProps, ListListState> {
 
       const list = lists[i];
 
-      const owner = this.props.userModel.getUser(
-        list.getMetadata()!.getOwner()
-      );
+      const owner = this.props.userModel.getUser(list.metadata!.owner);
       if (!owner) {
-        console.log("list", list.getId(), "has unknown owner; skipping");
+        console.log("list", list.id, "has unknown owner; skipping");
         continue;
       }
 
       out.push(
         <ListListElement
-          key={list.getId()}
+          key={list.id}
           list={list}
           listOwner={owner}
           currentUser={this.props.currentUser}
@@ -201,7 +202,7 @@ class ListList extends React.Component<ListListProps, ListListState> {
   private handleDeleteClicked(id: string, isActive: boolean) {
     let idx = -1;
     for (let i = 0; i < this.state.lists.length; ++i) {
-      if (this.state.lists[i].getId() === id) {
+      if (this.state.lists[i].id === id) {
         idx = i;
         break;
       }
@@ -218,15 +219,15 @@ class ListList extends React.Component<ListListProps, ListListState> {
     if (isActive && !this.state.showDeleted) {
       tmpLists.splice(idx, 1);
     } else {
-      const newList = toDelete.cloneMessage();
-      newList.getMetadata()!.setActive(!isActive);
+      const newList = clone(ListSchema, toDelete);
+      newList.metadata!.active = !isActive;
       tmpLists[idx] = newList;
     }
     this.setState({ lists: tmpLists });
 
     this.props.listModel.changeActiveState(
       id,
-      Number(toDelete.getVersion()),
+      Number(toDelete.version),
       !isActive
     );
   }
@@ -250,15 +251,16 @@ class ListList extends React.Component<ListListProps, ListListState> {
 
         this.setState({ creatingDialogOpen: false, lists: copy });
       })
-      .catch((error: GrpcError) => {
-        if (error.code === StatusCode.UNAUTHENTICATED) {
+      .catch((e) => {
+        const error = ConnectError.from(e);
+        if (error.code === Code.Unauthenticated) {
           this.setState({ loggedIn: false });
           return;
         }
 
         this.setState({
           creatingDialogOpen: false,
-          errorMessage: error.message || "Unknown error",
+          errorMessage: error.rawMessage || "Unknown error",
         });
       });
   }

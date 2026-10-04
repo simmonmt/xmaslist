@@ -1,3 +1,4 @@
+import { Code, ConnectError } from "@connectrpc/connect";
 import Box from "@material-ui/core/Box";
 import Card from "@material-ui/core/Card";
 import grey from "@material-ui/core/colors/grey";
@@ -12,21 +13,20 @@ import Typography from "@material-ui/core/Typography";
 import AddIcon from "@material-ui/icons/Add";
 import Alert from "@material-ui/lab/Alert";
 import { format as formatDate, isPast as isPastDate } from "date-fns";
-import { Error as GrpcError, StatusCode } from "grpc-web";
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
 import { Redirect, Link as RouterLink, withRouter } from "react-router-dom";
+import { EditListDialog } from "./edit_list_dialog";
+import { EditListItemDialog } from "./edit_list_item_dialog";
 import {
   ListItemData as ListItemDataProto,
   ListItem as ListItemProto,
   ListItemState as ListItemStateProto,
-} from "xmaslist-proto/proto/list_item_pb.js";
+} from "./gen/proto/list_item_pb";
 import {
   ListData as ListDataProto,
   List as ListProto,
-} from "xmaslist-proto/proto/list_pb.js";
-import { EditListDialog } from "./edit_list_dialog";
-import { EditListItemDialog } from "./edit_list_item_dialog";
+} from "./gen/proto/list_pb";
 import { ItemListElement, ItemListElementMode } from "./item_list_element";
 import { ListItem } from "./list_item";
 import { ListModel } from "./list_model";
@@ -131,14 +131,12 @@ class ItemList extends React.Component<Props, State> {
     let eventIsPast = false;
     let userIsOwner = false;
     if (this.state.list) {
-      const data = this.state.list.getData();
-      eventIsPast = isPastDate(
-        new Date(Number(data && data.getEventDate()) * 1000)
-      );
+      const data = this.state.list.data;
+      eventIsPast = isPastDate(new Date(Number(data && data.eventDate) * 1000));
 
-      const metadata = this.state.list.getMetadata();
+      const metadata = this.state.list.metadata;
       userIsOwner =
-        Number(metadata && metadata.getOwner()) === this.props.currentUser.id;
+        Number(metadata && metadata.owner) === this.props.currentUser.id;
     }
 
     const showAdminModeToggle =
@@ -226,7 +224,7 @@ class ItemList extends React.Component<Props, State> {
             action="Modify"
             open={this.state.modifyListDialogOpen}
             onClose={this.handleModifyListDialogClose}
-            initial={this.state.list.getData() || null}
+            initial={this.state.list.data || null}
           />
         )}
       </div>
@@ -254,15 +252,16 @@ class ItemList extends React.Component<Props, State> {
 
         this.setState({ creatingItemDialogOpen: false, items: copy });
       })
-      .catch((error) => {
-        if (isGrpcError(error) && error.code === StatusCode.UNAUTHENTICATED) {
+      .catch((e) => {
+        const error = ConnectError.from(e);
+        if (error.code === Code.Unauthenticated) {
           this.setState({ loggedIn: false });
           return;
         }
 
         this.setState({
           creatingItemDialogOpen: false,
-          errorMessage: error.message || "Unknown error",
+          errorMessage: error.rawMessage || "Unknown error",
         });
       });
   }
@@ -281,19 +280,20 @@ class ItemList extends React.Component<Props, State> {
     }
 
     this.props.listModel
-      .updateList(this.state.list.getId(), this.state.list.getVersion(), data)
+      .updateList(this.state.list.id, this.state.list.version, data)
       .then((list: ListProto) => {
         this.setState({ modifyingList: false, list: list });
       })
-      .catch((error: GrpcError) => {
-        if (error.code === StatusCode.UNAUTHENTICATED) {
+      .catch((e) => {
+        const error = ConnectError.from(e);
+        if (error.code === Code.Unauthenticated) {
           this.setState({ loggedIn: false });
           return;
         }
 
         this.setState({
           modifyingList: false,
-          errorMessage: error.message || "Unknown error",
+          errorMessage: error.rawMessage || "Unknown error",
         });
       });
   }
@@ -305,14 +305,14 @@ class ItemList extends React.Component<Props, State> {
   private listMeta() {
     if (!this.state.list || !this.state.listOwner) return;
 
-    const data = this.state.list.getData()!;
+    const data = this.state.list.data!;
     return (
       <div className={this.props.classes.meta}>
-        <Typography variant="h2">{data.getName()}</Typography>
+        <Typography variant="h2">{data.name}</Typography>
         <Typography variant="body1">
           {
             // Long localized date
-            formatDate(new Date(data.getEventDate() * 1000), "PPPP")
+            formatDate(new Date(Number(data.eventDate) * 1000), "PPPP")
           }
         </Typography>
         <div>
@@ -321,7 +321,7 @@ class ItemList extends React.Component<Props, State> {
               For:
             </Typography>{" "}
             <Typography variant="body1" component="span">
-              {data.getBeneficiary()}
+              {data.beneficiary}
             </Typography>
           </span>
           <span>
@@ -415,14 +415,15 @@ class ItemList extends React.Component<Props, State> {
         });
         return Promise.resolve();
       })
-      .catch((error) => {
-        if (isGrpcError(error) && error.code === StatusCode.UNAUTHENTICATED) {
+      .catch((e) => {
+        const error = ConnectError.from(e);
+        if (error.code === Code.Unauthenticated) {
           this.setState({ loggedIn: false });
           return;
         }
 
         this.setState({
-          errorMessage: error.message || "Unknown error",
+          errorMessage: error.rawMessage || "Unknown error",
         });
         return Promise.resolve();
       });
@@ -441,14 +442,15 @@ class ItemList extends React.Component<Props, State> {
         this.setState({ items: tmp });
         return Promise.resolve();
       })
-      .catch((error: GrpcError) => {
-        if (error.code === StatusCode.UNAUTHENTICATED) {
+      .catch((e) => {
+        const error = ConnectError.from(e);
+        if (error.code === Code.Unauthenticated) {
           this.setState({ loggedIn: false });
           return;
         }
 
         this.setState({
-          errorMessage: error.message || "Unknown error",
+          errorMessage: error.rawMessage || "Unknown error",
         });
         return Promise.resolve();
       });
@@ -474,9 +476,9 @@ class ItemList extends React.Component<Props, State> {
           loadedItems = items;
 
           let users = [];
-          const metadata = loadedList!.getMetadata();
+          const metadata = loadedList!.metadata;
           if (metadata) {
-            listOwnerId = metadata.getOwner();
+            listOwnerId = metadata.owner;
             if (listOwnerId) {
               users.push(listOwnerId);
             }
@@ -501,23 +503,20 @@ class ItemList extends React.Component<Props, State> {
             items: loadedItems,
           });
         })
-        .catch((error) => {
-          if (isGrpcError(error) && error.code === StatusCode.UNAUTHENTICATED) {
+        .catch((e) => {
+          const error = ConnectError.from(e);
+          if (error.code === Code.Unauthenticated) {
             this.setState({ loggedIn: false });
             return;
           }
 
           this.setState({
             loading: false,
-            errorMessage: error.message || "Unknown error",
+            errorMessage: error.rawMessage || "Unknown error",
           });
         });
     });
   }
-}
-
-function isGrpcError(error: Error | GrpcError): error is GrpcError {
-  return (error as any).metadata !== undefined;
 }
 
 const itemListStyles = (theme: Theme) =>

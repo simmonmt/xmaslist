@@ -1,9 +1,12 @@
+import { clone } from "@bufbuild/protobuf";
 import {
   ListItemData as ListItemDataProto,
+  ListItemDataSchema,
   ListItemMetadata as ListItemMetadataProto,
   ListItem as ListItemProto,
   ListItemState as ListItemStateProto,
-} from "xmaslist-proto/proto/list_item_pb.js";
+  ListItemStateSchema,
+} from "./gen/proto/list_item_pb";
 
 export class ListItem {
   private readonly data: ListItemDataProto;
@@ -11,22 +14,22 @@ export class ListItem {
   private readonly metadata: ListItemMetadataProto;
 
   constructor(private readonly proto: ListItemProto) {
-    const data = proto.getData();
-    const metadata = proto.getMetadata();
-    const state = proto.getState();
+    const data = proto.data;
+    const metadata = proto.metadata;
+    const state = proto.state;
     if (
-      !proto.getId() ||
-      !proto.getVersion() ||
-      !proto.getListId() ||
+      !proto.id ||
+      !proto.version ||
+      !proto.listId ||
       !data ||
       !metadata ||
       !state ||
-      !data.getName()
+      !data.name
     ) {
       throw new Error("malformed");
     }
 
-    if (state.getClaimed() && !metadata.getClaimedBy()) {
+    if (state.claimed && !metadata.claimedBy) {
       throw new Error("bad claim state");
     }
 
@@ -36,45 +39,45 @@ export class ListItem {
   }
 
   getItemId(): string {
-    return this.proto.getId();
+    return this.proto.id;
   }
 
   getItemVersion(): number {
-    return this.proto.getVersion();
+    return this.proto.version;
   }
 
   getListId(): string {
-    return this.proto.getListId();
+    return this.proto.listId;
   }
 
   isClaimed(): boolean {
-    return this.state.getClaimed();
+    return this.state.claimed;
   }
 
   getClaimedBy(): number | undefined {
     if (!this.isClaimed()) {
       return undefined;
     }
-    return this.metadata.getClaimedBy();
+    return this.metadata.claimedBy;
   }
 
   getName(): string {
-    return this.data.getName();
+    return this.data.name;
   }
 
   getDesc(): string {
-    return this.data.getDesc();
+    return this.data.desc;
   }
 
   getUrl(): string {
-    return this.data.getUrl();
+    return this.data.url;
   }
 
   getData(): ListItemDataProto {
-    return this.data.cloneMessage();
+    return clone(ListItemDataSchema, this.data);
   }
 
   getState(): ListItemStateProto {
-    return this.state.cloneMessage();
+    return clone(ListItemStateSchema, this.state);
   }
 }

@@ -1,23 +1,25 @@
+import { create } from "@bufbuild/protobuf";
+import { Client } from "@connectrpc/connect";
 import Cookies from "universal-cookie";
-import { AuthServicePromiseClient } from "xmaslist-proto/proto/auth_service_grpc_web_pb.js";
-import {
-  LoginRequest,
-  LoginResponse,
-  LogoutRequest,
-  LogoutResponse,
-} from "xmaslist-proto/proto/auth_service_pb.js";
 import { AuthStorage } from "./auth_storage";
+import {
+  AuthService,
+  LoginRequestSchema,
+  LoginResponse,
+  LogoutRequestSchema,
+  LogoutResponse,
+} from "./gen/proto/auth_service_pb";
 import { User } from "./user";
 
 const COOKIE_NAME = "session";
 
 export class AuthModel {
-  private readonly authService: AuthServicePromiseClient;
+  private readonly authService: Client<typeof AuthService>;
   private readonly authStorage: AuthStorage;
   private readonly cookies: Cookies;
 
   constructor(
-    authService: AuthServicePromiseClient,
+    authService: Client<typeof AuthService>,
     authStorage: AuthStorage,
     cookies: Cookies
   ) {
@@ -47,29 +49,28 @@ export class AuthModel {
   }
 
   login(username: string, password: string): Promise<User> {
-    let req = new LoginRequest();
-    req.setUsername(username);
-    req.setPassword(password);
+    const req = create(LoginRequestSchema, {
+      username: username,
+      password: password,
+    });
 
-    return this.authService
-      .login(req, undefined)
-      .then((resp: LoginResponse) => {
-        const cookie = resp.getCookie();
-        const userInfo = resp.getUserInfo();
-        const expiry = new Date(resp.getExpiry() * 1000);
-        if (!cookie || !userInfo || !expiry) {
-          console.log("bad login response");
-          return Promise.reject(new Error("an error occurred"));
-        }
+    return this.authService.login(req).then((resp: LoginResponse) => {
+      const cookie = resp.cookie;
+      const userInfo = resp.userInfo;
+      const expiry = new Date(Number(resp.expiry) * 1000);
+      if (!cookie || !userInfo || !expiry) {
+        console.log("bad login response");
+        return Promise.reject(new Error("an error occurred"));
+      }
 
-        console.log("login: setting cookie", cookie);
-        this.cookies.set(COOKIE_NAME, cookie, {
-          expires: expiry,
-          sameSite: true,
-        });
-        this.authStorage.write(userInfo);
-        return new User(userInfo);
+      console.log("login: setting cookie", cookie);
+      this.cookies.set(COOKIE_NAME, cookie, {
+        expires: expiry,
+        sameSite: true,
       });
+      this.authStorage.write(userInfo);
+      return new User(userInfo);
+    });
   }
 
   logout(): Promise<boolean> {
@@ -77,15 +78,14 @@ export class AuthModel {
       return Promise.resolve(true);
     }
 
-    let req = new LogoutRequest();
-    req.setCookie(this.cookies.get(COOKIE_NAME));
-    return this.authService
-      .logout(req, undefined)
-      .then((unused: LogoutResponse) => {
-        console.log("logout: clearing cookie");
-        this.cookies.remove(COOKIE_NAME);
-        this.authStorage.clear();
-        return true;
-      });
+    const req = create(LogoutRequestSchema, {
+      cookie: this.cookies.get(COOKIE_NAME),
+    });
+    return this.authService.logout(req).then((unused: LogoutResponse) => {
+      console.log("logout: clearing cookie");
+      this.cookies.remove(COOKIE_NAME);
+      this.authStorage.clear();
+      return true;
+    });
   }
 }

@@ -11,11 +11,9 @@ COPY --from=go /usr/local/go /usr/local/go
 ENV PATH=/usr/local/go/bin:$PATH
 WORKDIR /src
 
-# Only buf is needed from npm here, so skip install scripts (they download the
-# browser code generators).
+# Only buf is needed from npm here.
 COPY package.json package-lock.json ./
-COPY client/gen/package.json client/gen/
-RUN npm ci --ignore-scripts
+RUN npm ci
 
 COPY go.mod go.sum ./
 RUN go mod download

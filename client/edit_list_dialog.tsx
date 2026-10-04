@@ -1,3 +1,4 @@
+import { create } from "@bufbuild/protobuf";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
@@ -6,7 +7,7 @@ import DialogTitle from "@material-ui/core/DialogTitle";
 import TextField from "@material-ui/core/TextField";
 import { KeyboardDatePicker } from "@material-ui/pickers";
 import * as React from "react";
-import { ListData as ListDataProto } from "xmaslist-proto/proto/list_pb.js";
+import { ListData as ListDataProto, ListDataSchema } from "./gen/proto/list_pb";
 
 interface Props {
   action: string;
@@ -41,14 +42,14 @@ export class EditListDialog extends React.Component<Props, State> {
 
   private static stateFromInitial(initial: ListDataProto | null): State {
     let eventDate: Date | null = null;
-    if (initial && initial.getEventDate() != 0) {
-      eventDate = new Date(initial.getEventDate() * 1000);
+    if (initial && Number(initial.eventDate) != 0) {
+      eventDate = new Date(Number(initial.eventDate) * 1000);
     }
 
     return {
-      name: initial ? initial.getName() : "",
+      name: initial ? initial.name : "",
       nameErrorMessage: "",
-      beneficiary: initial ? initial.getBeneficiary() : "",
+      beneficiary: initial ? initial.beneficiary : "",
       beneficiaryErrorMessage: "",
       eventDate: eventDate,
       eventDateErrorMessage: "",
@@ -167,10 +168,12 @@ export class EditListDialog extends React.Component<Props, State> {
       return;
     }
 
-    const listData = new ListDataProto();
-    listData.setName(this.state.name);
-    listData.setBeneficiary(this.state.beneficiary);
-    listData.setEventDate(this.state.eventDate!.getTime() / 1000);
+    const listData = create(ListDataSchema, {
+      name: this.state.name,
+      beneficiary: this.state.beneficiary,
+      // event_date is an int64 (bigint) in whole seconds.
+      eventDate: BigInt(Math.floor(this.state.eventDate!.getTime() / 1000)),
+    });
     this.props.onClose(listData);
   }
 }

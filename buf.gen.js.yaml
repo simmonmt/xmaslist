@@ -1,13 +1,10 @@
-# Browser (grpc-web) code generation. Output lands in client/gen/proto/ and is
-# not checked in. Run via `make gen`.
+# Browser (protobuf-es / connect-es) code generation. Output lands in
+# client/gen/ as TypeScript and is not checked in. Run via `make gen`.
 #
-# protoc-gen-js comes from the protoc-gen-js npm package. protoc-gen-grpc-web is
-# downloaded by tools/fetch-protoc-gen-grpc-web.mjs (npm postinstall).
+# protoc-gen-es comes from the @bufbuild/protoc-gen-es npm package. Its output
+# includes the service descriptors that @connectrpc/connect's createClient uses.
 version: v2
 plugins:
-  - local: node_modules/protoc-gen-js/bin/protoc-gen-js
+  - local: node_modules/.bin/protoc-gen-es
     out: client/gen
-    opt: [import_style=commonjs, binary]
-  - local: node_modules/.tools/protoc-gen-grpc-web
-    out: client/gen
-    opt: [import_style=commonjs+dts, mode=grpcweb]
+    opt: [target=ts]

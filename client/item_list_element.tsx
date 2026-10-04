@@ -9,8 +9,8 @@ import { Theme } from "@material-ui/core/styles/createTheme";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import * as React from "react";
-import { ListItemData as ListItemDataProto } from "xmaslist-proto/proto/list_item_pb.js";
 import { EditListItemDialog } from "./edit_list_item_dialog";
+import { ListItemData as ListItemDataProto } from "./gen/proto/list_item_pb";
 import { ListItemUpdater } from "./item_list";
 import { ListItem } from "./list_item";
 import { ProgressButton } from "./progress_button";
@@ -193,7 +193,7 @@ class ItemListElement extends React.Component<Props, State> {
 
   private handleClaimClick(newClaimState: boolean) {
     const newItemState = this.props.item.getState();
-    newItemState.setClaimed(newClaimState);
+    newItemState.claimed = newClaimState;
 
     this.setState({ claiming: true });
     this.props.itemUpdater

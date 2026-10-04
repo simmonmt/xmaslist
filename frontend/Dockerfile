@@ -5,8 +5,6 @@
 FROM node:26.10.0-trixie AS client
 WORKDIR /src
 COPY package.json package-lock.json ./
-COPY client/gen/package.json client/gen/
-COPY tools/ tools/
 RUN npm ci
 COPY . .
 RUN make gen-js && npm run typecheck && npm run build

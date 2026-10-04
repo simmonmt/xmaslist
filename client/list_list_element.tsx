@@ -9,7 +9,7 @@ import RestoreFromTrashIcon from "@material-ui/icons/RestoreFromTrash";
 import { format } from "date-fns";
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { List as ListProto } from "xmaslist-proto/proto/list_pb.js";
+import { List as ListProto } from "./gen/proto/list_pb";
 import { User } from "./user";
 
 interface ListItemLinkProps {
@@ -58,20 +58,19 @@ class ListListElement extends React.Component<
 > {
   render() {
     const list = this.props.list;
-    const listId = list.getId();
-    const data = list.getData();
-    const meta = list.getMetadata();
+    const listId = list.id;
+    const data = list.data;
+    const meta = list.metadata;
     if (!listId || !data || !meta) {
       return <div />;
     }
 
-    let eventDate = new Date(data.getEventDate() * 1000);
+    let eventDate = new Date(Number(data.eventDate) * 1000);
     const monthStr = format(eventDate, "MMM");
     const day = eventDate.getDate();
     const year = eventDate.getFullYear();
 
-    const linkVerb =
-      this.props.currentUser.id === meta.getOwner() ? "edit" : "view";
+    const linkVerb = this.props.currentUser.id === meta.owner ? "edit" : "view";
     const linkTarget = `/${linkVerb}/${listId}`;
 
     return (
@@ -94,7 +93,7 @@ class ListListElement extends React.Component<
               </Typography>
             </div>
             <div>
-              <div>{data.getName()}</div>
+              <div>{data.name}</div>
               <div></div>
             </div>
             <div className={this.props.classes.listGrow} />
@@ -107,7 +106,7 @@ class ListListElement extends React.Component<
                 >
                   For:
                 </Typography>{" "}
-                {data.getBeneficiary()}
+                {data.beneficiary}
               </div>
               <div>
                 <Typography
@@ -124,7 +123,7 @@ class ListListElement extends React.Component<
         </ListItemText>
         {this.props.currentUser.isAdmin && (
           <ListItemSecondaryAction>
-            {this.deleteButton(list.getId(), meta.getActive())}
+            {this.deleteButton(list.id, meta.active)}
           </ListItemSecondaryAction>
         )}
       </ListItemLink>

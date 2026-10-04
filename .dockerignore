@@ -3,7 +3,7 @@
 .claude
 node_modules
 client/dist
-client/gen/proto
+client/gen
 **/*.sqlite
 
 # Generated Go code (proto/<pkg>/); keep the .proto sources.

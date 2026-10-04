@@ -1,19 +1,20 @@
-import { Metadata } from "grpc-web";
-import { UserServicePromiseClient } from "xmaslist-proto/proto/user_service_grpc_web_pb.js";
-import {
-  GetUsersRequest,
-  GetUsersResponse,
-} from "xmaslist-proto/proto/user_service_pb.js";
+import { create } from "@bufbuild/protobuf";
+import { CallOptions, Client } from "@connectrpc/connect";
 import { AuthModel } from "./auth_model";
+import {
+  GetUsersRequestSchema,
+  GetUsersResponse,
+  UserService,
+} from "./gen/proto/user_service_pb";
 import { User } from "./user";
 
 export class UserModel {
-  private readonly userService: UserServicePromiseClient;
+  private readonly userService: Client<typeof UserService>;
   private readonly authModel: AuthModel;
   private users = new Map<number, User>();
   private badUsers = new Set<number>();
 
-  constructor(userService: UserServicePromiseClient, authModel: AuthModel) {
+  constructor(userService: Client<typeof UserService>, authModel: AuthModel) {
     this.userService = userService;
     this.authModel = authModel;
   }
@@ -43,13 +44,14 @@ export class UserModel {
       return Promise.resolve(true);
     }
 
-    const req = new GetUsersRequest();
-    req.setIdsList(Array.from(missingIds.values()));
+    const req = create(GetUsersRequestSchema, {
+      ids: Array.from(missingIds.values()),
+    });
 
     return this.userService
-      .getUsers(req, this.metadata())
+      .getUsers(req, this.callOptions())
       .then((resp: GetUsersResponse) => {
-        for (const userInfo of resp.getUsersList()) {
+        for (const userInfo of resp.users) {
           const user = new User(userInfo);
           this.users.set(user.id, user);
           missingIds.delete(user.id);
@@ -63,8 +65,8 @@ export class UserModel {
       });
   }
 
-  private metadata(): Metadata {
+  private callOptions(): CallOptions {
     const cookie = this.authModel.getSessionCookie();
-    return { authorization: cookie ? cookie : "" };
+    return { headers: { authorization: cookie ? cookie : "" } };
   }
 }

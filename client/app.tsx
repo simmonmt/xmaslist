@@ -1,3 +1,5 @@
+import { createClient } from "@connectrpc/connect";
+import { createConnectTransport } from "@connectrpc/connect-web";
 import DateFnsUtils from "@date-io/date-fns";
 import { createStyles, withStyles } from "@material-ui/core/styles";
 import { MuiPickersUtilsProvider } from "@material-ui/pickers";
@@ -9,12 +11,12 @@ import {
   Switch,
 } from "react-router-dom";
 import Cookies from "universal-cookie";
-import { AuthServicePromiseClient } from "xmaslist-proto/proto/auth_service_grpc_web_pb.js";
-import { ListServicePromiseClient } from "xmaslist-proto/proto/list_service_grpc_web_pb.js";
-import { UserServicePromiseClient } from "xmaslist-proto/proto/user_service_grpc_web_pb.js";
 import { AuthModel } from "./auth_model";
 import { AuthStorage } from "./auth_storage";
 import { Banner } from "./banner";
+import { AuthService } from "./gen/proto/auth_service_pb";
+import { ListService } from "./gen/proto/list_service_pb";
+import { UserService } from "./gen/proto/user_service_pb";
 import { ItemList } from "./item_list";
 import { ListList } from "./list_list";
 import { ListModel } from "./list_model";
@@ -44,12 +46,14 @@ class App extends React.Component<Props, State> {
     const rpcUrl = document.location.origin;
     console.log("rpcUrl", rpcUrl);
 
-    const authService = new AuthServicePromiseClient(rpcUrl, null, null);
+    const transport = createConnectTransport({ baseUrl: rpcUrl });
+
+    const authService = createClient(AuthService, transport);
     const authStorage = new AuthStorage();
     this.cookies = new Cookies();
 
-    const listService = new ListServicePromiseClient(rpcUrl, null, null);
-    const userService = new UserServicePromiseClient(rpcUrl, null, null);
+    const listService = createClient(ListService, transport);
+    const userService = createClient(UserService, transport);
 
     this.authModel = new AuthModel(authService, authStorage, this.cookies);
     this.listModel = new ListModel(listService, this.authModel);

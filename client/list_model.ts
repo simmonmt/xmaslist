@@ -1,51 +1,51 @@
-import { Metadata } from "grpc-web";
+import { create } from "@bufbuild/protobuf";
+import { CallOptions, Client } from "@connectrpc/connect";
+import { AuthModel } from "./auth_model";
 import {
   ListItemData as ListItemDataProto,
   ListItemState as ListItemStateProto,
-} from "xmaslist-proto/proto/list_item_pb.js";
+} from "./gen/proto/list_item_pb";
 import {
   ListData as ListDataProto,
   List as ListProto,
-} from "xmaslist-proto/proto/list_pb.js";
-import { ListServicePromiseClient } from "xmaslist-proto/proto/list_service_grpc_web_pb.js";
+} from "./gen/proto/list_pb";
 import {
-  ChangeActiveStateRequest,
-  CreateListItemRequest,
+  ChangeActiveStateRequestSchema,
+  CreateListItemRequestSchema,
   CreateListItemResponse,
-  CreateListRequest,
+  CreateListRequestSchema,
   CreateListResponse,
-  DeleteListItemRequest,
-  GetListRequest,
+  DeleteListItemRequestSchema,
+  GetListRequestSchema,
   GetListResponse,
-  ListListItemsRequest,
+  ListListItemsRequestSchema,
   ListListItemsResponse,
-  ListListsRequest,
+  ListListsRequestSchema,
   ListListsResponse,
-  UpdateListItemRequest,
+  ListService,
+  UpdateListItemRequestSchema,
   UpdateListItemResponse,
-  UpdateListRequest,
+  UpdateListRequestSchema,
   UpdateListResponse,
-} from "xmaslist-proto/proto/list_service_pb.js";
-import { AuthModel } from "./auth_model";
+} from "./gen/proto/list_service_pb";
 import { ListItem } from "./list_item";
 
 export class ListModel {
-  private readonly listService: ListServicePromiseClient;
+  private readonly listService: Client<typeof ListService>;
   private readonly authModel: AuthModel;
 
-  constructor(listService: ListServicePromiseClient, authModel: AuthModel) {
+  constructor(listService: Client<typeof ListService>, authModel: AuthModel) {
     this.listService = listService;
     this.authModel = authModel;
   }
 
   createList(listData: ListDataProto): Promise<ListProto> {
-    const req = new CreateListRequest();
-    req.setData(listData);
+    const req = create(CreateListRequestSchema, { data: listData });
 
     return this.listService
-      .createList(req, this.metadata())
+      .createList(req, this.callOptions())
       .then((resp: CreateListResponse) => {
-        const list = resp.getList();
+        const list = resp.list;
         if (!list) {
           return Promise.reject(new Error("no list in response"));
         }
@@ -59,14 +59,17 @@ export class ListModel {
     version: number,
     newState: boolean
   ): Promise<void> {
-    const req = new ChangeActiveStateRequest();
-    req.setListId(listId);
-    req.setListVersion(version);
-    req.setNewState(newState);
-
-    return this.listService.changeActiveState(req, this.metadata()).then(() => {
-      Promise.resolve();
+    const req = create(ChangeActiveStateRequestSchema, {
+      listId: listId,
+      listVersion: version,
+      newState: newState,
     });
+
+    return this.listService
+      .changeActiveState(req, this.callOptions())
+      .then(() => {
+        Promise.resolve();
+      });
   }
 
   updateList(
@@ -74,15 +77,16 @@ export class ListModel {
     version: number,
     data: ListDataProto
   ): Promise<ListProto> {
-    const req = new UpdateListRequest();
-    req.setListId(listId);
-    req.setListVersion(version);
-    req.setData(data);
+    const req = create(UpdateListRequestSchema, {
+      listId: listId,
+      listVersion: version,
+      data: data,
+    });
 
     return this.listService
-      .updateList(req, this.metadata())
+      .updateList(req, this.callOptions())
       .then((resp: UpdateListResponse) => {
-        const list = resp.getList();
+        const list = resp.list;
         if (!list) {
           return Promise.reject(new Error("no list in response"));
         }
@@ -95,14 +99,15 @@ export class ListModel {
     listId: string,
     itemData: ListItemDataProto
   ): Promise<ListItem> {
-    const req = new CreateListItemRequest();
-    req.setListId(listId);
-    req.setData(itemData);
+    const req = create(CreateListItemRequestSchema, {
+      listId: listId,
+      data: itemData,
+    });
 
     return this.listService
-      .createListItem(req, this.metadata())
+      .createListItem(req, this.callOptions())
       .then((resp: CreateListItemResponse) => {
-        const item = resp.getItem();
+        const item = resp.item;
         if (!item) {
           return Promise.reject(new Error("no item in response"));
         }
@@ -112,24 +117,24 @@ export class ListModel {
   }
 
   listLists(includeInactive: boolean): Promise<ListProto[]> {
-    const req = new ListListsRequest();
-    req.setIncludeInactive(includeInactive);
+    const req = create(ListListsRequestSchema, {
+      includeInactive: includeInactive,
+    });
 
     return this.listService
-      .listLists(req, this.metadata())
+      .listLists(req, this.callOptions())
       .then((resp: ListListsResponse) => {
-        return resp.getListsList();
+        return resp.lists;
       });
   }
 
   getList(listId: string): Promise<ListProto> {
-    const req = new GetListRequest();
-    req.setListId(listId);
+    const req = create(GetListRequestSchema, { listId: listId });
 
     return this.listService
-      .getList(req, this.metadata())
+      .getList(req, this.callOptions())
       .then((resp: GetListResponse) => {
-        const list = resp.getList();
+        const list = resp.list;
         if (!list) {
           return Promise.reject(new Error("no list in response"));
         }
@@ -145,22 +150,23 @@ export class ListModel {
     newData: ListItemDataProto | null,
     newState: ListItemStateProto | null
   ): Promise<ListItem> {
-    const req = new UpdateListItemRequest();
-    req.setListId(listId);
-    req.setItemId(itemId);
-    req.setItemVersion(itemVersion);
+    const req = create(UpdateListItemRequestSchema, {
+      listId: listId,
+      itemId: itemId,
+      itemVersion: itemVersion,
+    });
 
     if (newData) {
-      req.setData(newData);
+      req.data = newData;
     }
     if (newState) {
-      req.setState(newState);
+      req.state = newState;
     }
 
     return this.listService
-      .updateListItem(req, this.metadata())
+      .updateListItem(req, this.callOptions())
       .then((resp: UpdateListItemResponse) => {
-        const item = resp.getItem();
+        const item = resp.item;
         if (!item) {
           return Promise.reject(new Error("no item in response"));
         }
@@ -170,28 +176,28 @@ export class ListModel {
   }
 
   deleteListItem(listId: string, itemId: string): Promise<void> {
-    const req = new DeleteListItemRequest();
-    req.setListId(listId);
-    req.setItemId(itemId);
+    const req = create(DeleteListItemRequestSchema, {
+      listId: listId,
+      itemId: itemId,
+    });
 
     return this.listService
-      .deleteListItem(req, this.metadata())
+      .deleteListItem(req, this.callOptions())
       .then(() => Promise.resolve());
   }
 
-  private metadata(): Metadata {
+  private callOptions(): CallOptions {
     const cookie = this.authModel.getSessionCookie();
-    return { authorization: cookie ? cookie : "" };
+    return { headers: { authorization: cookie ? cookie : "" } };
   }
 
   listListItems(listId: string): Promise<ListItem[]> {
-    const req = new ListListItemsRequest();
-    req.setListId(listId);
+    const req = create(ListListItemsRequestSchema, { listId: listId });
 
     return this.listService
-      .listListItems(req, this.metadata())
+      .listListItems(req, this.callOptions())
       .then((resp: ListListItemsResponse) => {
-        return resp.getItemsList().map((proto) => new ListItem(proto));
+        return resp.items.map((proto) => new ListItem(proto));
       });
   }
 }
