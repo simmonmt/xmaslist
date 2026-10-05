@@ -1,13 +1,21 @@
 import { create } from "@bufbuild/protobuf";
-import Button from "@material-ui/core/Button";
-import Dialog from "@material-ui/core/Dialog";
-import DialogActions from "@material-ui/core/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import TextField from "@material-ui/core/TextField";
-import { KeyboardDatePicker } from "@material-ui/pickers";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import TextField from "@mui/material/TextField";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { DateValidationError } from "@mui/x-date-pickers/models";
+import { format, isValid, startOfDay } from "date-fns";
 import * as React from "react";
 import { ListData as ListDataProto, ListDataSchema } from "./gen/proto/list_pb";
+
+// The picker's default limits, made explicit so the error messages can name
+// them.
+const minEventDate = new Date(1900, 0, 1);
+const maxEventDate = new Date(2099, 11, 31);
+const dateFormat = "MM/dd/yyyy";
 
 interface Props {
   action: string;
@@ -23,6 +31,8 @@ interface State {
   beneficiaryErrorMessage: string;
   eventDate: Date | null;
   eventDateErrorMessage: string;
+  // The picker's own validation result for the current value.
+  eventDatePickerError: DateValidationError | null;
 }
 
 export class EditListDialog extends React.Component<Props, State> {
@@ -53,12 +63,17 @@ export class EditListDialog extends React.Component<Props, State> {
       beneficiaryErrorMessage: "",
       eventDate: eventDate,
       eventDateErrorMessage: "",
+      eventDatePickerError: null,
     };
   }
 
   render() {
     const handleDateChange = (date: Date | null) => {
-      this.setState({ eventDate: date });
+      // Keep midnight (local time) of the chosen day. The picker otherwise
+      // carries over the time of day of the previous value.
+      this.setState({
+        eventDate: date && isValid(date) ? startOfDay(date) : date,
+      });
     };
 
     const handleNameChange = (name: string) => {
@@ -107,15 +122,23 @@ export class EditListDialog extends React.Component<Props, State> {
             error={this.state.beneficiaryErrorMessage.length > 0}
             helperText={this.state.beneficiaryErrorMessage}
           />
-          <KeyboardDatePicker
-            required
+          <DatePicker
             value={this.state.eventDate}
             onChange={handleDateChange}
             label="Event date"
-            format="MM/dd/yyyy"
-            margin="normal"
-            error={this.state.eventDateErrorMessage.length > 0}
-            helperText={this.state.eventDateErrorMessage}
+            format={dateFormat}
+            minDate={minEventDate}
+            maxDate={maxEventDate}
+            onError={(error) => this.setState({ eventDatePickerError: error })}
+            slotProps={{
+              textField: {
+                required: true,
+                variant: "standard",
+                margin: "normal",
+                error: this.state.eventDateErrorMessage.length > 0,
+                helperText: this.state.eventDateErrorMessage,
+              },
+            }}
           />
         </DialogContent>
         <DialogActions>
@@ -155,12 +178,9 @@ export class EditListDialog extends React.Component<Props, State> {
       error = true;
     }
 
-    if (this.state.eventDate) {
-      this.setState({ eventDateErrorMessage: "" });
-    } else {
-      this.setState({
-        eventDateErrorMessage: "This field is required",
-      });
+    const eventDateErrorMessage = this.eventDateErrorMessage();
+    this.setState({ eventDateErrorMessage: eventDateErrorMessage });
+    if (eventDateErrorMessage) {
       error = true;
     }
 
@@ -175,5 +195,28 @@ export class EditListDialog extends React.Component<Props, State> {
       eventDate: BigInt(Math.floor(this.state.eventDate!.getTime() / 1000)),
     });
     this.props.onClose(listData);
+  }
+
+  private eventDateErrorMessage(): string {
+    const eventDate = this.state.eventDate;
+    if (!eventDate) {
+      return "This field is required";
+    }
+
+    switch (this.state.eventDatePickerError) {
+      case null:
+        break;
+      case "minDate":
+        return "Date must not be before " + format(minEventDate, dateFormat);
+      case "maxDate":
+        return "Date must not be after " + format(maxEventDate, dateFormat);
+      default:
+        return "Invalid date";
+    }
+
+    if (!isValid(eventDate)) {
+      return "Invalid date";
+    }
+    return "";
   }
 }

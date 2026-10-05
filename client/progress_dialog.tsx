@@ -1,21 +1,15 @@
-import CircularProgress from "@material-ui/core/CircularProgress";
-import Dialog from "@material-ui/core/Dialog";
-import DialogContent from "@material-ui/core/DialogContent";
-import { makeStyles } from "@material-ui/core/styles";
-import { Theme } from "@material-ui/core/styles/createTheme";
-import Typography from "@material-ui/core/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import { styled } from "@mui/material/styles";
+import Typography from "@mui/material/Typography";
 import * as React from "react";
 
-const styles = makeStyles((theme: Theme) => ({
-  content: {
-    display: "flex",
-    alignItems: "center",
-    padding: 20, // To match the hard-coded padding-top in DialogContent
-  },
-  progress: {
-    marginRight: theme.spacing(2), // padding interferes with the spinner
-  },
-}));
+const Content = styled(DialogContent)({
+  display: "flex",
+  alignItems: "center",
+  padding: 20, // To match the hard-coded padding-top in DialogContent
+});
 
 export function ProgressDialog({
   open,
@@ -24,16 +18,17 @@ export function ProgressDialog({
   open: boolean;
   label: string;
 }) {
-  const classes = styles();
-
   return (
     <Dialog open={open}>
-      <DialogContent className={classes.content}>
-        <CircularProgress className={classes.progress} />
+      <Content>
+        <CircularProgress
+          // padding interferes with the spinner
+          sx={{ marginRight: 2 }}
+        />
         <Typography variant="body1" color="textSecondary">
           {label}
         </Typography>
-      </DialogContent>
+      </Content>
     </Dialog>
   );
 }

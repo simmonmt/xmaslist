@@ -1,17 +1,16 @@
 import { Code, ConnectError } from "@connectrpc/connect";
-import Box from "@material-ui/core/Box";
-import Card from "@material-ui/core/Card";
-import grey from "@material-ui/core/colors/grey";
-import Fab from "@material-ui/core/Fab";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import FormGroup from "@material-ui/core/FormGroup";
-import LinearProgress from "@material-ui/core/LinearProgress";
-import { createStyles, withStyles } from "@material-ui/core/styles";
-import { Theme } from "@material-ui/core/styles/createTheme";
-import Switch from "@material-ui/core/Switch";
-import Typography from "@material-ui/core/Typography";
-import AddIcon from "@material-ui/icons/Add";
-import Alert from "@material-ui/lab/Alert";
+import AddIcon from "@mui/icons-material/Add";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import { grey } from "@mui/material/colors";
+import Fab from "@mui/material/Fab";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormGroup from "@mui/material/FormGroup";
+import LinearProgress from "@mui/material/LinearProgress";
+import { styled } from "@mui/material/styles";
+import Switch from "@mui/material/Switch";
+import Typography from "@mui/material/Typography";
 import { format as formatDate, isPast as isPastDate } from "date-fns";
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
@@ -65,12 +64,56 @@ export interface ItemListApiArgs {
 export type ItemListMode = "view" | "edit";
 
 export interface Props extends RouteComponentProps<PathParams> {
-  classes: any;
   listModel: ListModel;
   userModel: UserModel;
   currentUser: User;
   mode: ItemListMode;
 }
+
+const Root = styled("div")({
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  flexGrow: 1,
+});
+
+const ListCard = styled(Card)({
+  margin: "1em",
+});
+
+const ListMeta = styled("div")({
+  textAlign: "center",
+});
+
+const ListMetaFor = styled("span")(({ theme }) => ({
+  marginRight: theme.spacing(2),
+}));
+
+const CreateFab = styled(Fab)(({ theme }) => ({
+  position: "absolute",
+  bottom: theme.spacing(2),
+  right: theme.spacing(2),
+}));
+
+const EmptyList = styled("div")({
+  color: grey[400],
+  flexGrow: 1,
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+
+  "& > *": { textAlign: "center" },
+});
+
+const EmptyEmoji = styled(Typography)({
+  fontFamily: "Arial",
+  marginBottom: "1rem",
+});
+
+const Buttons = styled("div")({
+  display: "flex",
+  justifyContent: "flex-end",
+});
 
 interface State {
   loggedIn: boolean;
@@ -146,7 +189,7 @@ class ItemList extends React.Component<Props, State> {
       : this.props.mode;
 
     return (
-      <div className={this.props.classes.root}>
+      <Root>
         {!this.state.loggedIn && <Redirect to="/logout" />}
         {this.state.loading && <LinearProgress />}
         {this.state.errorMessage && (
@@ -158,7 +201,7 @@ class ItemList extends React.Component<Props, State> {
             Error: {this.state.errorMessage}
           </Alert>
         )}
-        <Box display="flex" justifyContent="space-between">
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="body1">
             <RouterLink to="/">&lt;&lt; All lists</RouterLink>
           </Typography>
@@ -177,35 +220,28 @@ class ItemList extends React.Component<Props, State> {
           </FormGroup>
         </Box>
 
-        <Card className={this.props.classes.card} raised>
-          {this.listMeta()}
-        </Card>
+        <ListCard raised>{this.listMeta()}</ListCard>
 
         {this.state.items.length > 0 && (
-          <Card className={this.props.classes.card} raised>
-            {this.listItems(elementMode)}
-          </Card>
+          <ListCard raised>{this.listItems(elementMode)}</ListCard>
         )}
 
         {this.state.items.length === 0 && !this.state.loading && (
-          <div className={this.props.classes.emptyList}>
-            <Typography variant="h1" className={this.props.classes.emptyEmoji}>
-              ( •́ω•̩̥̀ )
-            </Typography>
+          <EmptyList>
+            <EmptyEmoji variant="h1">( •́ω•̩̥̀ )</EmptyEmoji>
             <Typography variant="h4">This list is empty</Typography>
-          </div>
+          </EmptyList>
         )}
 
         {this.props.mode == "edit" && (
           <div>
-            <Fab
+            <CreateFab
               color="primary"
               aria-label="create"
-              className={this.props.classes.fab}
               onClick={this.handleCreateClick}
             >
               <AddIcon />
-            </Fab>
+            </CreateFab>
             <EditListItemDialog
               action="Create"
               open={this.state.createItemDialogOpen}
@@ -227,7 +263,7 @@ class ItemList extends React.Component<Props, State> {
             initial={this.state.list.data || null}
           />
         )}
-      </div>
+      </Root>
     );
   }
 
@@ -307,7 +343,7 @@ class ItemList extends React.Component<Props, State> {
 
     const data = this.state.list.data!;
     return (
-      <div className={this.props.classes.meta}>
+      <ListMeta>
         <Typography variant="h2">{data.name}</Typography>
         <Typography variant="body1">
           {
@@ -316,14 +352,14 @@ class ItemList extends React.Component<Props, State> {
           }
         </Typography>
         <div>
-          <span className={this.props.classes.metaFor}>
+          <ListMetaFor>
             <Typography variant="body1" component="span" color="textSecondary">
               For:
             </Typography>{" "}
             <Typography variant="body1" component="span">
               {data.beneficiary}
             </Typography>
-          </span>
+          </ListMetaFor>
           <span>
             <Typography variant="body1" component="span" color="textSecondary">
               By:
@@ -334,16 +370,16 @@ class ItemList extends React.Component<Props, State> {
           </span>
         </div>
         {this.props.mode == "edit" && (
-          <div className={this.props.classes.buttons}>
+          <Buttons>
             <ProgressButton
               updating={this.state.modifyingList}
               onClick={this.handleModifyListClick}
             >
               Edit
             </ProgressButton>
-          </div>
+          </Buttons>
         )}
-      </div>
+      </ListMeta>
     );
   }
 
@@ -519,47 +555,6 @@ class ItemList extends React.Component<Props, State> {
   }
 }
 
-const itemListStyles = (theme: Theme) =>
-  createStyles({
-    root: {
-      width: "100%",
-      display: "flex",
-      flexDirection: "column",
-      flexGrow: 1,
-    },
-    card: {
-      margin: "1em",
-    },
-    meta: {
-      textAlign: "center",
-    },
-    metaFor: {
-      marginRight: theme.spacing(2),
-    },
-    fab: {
-      position: "absolute",
-      bottom: theme.spacing(2),
-      right: theme.spacing(2),
-    },
-    emptyList: {
-      color: grey[400],
-      flexGrow: 1,
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-
-      "& > *": { textAlign: "center" },
-    },
-    emptyEmoji: {
-      fontFamily: "Arial",
-      marginBottom: "1rem",
-    },
-    buttons: {
-      display: "flex",
-      justifyContent: "flex-end",
-    },
-  });
-
-const exportItemList: any = withStyles(itemListStyles)(withRouter(ItemList));
+const exportItemList = withRouter(ItemList);
 
 export { exportItemList as ItemList };

@@ -1,8 +1,8 @@
 import { createClient } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
-import DateFnsUtils from "@date-io/date-fns";
-import { createStyles, withStyles } from "@material-ui/core/styles";
-import { MuiPickersUtilsProvider } from "@material-ui/pickers";
+import { createTheme, styled, ThemeProvider } from "@mui/material/styles";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as React from "react";
 import {
   Redirect,
@@ -26,9 +26,47 @@ import { ProtectedRoute, ProtectedRouteProps } from "./protected_route";
 import { User } from "./user";
 import { UserModel } from "./user_model";
 
-interface Props {
-  classes: any;
-}
+// Keep the look of the app as it was under Material UI v4, whose defaults
+// differ from those of later versions.
+const theme = createTheme({
+  palette: {
+    // The v4 default palette: indigo, pink, red.
+    primary: { light: "#7986cb", main: "#3f51b5", dark: "#303f9f" },
+    secondary: { light: "#ff4081", main: "#f50057", dark: "#c51162" },
+    error: { light: "#e57373", main: "#f44336", dark: "#d32f2f" },
+    text: { secondary: "rgba(0, 0, 0, 0.54)" },
+  },
+  components: {
+    // No divider above the item that follows an expanded accordion.
+    MuiAccordion: {
+      styleOverrides: {
+        root: {
+          "&.Mui-expanded + .MuiAccordion-root::before": { display: "none" },
+        },
+      },
+    },
+    // v4 dialog content padding, including when it follows a title.
+    MuiDialogContent: {
+      styleOverrides: {
+        root: {
+          padding: "8px 24px",
+          ".MuiDialogTitle-root + &": { paddingTop: 8 },
+        },
+      },
+    },
+    MuiLink: { defaultProps: { underline: "hover" } },
+    MuiSwitch: { defaultProps: { color: "secondary" } },
+    MuiTextField: { defaultProps: { variant: "standard" } },
+  },
+});
+
+const Root = styled("div")({
+  height: "100%",
+  display: "flex",
+  flexDirection: "column",
+});
+
+interface Props {}
 
 interface State {
   user: User | null;
@@ -70,59 +108,61 @@ class App extends React.Component<Props, State> {
     };
 
     return (
-      <MuiPickersUtilsProvider utils={DateFnsUtils}>
-        <Router>
-          <div className={this.props.classes.root}>
-            <Banner user={this.state.user} />
+      <ThemeProvider theme={theme}>
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <Router>
+            <Root>
+              <Banner user={this.state.user} />
 
-            <Switch>
-              <Route path="/login">
-                <Login
-                  user={this.state.user}
-                  authModel={this.authModel}
-                  onLogin={(user: User) => this.handleLogin(user)}
-                />
-              </Route>
-              <Route path="/logout">
-                <Logout
-                  authModel={this.authModel}
-                  onLogout={() => this.handleLogout()}
-                />
-              </Route>
-              <ProtectedRoute
-                {...defaultProtectedRouteProps}
-                path="/view/:listId"
-              >
-                <ItemList
-                  listModel={this.listModel}
-                  userModel={this.userModel}
-                  currentUser={this.state.user!}
-                  mode="view"
-                />
-              </ProtectedRoute>
-              <ProtectedRoute
-                {...defaultProtectedRouteProps}
-                path="/edit/:listId"
-              >
-                <ItemList
-                  listModel={this.listModel}
-                  userModel={this.userModel}
-                  currentUser={this.state.user!}
-                  mode="edit"
-                />
-              </ProtectedRoute>
-              <ProtectedRoute {...defaultProtectedRouteProps} exact path="/">
-                <ListList
-                  listModel={this.listModel}
-                  userModel={this.userModel}
-                  currentUser={this.state.user!}
-                />
-              </ProtectedRoute>
-              <Redirect to="/" />
-            </Switch>
-          </div>
-        </Router>
-      </MuiPickersUtilsProvider>
+              <Switch>
+                <Route path="/login">
+                  <Login
+                    user={this.state.user}
+                    authModel={this.authModel}
+                    onLogin={(user: User) => this.handleLogin(user)}
+                  />
+                </Route>
+                <Route path="/logout">
+                  <Logout
+                    authModel={this.authModel}
+                    onLogout={() => this.handleLogout()}
+                  />
+                </Route>
+                <ProtectedRoute
+                  {...defaultProtectedRouteProps}
+                  path="/view/:listId"
+                >
+                  <ItemList
+                    listModel={this.listModel}
+                    userModel={this.userModel}
+                    currentUser={this.state.user!}
+                    mode="view"
+                  />
+                </ProtectedRoute>
+                <ProtectedRoute
+                  {...defaultProtectedRouteProps}
+                  path="/edit/:listId"
+                >
+                  <ItemList
+                    listModel={this.listModel}
+                    userModel={this.userModel}
+                    currentUser={this.state.user!}
+                    mode="edit"
+                  />
+                </ProtectedRoute>
+                <ProtectedRoute {...defaultProtectedRouteProps} exact path="/">
+                  <ListList
+                    listModel={this.listModel}
+                    userModel={this.userModel}
+                    currentUser={this.state.user!}
+                  />
+                </ProtectedRoute>
+                <Redirect to="/" />
+              </Switch>
+            </Root>
+          </Router>
+        </LocalizationProvider>
+      </ThemeProvider>
     );
   }
 
@@ -135,15 +175,4 @@ class App extends React.Component<Props, State> {
   }
 }
 
-const appStyles = () =>
-  createStyles({
-    root: {
-      height: "100%",
-      display: "flex",
-      flexDirection: "column",
-    },
-  });
-
-const exportApp: any = withStyles(appStyles)(App);
-
-export { exportApp as App };
+export { App };

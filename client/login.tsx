@@ -1,17 +1,16 @@
 import { Code, ConnectError } from "@connectrpc/connect";
-import Button from "@material-ui/core/Button";
-import CircularProgress from "@material-ui/core/CircularProgress";
-import { createStyles, styled, withStyles } from "@material-ui/core/styles";
-import TextField from "@material-ui/core/TextField";
-import Typography from "@material-ui/core/Typography";
-import Alert from "@material-ui/lab/Alert";
+import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import { styled } from "@mui/material/styles";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { Redirect, useLocation } from "react-router-dom";
 import { AuthModel } from "./auth_model";
 import { User } from "./user";
 
 interface Props extends WrappedLoginProps {
-  classes: any;
   redirect: string;
 }
 
@@ -28,6 +27,26 @@ const inputStyles = {
 };
 
 const StyledTextField = styled(TextField)(inputStyles);
+
+const LoginForm = styled("form")({
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+});
+
+const ButtonWrapper = styled("div")({
+  ...inputStyles,
+  position: "relative",
+});
+
+const ButtonProgress = styled(CircularProgress)({
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  marginTop: -12,
+  marginLeft: -12,
+});
 
 class Login extends React.Component<Props, State> {
   constructor(props: Props) {
@@ -87,7 +106,7 @@ class Login extends React.Component<Props, State> {
     }
 
     return (
-      <form className={this.props.classes.root} onSubmit={this.handleSubmit}>
+      <LoginForm onSubmit={this.handleSubmit}>
         <Typography variant="h2">Please sign in</Typography>
         {this.state.error.length > 0 && (
           <Alert severity="error" variant="standard">
@@ -114,9 +133,9 @@ class Login extends React.Component<Props, State> {
           value={this.state.password}
           onChange={this.handlePasswordChange}
         />
-        <div className={this.props.classes.buttonWrapper}>
+        <ButtonWrapper>
           <Button
-            classes={{ root: this.props.classes.button }}
+            sx={{ width: "100%" }}
             variant="contained"
             color="primary"
             disabled={this.state.submitting}
@@ -124,43 +143,12 @@ class Login extends React.Component<Props, State> {
           >
             Sign in
           </Button>
-          {this.state.submitting && (
-            <CircularProgress
-              size={24}
-              className={this.props.classes.buttonProgress}
-            />
-          )}
-        </div>
-      </form>
+          {this.state.submitting && <ButtonProgress size={24} />}
+        </ButtonWrapper>
+      </LoginForm>
     );
   }
 }
-
-const loginStyles = () =>
-  createStyles({
-    root: {
-      width: "100%",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-    },
-    button: {
-      width: "100%",
-    },
-    buttonWrapper: {
-      ...inputStyles,
-      position: "relative",
-    },
-    buttonProgress: {
-      position: "absolute",
-      top: "50%",
-      left: "50%",
-      marginTop: -12,
-      marginLeft: -12,
-    },
-  });
-
-const StyledLogin: any = withStyles(loginStyles)(Login);
 
 interface WrappedLoginProps extends React.HTMLAttributes<HTMLElement> {
   authModel: AuthModel;
@@ -168,11 +156,10 @@ interface WrappedLoginProps extends React.HTMLAttributes<HTMLElement> {
   onLogin: (user: User) => void;
 }
 
-// withRedirect() causes type errors (somehow Material UI gets around them using
-// createStyles, but react-router does not. The alternative is useLocation(),
-// which is a Hook, and apparently hooks aren't usable in class components. So
-// we make a function component solely to call useLocation then pass that as a
-// prop to the class component. I'm sure there's a better way to do this.
+// withRouter() causes type errors. The alternative is useLocation(), which is a
+// Hook, and hooks aren't usable in class components. So we make a function
+// component solely to call useLocation then pass that as a prop to the class
+// component. I'm sure there's a better way to do this.
 function LoginWithRedirect(props: WrappedLoginProps) {
   const params = new URLSearchParams(useLocation().search);
   let redirect = params.get("redirect");
@@ -180,7 +167,7 @@ function LoginWithRedirect(props: WrappedLoginProps) {
     redirect = "/";
   }
 
-  return <StyledLogin {...props} redirect={redirect} />;
+  return <Login {...props} redirect={redirect} />;
 }
 
 export { LoginWithRedirect as Login };

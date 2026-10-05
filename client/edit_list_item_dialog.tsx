@@ -1,11 +1,10 @@
 import { create } from "@bufbuild/protobuf";
-import Button from "@material-ui/core/Button";
-import Dialog from "@material-ui/core/Dialog";
-import DialogActions from "@material-ui/core/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import { createStyles, withStyles } from "@material-ui/core/styles";
-import TextField from "@material-ui/core/TextField";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import TextField from "@mui/material/TextField";
 import * as React from "react";
 import {
   ListItemData as ListItemDataProto,
@@ -22,7 +21,6 @@ function isValidUrl(url: string): boolean {
 }
 
 interface Props {
-  classes: any;
   action: string;
   open: boolean;
   onClose: (listData: ListItemDataProto | null) => void;
@@ -38,7 +36,7 @@ interface State {
   urlErrorMessage: string;
 }
 
-class EditListItemDialog extends React.Component<Props, State> {
+export class EditListItemDialog extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = EditListItemDialog.stateFromInitial(props.initial);
@@ -177,11 +175,3 @@ class EditListItemDialog extends React.Component<Props, State> {
     this.props.onClose(itemData);
   }
 }
-
-const createListItemDialogStyles = () => createStyles({});
-
-const exportEditListItemDialog: any = withStyles(createListItemDialogStyles)(
-  EditListItemDialog
-);
-
-export { exportEditListItemDialog as EditListItemDialog };

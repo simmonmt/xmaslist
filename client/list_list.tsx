@@ -1,16 +1,16 @@
 import { clone } from "@bufbuild/protobuf";
 import { Code, ConnectError } from "@connectrpc/connect";
-import Card from "@material-ui/core/Card";
-import Divider from "@material-ui/core/Divider";
-import Fab from "@material-ui/core/Fab";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import LinearProgress from "@material-ui/core/LinearProgress";
-import List from "@material-ui/core/List";
-import { createStyles, withStyles } from "@material-ui/core/styles";
-import { Theme } from "@material-ui/core/styles/createTheme";
-import Switch from "@material-ui/core/Switch";
-import AddIcon from "@material-ui/icons/Add";
-import Alert from "@material-ui/lab/Alert";
+import AddIcon from "@mui/icons-material/Add";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import Divider from "@mui/material/Divider";
+import Fab from "@mui/material/Fab";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import LinearProgress from "@mui/material/LinearProgress";
+import List from "@mui/material/List";
+import { styled } from "@mui/material/styles";
+import Switch from "@mui/material/Switch";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
 import { EditListDialog } from "./edit_list_dialog";
@@ -28,10 +28,14 @@ import { UserModel } from "./user_model";
 interface ListListProps {
   listModel: ListModel;
   userModel: UserModel;
-  onShouldLogout: () => void;
   currentUser: User;
-  classes: any;
 }
+
+const CreateFab = styled(Fab)(({ theme }) => ({
+  position: "absolute",
+  bottom: theme.spacing(2),
+  right: theme.spacing(2),
+}));
 
 interface ListListState {
   loading: boolean;
@@ -108,7 +112,7 @@ class ListList extends React.Component<ListListProps, ListListState> {
 
   render() {
     return (
-      <div className={this.props.classes.root}>
+      <Box sx={{ width: "100%" }}>
         {!this.state.loggedIn && <Redirect to="/logout" />}
         {this.state.loading && <LinearProgress />}
         {this.state.errorMessage && (
@@ -121,7 +125,7 @@ class ListList extends React.Component<ListListProps, ListListState> {
           </Alert>
         )}
         {this.props.currentUser.isAdmin && (
-          <div className={this.props.classes.switchDiv}>
+          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
             <FormControlLabel
               label="Show deleted lists"
               control={
@@ -133,21 +137,20 @@ class ListList extends React.Component<ListListProps, ListListState> {
               }
               labelPlacement="start"
             />
-          </div>
+          </Box>
         )}
 
         <Card raised>
           <List>{this.makeList(this.state.lists)} </List>
         </Card>
 
-        <Fab
+        <CreateFab
           color="primary"
           aria-label="create"
-          className={this.props.classes.fab}
           onClick={this.handleCreateClicked}
         >
           <AddIcon />
-        </Fab>
+        </CreateFab>
         <EditListDialog
           open={this.state.createDialogOpen}
           onClose={this.handleCreateDialogClose}
@@ -158,7 +161,7 @@ class ListList extends React.Component<ListListProps, ListListState> {
           open={this.state.creatingDialogOpen}
           label="Creating List"
         />
-      </div>
+      </Box>
     );
   }
 
@@ -266,22 +269,4 @@ class ListList extends React.Component<ListListProps, ListListState> {
   }
 }
 
-const listListStyles = (theme: Theme) =>
-  createStyles({
-    root: {
-      width: "100%",
-    },
-    fab: {
-      position: "absolute",
-      bottom: theme.spacing(2),
-      right: theme.spacing(2),
-    },
-    switchDiv: {
-      display: "flex",
-      justifyContent: "flex-end",
-    },
-  });
-
-const exportListList: any = withStyles(listListStyles)(ListList);
-
-export { exportListList as ListList };
+export { ListList };

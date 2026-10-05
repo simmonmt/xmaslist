@@ -1,5 +1,5 @@
-import { createStyles, withStyles } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
+import { styled } from "@mui/material/styles";
+import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
 import { AuthModel } from "./auth_model";
@@ -7,8 +7,14 @@ import { AuthModel } from "./auth_model";
 interface Props {
   authModel: AuthModel;
   onLogout: () => void;
-  classes: any;
 }
+
+const Root = styled("div")({
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+});
 
 interface State {
   loggedOut: boolean;
@@ -28,9 +34,9 @@ class Logout extends React.Component<Props, State> {
     }
 
     return (
-      <div className={this.props.classes.root}>
+      <Root>
         <Typography variant="h2">Signing out...</Typography>
-      </div>
+      </Root>
     );
   }
 
@@ -42,16 +48,4 @@ class Logout extends React.Component<Props, State> {
   }
 }
 
-const logoutStyles = () =>
-  createStyles({
-    root: {
-      width: "100%",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-    },
-  });
-
-const StyledLogout: any = withStyles(logoutStyles)(Logout);
-
-export { StyledLogout as Logout };
+export { Logout };

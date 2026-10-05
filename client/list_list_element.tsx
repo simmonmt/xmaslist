@@ -1,48 +1,38 @@
-import IconButton from "@material-ui/core/IconButton";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
-import ListItemText from "@material-ui/core/ListItemText";
-import { createStyles, withStyles } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
-import DeleteIcon from "@material-ui/icons/Delete";
-import RestoreFromTrashIcon from "@material-ui/icons/RestoreFromTrash";
+import DeleteIcon from "@mui/icons-material/Delete";
+import RestoreFromTrashIcon from "@mui/icons-material/RestoreFromTrash";
+import IconButton from "@mui/material/IconButton";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
+import { styled } from "@mui/material/styles";
+import Typography from "@mui/material/Typography";
 import { format } from "date-fns";
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { List as ListProto } from "./gen/proto/list_pb";
 import { User } from "./user";
 
-interface ListItemLinkProps {
-  to: string;
-  children: React.ReactNode;
-}
+const ListDate = styled("div")({
+  textAlign: "center",
+  width: "10ch",
+});
 
-function ListItemLink(props: ListItemLinkProps) {
-  const { to, children } = props;
+const ListGrow = styled("div")({
+  flexGrow: 1,
+});
 
-  // I'm not entirely sure what this does. Source:
-  // https://material-ui.com/guides/composition/#wrapping-components
-  //
-  // useMemo makes CustomLink a static component -- it only gets re-rendered
-  // when 'to' changes. So I guess that means it won't change when just children
-  // change? The ref lets link access the anchor created by ListItem. I think.
-  const CustomLink = React.useMemo(
-    () =>
-      React.forwardRef<HTMLAnchorElement>((linkProps, ref) => (
-        <Link ref={ref} to={to} {...linkProps} />
-      )),
-    [to]
-  );
+const ListRow = styled("div")({
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+});
 
-  return (
-    <ListItem button component={CustomLink}>
-      {children}
-    </ListItem>
-  );
-}
+const ListMeta = styled("div")({
+  textAlign: "right",
+  marginRight: "3ch",
+});
 
 interface ListListElementProps {
-  classes: any;
   list: ListProto;
   listOwner: User;
   currentUser: User;
@@ -52,7 +42,7 @@ interface ListListElementProps {
 
 interface ListListElementState {}
 
-class ListListElement extends React.Component<
+export class ListListElement extends React.Component<
   ListListElementProps,
   ListListElementState
 > {
@@ -74,59 +64,62 @@ class ListListElement extends React.Component<
     const linkTarget = `/${linkVerb}/${listId}`;
 
     return (
-      <ListItemLink to={linkTarget}>
-        <ListItemText>
-          <div className={this.props.classes.listItem}>
-            <div className={this.props.classes.listDate}>
-              <Typography variant="body1" color="textSecondary">
-                {this.props.curYear == year ? (
-                  <span>
-                    {monthStr} {day}
-                  </span>
-                ) : (
-                  <span>
-                    {monthStr} {day}
-                    <br />
-                    {year}
-                  </span>
-                )}
-              </Typography>
-            </div>
-            <div>
-              <div>{data.name}</div>
-              <div></div>
-            </div>
-            <div className={this.props.classes.listGrow} />
-            <div className={this.props.classes.listMeta}>
+      <ListItem
+        disablePadding
+        secondaryAction={
+          this.props.currentUser.isAdmin &&
+          this.deleteButton(list.id, meta.active)
+        }
+      >
+        <ListItemButton component={Link} to={linkTarget}>
+          <ListItemText>
+            <ListRow>
+              <ListDate>
+                <Typography variant="body1" color="textSecondary">
+                  {this.props.curYear == year ? (
+                    <span>
+                      {monthStr} {day}
+                    </span>
+                  ) : (
+                    <span>
+                      {monthStr} {day}
+                      <br />
+                      {year}
+                    </span>
+                  )}
+                </Typography>
+              </ListDate>
               <div>
-                <Typography
-                  variant="body2"
-                  color="textSecondary"
-                  component="span"
-                >
-                  For:
-                </Typography>{" "}
-                {data.beneficiary}
+                <div>{data.name}</div>
+                <div></div>
               </div>
-              <div>
-                <Typography
-                  variant="body2"
-                  color="textSecondary"
-                  component="span"
-                >
-                  By:
-                </Typography>{" "}
-                {this.props.listOwner.name()}
-              </div>
-            </div>
-          </div>
-        </ListItemText>
-        {this.props.currentUser.isAdmin && (
-          <ListItemSecondaryAction>
-            {this.deleteButton(list.id, meta.active)}
-          </ListItemSecondaryAction>
-        )}
-      </ListItemLink>
+              <ListGrow />
+              <ListMeta>
+                <div>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    component="span"
+                  >
+                    For:
+                  </Typography>{" "}
+                  {data.beneficiary}
+                </div>
+                <div>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    component="span"
+                  >
+                    By:
+                  </Typography>{" "}
+                  {this.props.listOwner.name()}
+                </div>
+              </ListMeta>
+            </ListRow>
+          </ListItemText>
+        </ListItemButton>
+      </ListItem>
     );
   }
 
@@ -145,29 +138,3 @@ class ListListElement extends React.Component<
     );
   }
 }
-
-const listListElementStyles = () =>
-  createStyles({
-    listDate: {
-      textAlign: "center",
-      width: "10ch",
-    },
-    listGrow: {
-      flexGrow: 1,
-    },
-    listItem: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    listMeta: {
-      textAlign: "right",
-      marginRight: "3ch",
-    },
-  });
-
-const exportListListElement: any = withStyles(listListElementStyles)(
-  ListListElement
-);
-
-export { exportListListElement as ListListElement };

@@ -1,12 +1,12 @@
-import AppBar from "@material-ui/core/AppBar";
-import IconButton from "@material-ui/core/IconButton";
-import Link from "@material-ui/core/Link";
-import Menu from "@material-ui/core/Menu";
-import MenuItem from "@material-ui/core/MenuItem";
-import { createStyles, withStyles } from "@material-ui/core/styles";
-import Toolbar from "@material-ui/core/Toolbar";
-import Typography from "@material-ui/core/Typography";
-import AccountCircle from "@material-ui/icons/AccountCircle";
+import AccountCircle from "@mui/icons-material/AccountCircle";
+import AppBar from "@mui/material/AppBar";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Link from "@mui/material/Link";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { TreeIcon } from "./tree_icon";
@@ -14,7 +14,6 @@ import { User } from "./user";
 
 interface Props {
   user: User | null;
-  classes: any;
 }
 
 interface State {
@@ -30,8 +29,6 @@ class Banner extends React.Component<Props, State> {
   }
 
   render() {
-    const classes = this.props.classes;
-
     const profileMenuId = "profile-menu";
     const isProfileMenuOpen = this.state.profileMenuAnchorElement !== null;
     const handleProfileMenuOpen = this.handleProfileMenuOpen.bind(this);
@@ -59,7 +56,7 @@ class Banner extends React.Component<Props, State> {
     if (this.props.user !== null) {
       userButtons = (
         <React.Fragment>
-          <Typography variant="body1" className={this.props.classes.username}>
+          <Typography variant="body1">
             {this.props.user.fullname
               ? this.props.user.fullname
               : this.props.user.username}
@@ -91,7 +88,7 @@ class Banner extends React.Component<Props, State> {
               <TreeIcon />
               xmaslist
             </Link>
-            <div className={classes.grow} />
+            <Box sx={{ flexGrow: 1 }} />
             {userButtons}
           </Toolbar>
         </AppBar>
@@ -113,13 +110,4 @@ class Banner extends React.Component<Props, State> {
   }
 }
 
-const bannerStyles = () =>
-  createStyles({
-    grow: {
-      flexGrow: 1,
-    },
-  });
-
-const StyledBanner: any = withStyles(bannerStyles)(Banner);
-
-export { StyledBanner as Banner };
+export { Banner };
