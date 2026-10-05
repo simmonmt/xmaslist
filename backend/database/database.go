@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"net/url"
+	"path/filepath"
 
 	"github.com/simmonmt/xmaslist/db/schema"
 
@@ -42,6 +43,13 @@ func open(path string, args *url.Values) (*DB, error) {
 
 	args.Set("_foreign_keys", "true")
 	args.Set("_mutex", "full")
+
+	// A relative path would become the URI's authority (file://dev.sqlite),
+	// which SQLite rejects.
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
 
 	url := url.URL{
 		Scheme:   "file",

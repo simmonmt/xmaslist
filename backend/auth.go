@@ -69,7 +69,10 @@ func (ai *AuthInterceptor) authorize(ctx context.Context, header http.Header) (*
 	cookie := authHeader[0]
 	valid, sessionID := ai.sessionManager.SessionIDFromCookie(cookie)
 	if !valid {
-		return nil, connect.NewError(connect.CodeInvalidArgument,
+		// Unauthenticated (rather than InvalidArgument) so the client
+		// sends the user to the login page, e.g. after the session
+		// secret changes.
+		return nil, connect.NewError(connect.CodeUnauthenticated,
 			errors.New("invalid cookie"))
 	}
 
@@ -79,7 +82,7 @@ func (ai *AuthInterceptor) authorize(ctx context.Context, header http.Header) (*
 	}
 	if session == nil {
 		return nil, connect.NewError(connect.CodeUnauthenticated,
-			fmt.Errorf("no active session for cookie %v", cookie))
+			fmt.Errorf("no active session %v", sessionID))
 	}
 
 	return session, nil
