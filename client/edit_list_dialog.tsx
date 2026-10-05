@@ -6,7 +6,10 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { DateValidationError } from "@mui/x-date-pickers/models";
+import {
+  DateValidationError,
+  PickerChangeHandlerContext,
+} from "@mui/x-date-pickers/models";
 import { format, isValid, startOfDay } from "date-fns";
 import * as React from "react";
 import { ListData as ListDataProto, ListDataSchema } from "./gen/proto/list_pb";
@@ -68,11 +71,17 @@ export class EditListDialog extends React.Component<Props, State> {
   }
 
   render() {
-    const handleDateChange = (date: Date | null) => {
+    const handleDateChange = (
+      date: Date | null,
+      context: PickerChangeHandlerContext<DateValidationError>
+    ) => {
       // Keep midnight (local time) of the chosen day. The picker otherwise
       // carries over the time of day of the previous value.
       this.setState({
         eventDate: date && isValid(date) ? startOfDay(date) : date,
+        // onError reports this too, but only from an effect, which may not
+        // have run yet if OK is clicked right after typing.
+        eventDatePickerError: context.validationError,
       });
     };
 

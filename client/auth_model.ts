@@ -17,6 +17,8 @@ export class AuthModel {
   private readonly authService: Client<typeof AuthService>;
   private readonly authStorage: AuthStorage;
   private readonly cookies: Cookies;
+  // The logout in progress, if any.
+  private pendingLogout: Promise<boolean> | null = null;
 
   constructor(
     authService: Client<typeof AuthService>,
@@ -73,7 +75,12 @@ export class AuthModel {
     });
   }
 
+  // Calls made while a logout is in progress (e.g. from a component mounted
+  // twice by React StrictMode) share it rather than sending another request.
   logout(): Promise<boolean> {
+    if (this.pendingLogout) {
+      return this.pendingLogout;
+    }
     if (this.authStorage.read() === null) {
       return Promise.resolve(true);
     }
@@ -81,11 +88,17 @@ export class AuthModel {
     const req = create(LogoutRequestSchema, {
       cookie: this.cookies.get(COOKIE_NAME),
     });
-    return this.authService.logout(req).then((unused: LogoutResponse) => {
-      console.log("logout: clearing cookie");
-      this.cookies.remove(COOKIE_NAME);
-      this.authStorage.clear();
-      return true;
-    });
+    this.pendingLogout = this.authService
+      .logout(req)
+      .then((unused: LogoutResponse) => {
+        console.log("logout: clearing cookie");
+        this.cookies.remove(COOKIE_NAME);
+        this.authStorage.clear();
+        return true;
+      })
+      .finally(() => {
+        this.pendingLogout = null;
+      });
+    return this.pendingLogout;
   }
 }
