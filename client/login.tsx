@@ -6,7 +6,7 @@ import { styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
-import { Redirect, useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router";
 import { AuthModel } from "./auth_model";
 import { User } from "./user";
 
@@ -102,7 +102,7 @@ class Login extends React.Component<Props, State> {
 
   render() {
     if (this.props.user !== null) {
-      return <Redirect to={this.props.redirect} />;
+      return <Navigate to={this.props.redirect} replace />;
     }
 
     return (
@@ -156,14 +156,23 @@ interface WrappedLoginProps extends React.HTMLAttributes<HTMLElement> {
   onLogin: (user: User) => void;
 }
 
-// withRouter() causes type errors. The alternative is useLocation(), which is a
-// Hook, and hooks aren't usable in class components. So we make a function
-// component solely to call useLocation then pass that as a prop to the class
-// component. I'm sure there's a better way to do this.
+// Hooks such as useLocation() aren't usable in class components, so this
+// function component reads the redirect target from the URL and passes it to
+// the class component as a prop.
 function LoginWithRedirect(props: WrappedLoginProps) {
   const params = new URLSearchParams(useLocation().search);
   let redirect = params.get("redirect");
   if (!redirect) {
+    redirect = "/";
+  }
+  // Only follow URLs within this site, resolved the way the browser would.
+  try {
+    const url = new URL(redirect, window.location.origin);
+    redirect =
+      url.origin === window.location.origin
+        ? url.pathname + url.search + url.hash
+        : "/";
+  } catch {
     redirect = "/";
   }
 

@@ -12,7 +12,7 @@ import List from "@mui/material/List";
 import { styled } from "@mui/material/styles";
 import Switch from "@mui/material/Switch";
 import * as React from "react";
-import { Redirect } from "react-router-dom";
+import { Navigate } from "react-router";
 import { EditListDialog } from "./edit_list_dialog";
 import {
   ListData as ListDataProto,
@@ -113,7 +113,7 @@ class ListList extends React.Component<ListListProps, ListListState> {
   render() {
     return (
       <Box sx={{ width: "100%" }}>
-        {!this.state.loggedIn && <Redirect to="/logout" />}
+        {!this.state.loggedIn && <Navigate to="/logout" replace />}
         {this.state.loading && <LinearProgress />}
         {this.state.errorMessage && (
           <Alert

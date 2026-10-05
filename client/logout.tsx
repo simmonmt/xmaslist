@@ -1,7 +1,7 @@
 import { styled } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
-import { Redirect } from "react-router-dom";
+import { Navigate } from "react-router";
 import { AuthModel } from "./auth_model";
 
 interface Props {
@@ -30,7 +30,7 @@ class Logout extends React.Component<Props, State> {
 
   render() {
     if (this.state.loggedOut) {
-      return <Redirect to="/login" />;
+      return <Navigate to="/login" replace />;
     }
 
     return (

@@ -4,12 +4,7 @@ import { createTheme, styled, ThemeProvider } from "@mui/material/styles";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import * as React from "react";
-import {
-  Redirect,
-  Route,
-  BrowserRouter as Router,
-  Switch,
-} from "react-router-dom";
+import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router";
 import Cookies from "universal-cookie";
 import { AuthModel } from "./auth_model";
 import { AuthStorage } from "./auth_storage";
@@ -22,7 +17,7 @@ import { ListList } from "./list_list";
 import { ListModel } from "./list_model";
 import { Login } from "./login";
 import { Logout } from "./logout";
-import { ProtectedRoute, ProtectedRouteProps } from "./protected_route";
+import { RequireAuth } from "./require_auth";
 import { User } from "./user";
 import { UserModel } from "./user_model";
 
@@ -102,63 +97,79 @@ class App extends React.Component<Props, State> {
   }
 
   render() {
-    const defaultProtectedRouteProps: ProtectedRouteProps = {
-      isLoggedIn: this.state.user !== null,
-      authPath: "/login",
-    };
+    const isLoggedIn = this.state.user !== null;
+    const authPath = "/login";
 
+    // As under react-router v5: the router updates the UI in the same render
+    // as the URL (useTransitions={false}) rather than in a transition, and
+    // routes match their paths as prefixes (the trailing /*).
     return (
       <ThemeProvider theme={theme}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <Router>
+          <Router useTransitions={false}>
             <Root>
               <Banner user={this.state.user} />
 
-              <Switch>
-                <Route path="/login">
-                  <Login
-                    user={this.state.user}
-                    authModel={this.authModel}
-                    onLogin={(user: User) => this.handleLogin(user)}
-                  />
-                </Route>
-                <Route path="/logout">
-                  <Logout
-                    authModel={this.authModel}
-                    onLogout={() => this.handleLogout()}
-                  />
-                </Route>
-                <ProtectedRoute
-                  {...defaultProtectedRouteProps}
-                  path="/view/:listId"
-                >
-                  <ItemList
-                    listModel={this.listModel}
-                    userModel={this.userModel}
-                    currentUser={this.state.user!}
-                    mode="view"
-                  />
-                </ProtectedRoute>
-                <ProtectedRoute
-                  {...defaultProtectedRouteProps}
-                  path="/edit/:listId"
-                >
-                  <ItemList
-                    listModel={this.listModel}
-                    userModel={this.userModel}
-                    currentUser={this.state.user!}
-                    mode="edit"
-                  />
-                </ProtectedRoute>
-                <ProtectedRoute {...defaultProtectedRouteProps} exact path="/">
-                  <ListList
-                    listModel={this.listModel}
-                    userModel={this.userModel}
-                    currentUser={this.state.user!}
-                  />
-                </ProtectedRoute>
-                <Redirect to="/" />
-              </Switch>
+              <Routes>
+                <Route
+                  path="/login/*"
+                  element={
+                    <Login
+                      user={this.state.user}
+                      authModel={this.authModel}
+                      onLogin={(user: User) => this.handleLogin(user)}
+                    />
+                  }
+                />
+                <Route
+                  path="/logout/*"
+                  element={
+                    <Logout
+                      authModel={this.authModel}
+                      onLogout={() => this.handleLogout()}
+                    />
+                  }
+                />
+                <Route
+                  path="/view/:listId/*"
+                  element={
+                    <RequireAuth isLoggedIn={isLoggedIn} authPath={authPath}>
+                      <ItemList
+                        listModel={this.listModel}
+                        userModel={this.userModel}
+                        currentUser={this.state.user!}
+                        mode="view"
+                      />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/edit/:listId/*"
+                  element={
+                    <RequireAuth isLoggedIn={isLoggedIn} authPath={authPath}>
+                      <ItemList
+                        listModel={this.listModel}
+                        userModel={this.userModel}
+                        currentUser={this.state.user!}
+                        mode="edit"
+                      />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path="/"
+                  element={
+                    <RequireAuth isLoggedIn={isLoggedIn} authPath={authPath}>
+                      <ListList
+                        listModel={this.listModel}
+                        userModel={this.userModel}
+                        currentUser={this.state.user!}
+                      />
+                    </RequireAuth>
+                  }
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
             </Root>
           </Router>
         </LocalizationProvider>

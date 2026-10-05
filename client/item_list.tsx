@@ -13,8 +13,7 @@ import Switch from "@mui/material/Switch";
 import Typography from "@mui/material/Typography";
 import { format as formatDate, isPast as isPastDate } from "date-fns";
 import * as React from "react";
-import { RouteComponentProps } from "react-router";
-import { Redirect, Link as RouterLink, withRouter } from "react-router-dom";
+import { Navigate, Link as RouterLink, useParams } from "react-router";
 import { EditListDialog } from "./edit_list_dialog";
 import { EditListItemDialog } from "./edit_list_item_dialog";
 import {
@@ -33,10 +32,6 @@ import { ProgressButton } from "./progress_button";
 import { ProgressDialog } from "./progress_dialog";
 import { User } from "./user";
 import { UserModel } from "./user_model";
-
-interface PathParams {
-  listId: string;
-}
 
 export interface ListItemUpdater {
   updateData: (
@@ -63,11 +58,15 @@ export interface ItemListApiArgs {
 
 export type ItemListMode = "view" | "edit";
 
-export interface Props extends RouteComponentProps<PathParams> {
+interface ItemListRouteProps {
   listModel: ListModel;
   userModel: UserModel;
   currentUser: User;
   mode: ItemListMode;
+}
+
+interface Props extends ItemListRouteProps {
+  listId: string;
 }
 
 const Root = styled("div")({
@@ -149,7 +148,7 @@ class ItemList extends React.Component<Props, State> {
       modifyingList: false,
     };
 
-    this.listId = this.props.match.params.listId;
+    this.listId = this.props.listId;
     this.itemUpdater = {
       updateData: this.updateListItemData.bind(this),
       updateState: this.updateListItemState.bind(this),
@@ -190,7 +189,7 @@ class ItemList extends React.Component<Props, State> {
 
     return (
       <Root>
-        {!this.state.loggedIn && <Redirect to="/logout" />}
+        {!this.state.loggedIn && <Navigate to="/logout" replace />}
         {this.state.loading && <LinearProgress />}
         {this.state.errorMessage && (
           <Alert
@@ -555,6 +554,13 @@ class ItemList extends React.Component<Props, State> {
   }
 }
 
-const exportItemList = withRouter(ItemList);
+// Hooks such as useParams() aren't usable in class components, so this
+// function component passes the list ID from the URL to the class component as
+// a prop. The key gives each list its own ItemList, which reads the ID only
+// when constructed.
+function ItemListRoute(props: ItemListRouteProps) {
+  const { listId } = useParams();
+  return <ItemList key={listId} {...props} listId={listId!} />;
+}
 
-export { exportItemList as ItemList };
+export { ItemListRoute as ItemList };

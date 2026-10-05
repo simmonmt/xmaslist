@@ -8,7 +8,7 @@ import { styled } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import { format } from "date-fns";
 import * as React from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { List as ListProto } from "./gen/proto/list_pb";
 import { User } from "./user";
 
