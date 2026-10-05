@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # The backend, which also serves the client. The image's default command
   # serves on port 8080, with the database at /db/db.sqlite and the session

@@ -12,8 +12,8 @@ COPY --from=go /usr/local/go /usr/local/go
 ENV PATH=/usr/local/go/bin:$PATH
 WORKDIR /src
 
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json package-lock.json Makefile ./
+RUN make deps
 
 COPY go.mod go.sum ./
 RUN go mod download

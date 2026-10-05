@@ -1,4 +1,5 @@
 {
+    "name": "xmaslist",
     "private": true,
     "devDependencies": {
         "@bufbuild/buf": "1.73.0",

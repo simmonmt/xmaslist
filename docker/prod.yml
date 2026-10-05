@@ -1,7 +1,8 @@
-version: "3.8"
-
 services:
   xmaslist:
+    # Come back after a host reboot or Docker daemon restart, but stay
+    # stopped after `docker/docker-compose-prod stop`.
+    restart: unless-stopped
     ports:
       - target: 8080
         published: 3400

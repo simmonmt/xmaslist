@@ -1,4 +1,10 @@
 #!/bin/bash
+#
+# Runs docker compose for the dev stack: the image (--tag, default latest) on
+# --port (default 8080), using the given database file and the dev session secret. Compose arguments follow the options, e.g.
+#   docker/docker-compose-dev --db=dev.sqlite up -d
+# A `--` before them (needed for compose options that precede the command) is
+# also accepted.
 
 set -e
 
@@ -8,28 +14,47 @@ function die {
 }
 
 function usage {
-    echo "Usage: ${PROGNAME} --db=db_file compose_args..." >&2
+    echo "Usage: ${PROGNAME} --db=db_file [--tag=tag] [--port=port] [--] compose_args..." >&2
     exit 2
 }
-
-GETOPT=getopt
-if which brew >/dev/null 2>&1 ; then
-    prefix=$(brew --prefix gnu-getopt 2>/dev/null)
-    if [[ -n "${prefix}" ]] ; then
-	GETOPT="${prefix}/bin/getopt"
-    fi
-fi
 
 PROGNAME=$(basename "$0")
 PROGDIR=$(dirname "$0")
 
-options=$(${GETOPT} -o '' --longoptions db: -- "$@")
-[[ $? -ne 0 ]] && usage
+# GNU getopt is required (for long options). macOS's isn't; use Homebrew's
+# gnu-getopt if it's installed.
+GETOPT=getopt
+if command -v brew >/dev/null 2>&1 ; then
+    prefix=$(brew --prefix --installed gnu-getopt 2>/dev/null) || true
+    if [[ -n "${prefix}" ]] ; then
+	GETOPT="${prefix}/bin/getopt"
+    fi
+fi
+# GNU getopt's -T (test) exits with 4.
+getopt_status=0
+"${GETOPT}" -T >/dev/null 2>&1 || getopt_status=$?
+[[ "${getopt_status}" -eq 4 ]] || \
+    die "GNU getopt required; on macOS: brew install gnu-getopt"
+
+tag=latest
+port=8080
+
+# The leading + stops option parsing at the first non-option (the compose
+# command), so compose arguments don't need a `--`.
+options=$("${GETOPT}" -o '+' --longoptions db:,port:,tag: -- "$@") || usage
 eval set -- "$options"
 while : ; do
     case "$1" in
         --db)
-            export XMASLIST_DATABASE="$2"
+            db="$2"
+            shift 2
+            ;;
+        --port)
+            port="$2"
+            shift 2
+            ;;
+        --tag)
+            tag="$2"
             shift 2
             ;;
         --)
@@ -37,19 +62,28 @@ while : ; do
             break
             ;;
         *)
-            break
+            usage
             ;;
     esac
-    shift
 done
 
-[[ -z "${XMASLIST_DATABASE}" ]] && usage
+[[ -z "${db}" ]] && usage
+[[ -f "${db}" ]] || die "${db}: no such file"
+[[ "${port}" =~ ^[0-9]+$ ]] || die "${port}: bad port"
 
-CONTAINER_TAG=latest \
-CONTAINER_PREFIX=xmaslist_dev \
-docker-compose \
-  --project-directory ${PROGDIR} \
-  --project-name xmaslist \
-  -f ${PROGDIR}/base.yml \
-  -f ${PROGDIR}/dev.yml \
+# Compose resolves relative bind paths against the project directory
+# (docker/), so pass an absolute path.
+dbdir=$(CDPATH='' cd -- "$(dirname -- "${db}")" && pwd)
+XMASLIST_DATABASE="${dbdir}/$(basename -- "${db}")"
+export XMASLIST_DATABASE
+
+export CONTAINER_TAG="${tag}"
+export XMASLIST_PORT="${port}"
+export CONTAINER_PREFIX=xmaslist_dev
+
+docker compose \
+  --project-directory "${PROGDIR}" \
+  --project-name xmaslist_dev \
+  -f "${PROGDIR}/base.yml" \
+  -f "${PROGDIR}/dev.yml" \
   "$@"

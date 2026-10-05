@@ -1,26 +1,20 @@
 #!/bin/bash
+#
+# Runs docker compose for the prod stack: the image (CONTAINER_TAG, default
+# latest) on port 3400, using the xmaslist_database and xmaslist_session_secret
+# volumes. Arguments are passed to compose, e.g.
+#   docker/docker-compose-prod up -d
 
 set -e
 
-function die {
-    echo "${PROGNAME}:" "$@" >&2
-    exit 1
-}
-
-function usage {
-    echo "Usage: ${PROGNAME} [--rm]" >&2
-    exit 2
-}
-
-PROGNAME=$(basename "$0")
-
 PROGDIR=$(dirname "$0")
 
-CONTAINER_TAG=latest \
-CONTAINER_PREFIX=xmaslist_prod \
-docker-compose \
-  --project-directory ${PROGDIR} \
-  --project-name xmaslist \
-  -f ${PROGDIR}/base.yml \
-  -f ${PROGDIR}/prod.yml \
+export CONTAINER_TAG="${CONTAINER_TAG:-latest}"
+export CONTAINER_PREFIX=xmaslist_prod
+
+docker compose \
+  --project-directory "${PROGDIR}" \
+  --project-name xmaslist_prod \
+  -f "${PROGDIR}/base.yml" \
+  -f "${PROGDIR}/prod.yml" \
   "$@"

@@ -9,21 +9,29 @@ function die {
 
 function usage {
     echo "Usage: ${PROGNAME} [--load_test_data] [--rm] [--vol volname]" >&2
+    echo "       ${PROGNAME} [--load_test_data] --local path" >&2
     exit 2
 }
 
 PROGNAME=$(basename "$0")
 
+# GNU getopt is required (for long options). macOS's isn't; use Homebrew's
+# gnu-getopt if it's installed.
 GETOPT=getopt
-if which brew >/dev/null 2>&1 ; then
-    prefix=$(brew --prefix gnu-getopt 2>/dev/null)
+if command -v brew >/dev/null 2>&1 ; then
+    prefix=$(brew --prefix --installed gnu-getopt 2>/dev/null) || true
     if [[ -n "${prefix}" ]] ; then
 	GETOPT="${prefix}/bin/getopt"
     fi
 fi
+# GNU getopt's -T (test) exits with 4.
+getopt_status=0
+"${GETOPT}" -T >/dev/null 2>&1 || getopt_status=$?
+[[ "${getopt_status}" -eq 4 ]] || \
+    die "GNU getopt required; on macOS: brew install gnu-getopt"
 
 VOL=xmaslist_database
-options=$(${GETOPT} -o '' --longoptions help,load_test_data,rm,vol: -- "$@")
+options=$(${GETOPT} -o '' --longoptions help,load_test_data,local:,rm,vol: -- "$@")
 [[ $? -ne 0 ]] && usage
 eval set -- "$options"
 while : ; do
@@ -34,11 +42,16 @@ while : ; do
         --load_test_data)
             LOADTESTDATA=1
             ;;
+	--local)
+	    LOCAL="$2"
+	    shift
+	    ;;
         --rm)
             RMVOL=1
             ;;
 	--vol)
 	    VOL="$2"
+	    VOL_SET=1
 	    shift
 	    ;;
         --)
@@ -49,77 +62,40 @@ while : ; do
     shift
 done
 
+[[ $# -ne 0 ]] && usage
 
-if docker volume inspect ${VOL} >/dev/null 2>&1 ; then
+if [[ -n "${LOCAL}" ]] ; then
+    [[ "${RMVOL}" -eq 1 || "${VOL_SET}" -eq 1 ]] && \
+	die "--local can't be used with --rm or --vol"
+    # Absolute, since we cd to the repo root below.
+    [[ "${LOCAL}" = /* ]] || LOCAL="${PWD}/${LOCAL}"
+elif docker volume inspect ${VOL} >/dev/null 2>&1 ; then
     [[ "$RMVOL" -ne 1 ]] && die "${VOL} exists"
     echo "Removing existing volume ${VOL}"
     docker volume rm ${VOL}
 fi
 
-DB_TMPFILE=/tmp/db.sqlite
-[[ -f "${DB_TMPFILE}" ]] && rm "${DB_TMPFILE}"
+# The paths below are relative to the repo root.
+cd "$(dirname "$0")/.."
 
-sqlite3 ${DB_TMPFILE} <db/schema/schema.txt
+WORKDIR=$(mktemp -d)
+trap 'rm -rf "${WORKDIR}"' EXIT INT QUIT TERM
+DB_TMPFILE="${WORKDIR}/db.sqlite"
+
+sqlite3 "${DB_TMPFILE}" <db/schema/schema.txt
 if [[ "${LOADTESTDATA}" -eq 1 ]] ; then
-    DB_UTIL_TMPDIR=$(mktemp -d)
-    trap "rm -rf ${DB_UTIL_TMPDIR}" EXIT INT QUIT TERM
-    DB_UTIL="${DB_UTIL_TMPDIR}/db_util"
+    DB_UTIL="${WORKDIR}/db_util"
     go build -o "${DB_UTIL}" ./cmd/db_util
 
-    "${DB_UTIL}" load --spec - ${DB_TMPFILE} <<-EOF
-	users:
-	  - username: "a"
-	    fullname: "Elmer McSquicken"
-	    password: "aa"
-	    admin: true
-	  - username: "b"
-	    fullname: "Sue Elaboratelastname"
-	    password: "bb"
+    "${DB_UTIL}" load --spec db/test_data.yaml "${DB_TMPFILE}"
+    "${DB_UTIL}" user list "${DB_TMPFILE}"
+    "${DB_UTIL}" list list "${DB_TMPFILE}"
+fi
 
-	lists:
-	  - owner: "a"
-	    data:
-	      name: "Christmas List 2021"
-	      active: true
-	      beneficiary: "Elmer"
-	      eventdate: "2021-12-25T00:00:00-04:00"
-	    items:
-	      - name: "item1"
-	        desc: "desc1"
-	        url: "url1"
-	      - name: "item2"
-	        desc: "desc2"
-	        url: "url2"
-	  - owner: "a"
-	    data:
-	      name: "Sue's Secret Birthday List 2021"
-	      active: true
-	      beneficiary: "Sue"
-	      eventdate: "2021-10-15T00:00:00-04:00"
-	  - owner: "b"
-	    data:
-	      name: "Elmer's Secret Christmas List 2021"
-	      active: true
-	      beneficiary: "Elmer"
-	      eventdate: "2021-12-25T02:00:00-04:00"
-	    items:
-	      - name: "Dewalt Flexvolt Advantage 20V MAX Circular Saw"
-	        desc: "this is a description of the saw"
-	        url: "https://www.amazon.com/DEWALT-FLEXVOLT-ADVANTAGE-Circular-DCS573B/dp/B08J8DZYT1"
-	      - name: "Under Armour Men's Raid 10-inch Workout Gym Shorts"
-	        url: "https://www.amazon.com/Under-Armour-Shorts-Graphite-Medium/dp/B00KWKD2TY"
-	      - name: "SparkFun 2D Barkcode Scanner Breakout board"
-	        url: "https://www.sparkfun.com/products/18088?_ga=2.5310515.1283549214.1624816813-40557423.1624816813"
-	  - owner: "b"
-	    data:
-	      name: "b list 2"
-	      active: false
-	      beneficiary: "bben2"
-	      eventdate: "2021-09-21T00:00:00-04:00"
-	EOF
-
-    "${DB_UTIL}" user list ${DB_TMPFILE}
-    "${DB_UTIL}" list list ${DB_TMPFILE}
+if [[ -n "${LOCAL}" ]] ; then
+    mv "${DB_TMPFILE}" "${LOCAL}"
+    echo "Created ${LOCAL}"
+    exit 0
 fi
 
 docker volume create ${VOL}
@@ -127,6 +103,6 @@ docker container create \
        --name xmaslist_database_create \
        -v ${VOL}:/db \
        alpine
-docker cp /tmp/db.sqlite xmaslist_database_create:/db
+docker cp "${DB_TMPFILE}" xmaslist_database_create:/db
 
 docker container rm xmaslist_database_create
