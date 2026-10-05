@@ -12,6 +12,10 @@ import {
 import { User } from "./user";
 
 const COOKIE_NAME = "session";
+// Set and remove the cookie with an explicit path. Otherwise the browser
+// derives one from the URL the page was loaded from (e.g. /view after a deep
+// link), and the cookie is then missing elsewhere.
+const COOKIE_PATH = "/";
 
 export class AuthModel {
   private readonly authService: Client<typeof AuthService>;
@@ -34,7 +38,7 @@ export class AuthModel {
     const userInfo = this.authStorage.read();
     if (!cookie !== !userInfo) {
       console.log("Unknown user model state; clearing");
-      this.cookies.remove(COOKIE_NAME);
+      this.cookies.remove(COOKIE_NAME, { path: COOKIE_PATH });
       this.authStorage.clear();
     }
   }
@@ -68,6 +72,7 @@ export class AuthModel {
       console.log("login: setting cookie", cookie);
       this.cookies.set(COOKIE_NAME, cookie, {
         expires: expiry,
+        path: COOKIE_PATH,
         sameSite: true,
       });
       this.authStorage.write(userInfo);
@@ -92,7 +97,7 @@ export class AuthModel {
       .logout(req)
       .then((unused: LogoutResponse) => {
         console.log("logout: clearing cookie");
-        this.cookies.remove(COOKIE_NAME);
+        this.cookies.remove(COOKIE_NAME, { path: COOKIE_PATH });
         this.authStorage.clear();
         return true;
       })
