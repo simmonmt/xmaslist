@@ -8,7 +8,7 @@ function die {
 }
 
 function usage {
-    echo "Usage: ${PROGNAME} [--rm]" >&2
+    echo "Usage: ${PROGNAME} [--load_test_data] [--rm] [--vol volname]" >&2
     exit 2
 }
 
@@ -22,17 +22,25 @@ if which brew >/dev/null 2>&1 ; then
     fi
 fi
 
-options=$(${GETOPT} -o '' --longoptions rm,load_test_data -- "$@")
+VOL=xmaslist_database
+options=$(${GETOPT} -o '' --longoptions help,load_test_data,rm,vol: -- "$@")
 [[ $? -ne 0 ]] && usage
 eval set -- "$options"
 while : ; do
     case "$1" in
-        --rm)
-            RMVOL=1
-            ;;
+	--help)
+	    usage
+	    ;;
         --load_test_data)
             LOADTESTDATA=1
             ;;
+        --rm)
+            RMVOL=1
+            ;;
+	--vol)
+	    VOL="$2"
+	    shift
+	    ;;
         --)
             shift
             break
@@ -41,7 +49,6 @@ while : ; do
     shift
 done
 
-VOL=xmaslist_database
 
 if docker volume inspect ${VOL} >/dev/null 2>&1 ; then
     [[ "$RMVOL" -ne 1 ]] && die "${VOL} exists"
