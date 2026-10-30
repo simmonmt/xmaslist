@@ -8,9 +8,12 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/subcommands v1.2.0
 	github.com/mattn/go-sqlite3 v1.14.52
+	golang.org/x/term v0.47.0
 	google.golang.org/protobuf v1.36.12
 	gopkg.in/yaml.v2 v2.4.0
 )
+
+require golang.org/x/sys v0.49.0 // indirect
 
 tool (
 	connectrpc.com/connect/cmd/protoc-gen-connect-go

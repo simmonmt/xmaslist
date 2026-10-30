@@ -20,17 +20,17 @@ In production it all runs as a single Docker container (`simmonmt/xmaslist`).
 
 ## Repository layout
 
-| Path           | What                                                       |
-| -------------- | ---------------------------------------------------------- |
-| `backend/`     | The server (`main.go` has the flags)                       |
-| `client/`      | The React client                                           |
-| `proto/`       | API definitions                                            |
-| `cmd/db_util/` | Admin CLI: create/list users, lists and items; load a spec |
-| `db/`          | Schema, sample data, scripts for the production DB volume  |
-| `docker/`      | Compose files and scripts for the dev and prod stacks      |
-| `docs/`        | [Operations runbook](docs/OPERATIONS.md)                   |
-| `Dockerfile`   | Builds the image                                           |
-| `Makefile`     | Code generation, builds, tests, dev servers                |
+| Path           | What                                                                      |
+| -------------- | ------------------------------------------------------------------------- |
+| `backend/`     | The server (`main.go` has the flags)                                      |
+| `client/`      | The React client                                                          |
+| `proto/`       | API definitions                                                           |
+| `cmd/db_util/` | Admin CLI: create/list users, set passwords, lists and items; load a spec |
+| `db/`          | Schema, sample data, scripts for the production DB volume                 |
+| `docker/`      | Compose files and scripts for the dev and prod stacks                     |
+| `docs/`        | [Operations runbook](docs/OPERATIONS.md)                                  |
+| `Dockerfile`   | Builds the image                                                          |
+| `Makefile`     | Code generation, builds, tests, dev servers                               |
 
 ## Prerequisites
 

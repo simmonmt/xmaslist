@@ -221,6 +221,12 @@ history, use `db_util user create --spec user.yaml ...` (format in
 `list list`) can use a copy taken without stopping the service. `db_util help`
 lists the commands.
 
+To reset a password, use `db_util user passwd --username carol work.sqlite` in
+place of `user create` in the recipe above. It prompts for the new password
+without echoing it (or reads it from `--password_file`, or from stdin when
+that isn't a terminal) and deletes carol's sessions, logging carol out
+everywhere.
+
 ## Session secret
 
 The server reads the secret (`/secret/session_secret.txt`, surrounding

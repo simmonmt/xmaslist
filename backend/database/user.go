@@ -77,6 +77,49 @@ func (db *DB) AuthenticateUser(ctx context.Context, username, password string) (
 	return userID, nil
 }
 
+// SetPassword sets the password for the named user and deletes the user's
+// sessions, logging them out everywhere. It returns the number of sessions
+// deleted.
+func (db *DB) SetPassword(ctx context.Context, username, password string) (int, error) {
+	tx, err := db.db.BeginTx(ctx, nil)
+	if err != nil {
+		return -1, err
+	}
+	defer tx.Rollback()
+
+	var userID int
+	err = tx.QueryRowContext(ctx, `SELECT id FROM users WHERE username = ?`,
+		username).Scan(&userID)
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return -1, fmt.Errorf("no such user %v", username)
+	case err != nil:
+		return -1, err
+	}
+
+	_, err = tx.ExecContext(ctx, `UPDATE users SET password = ? WHERE id = ?`,
+		hashPassword(password), userID)
+	if err != nil {
+		return -1, fmt.Errorf("password update failed: %v", err)
+	}
+
+	result, err := tx.ExecContext(ctx, `DELETE FROM sessions WHERE user = ?`,
+		userID)
+	if err != nil {
+		return -1, fmt.Errorf("session delete failed: %v", err)
+	}
+	numDeleted, err := result.RowsAffected()
+	if err != nil {
+		return -1, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return -1, err
+	}
+
+	return int(numDeleted), nil
+}
+
 func (db *DB) LookupUserByID(ctx context.Context, userID int) (*User, error) {
 	query := `SELECT username, fullname, admin FROM users WHERE id = ?`
 

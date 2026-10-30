@@ -27,6 +27,7 @@ func (c *userCommand) Execute(ctx context.Context, f *flag.FlagSet, args ...inte
 	cdr.Register(&userCreateCommand{}, "")
 	cdr.Register(&userListCommand{}, "")
 	cdr.Register(&userLookupCommand{}, "")
+	cdr.Register(&userPasswdCommand{}, "")
 	return cdr.Execute(ctx)
 }
 
