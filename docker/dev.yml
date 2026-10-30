@@ -4,7 +4,6 @@ services:
       - target: 8080
         published: "${XMASLIST_PORT}"
         protocol: tcp
-        mode: host
     volumes:
       - type: bind
         source: ./dev_session_secret.txt
